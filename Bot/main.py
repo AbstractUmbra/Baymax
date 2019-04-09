@@ -4,7 +4,6 @@ import os
 import sys
 import random
 from math import ceil
-from asyncio import sleep
 
 import discord
 from discord.ext import commands
@@ -32,9 +31,10 @@ if os.path.exists(CONFIG_PATH):
 else:
     print("No settings file exists at {}. Using defaults.".format(CONFIG_PATH))
     SETTINGS = {
-        "bot_token": "1234567890",
+        "bot_token": 1234567890,
         "admins": [],
         "bound_text_channels": [],
+        "server_id": 1324567890,
     }
 
     with open(CONFIG_PATH, "w+"):
@@ -101,6 +101,13 @@ def main():
         bot_prefix = SETTINGS["bot_prefix"]
     print("Currently bot prefix is: {}".format(bot_prefix))
 
+    if "server_id" not in SETTINGS:
+        # defaults to 1234567890
+        SETTINGS["server_id"] = 1234567890
+        save_settings(CONFIG_PATH)
+    else:
+        server_id = SETTINGS["server_id"]
+
     bot = commands.Bot(command_prefix=bot_prefix)
 
     @bot.event
@@ -135,11 +142,14 @@ def main():
             )
 
     @bot.event
-    async def on_ready():
+    async def on_ready(ctx):
         await bot.change_presence(
             activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.idle
         )
         print("Logged in as: {}".format(bot.user.name))
+
+        guild = discord.Client.fetch_guild(ctx, server_id)
+        print(guild.name)
 
     @bot.group()
     async def admin(ctx):
@@ -210,7 +220,7 @@ def main():
         await ctx.send("Honestly, you're a bit of a dick {}".format(dc_int_id(dick_user)))
         await dick_user.ban()
 
-    @admin.command(pass_context=True)
+    @admin.command()
     async def SNAP(ctx):
         current_voice_list = copy_local_voice_users(ctx)
         half_of_current_voice_list = ceil(len(current_voice_list) / 2)
@@ -225,15 +235,6 @@ def main():
         for member in snapped_users:
             await member.move_to(snapped_channel, reason="was snapped.")
 
-    async def list_servers():
-        await bot.wait_until_ready()
-        while not bot.is_closed:
-            print("Current servers:")
-            for guild in bot.guilds():
-                print(guild.name)
-            await sleep(200)
-
-    bot.loop.create_task(list_servers())
     bot.run(bot_token)
 
 

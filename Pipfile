@@ -10,6 +10,8 @@ asyncio = "*"
 async = "*"
 pip = "*"
 discord-py = {file = "https://github.com/Rapptz/discord.py/archive/rewrite.zip"}
+pylint = "*"
+autopep8 = "*"
 
 [requires]
 python_version = "3.7"
