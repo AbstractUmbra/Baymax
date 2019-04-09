@@ -148,8 +148,8 @@ def main():
         )
         print("Logged in as: {}".format(bot.user.name))
 
-        guild = discord.Client.fetch_guild(ctx, server_id)
-        print(guild.name)
+        main_guild = discord.Client.fetch_guild(ctx, server_id)
+        print(main_guild.name)
 
     @bot.group()
     async def admin(ctx):
@@ -200,14 +200,9 @@ def main():
 
     @admin.command()
     async def scattertheweak(ctx):
-        vcs = []
-        guilds = await discord.Client.fetch_guilds(ctx, limit=1).flatten()
-        for guild in guilds:
-            for vc in discord.Guild.voice_channels(guild):
-                vcs.append(vc)
         for member in copy_local_voice_users(ctx):
             await ctx.send("You are weak, {}".format(dc_int_id(member.id)))
-            await member.move_to(random.choice(vcs), reason="Was too weak.")
+            await member.move_to(random.choice(main_guild.voice_channels), reason="Was too weak.")
 
     @admin.command()
     async def whatadick(ctx):
