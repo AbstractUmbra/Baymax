@@ -8,7 +8,6 @@ from asyncio import sleep
 
 import discord
 from discord.ext import commands
-from discord.ext.commands import Bot
 import discord.utils
 
 # Set logging
@@ -102,7 +101,7 @@ def main():
         bot_prefix = SETTINGS["bot_prefix"]
     print("Currently bot prefix is: {}".format(bot_prefix))
 
-    bot = Bot(command_prefix=bot_prefix)
+    bot = commands.Bot(command_prefix=bot_prefix)
 
     @bot.event
     async def on_command_error(ctx, error):
@@ -115,26 +114,23 @@ def main():
             return
 
         if isinstance(error, commands.MissingRequiredArgument):
-            await bot.send(
-                ctx.message.channel,
+            await ctx.message.channel.send(
                 "error: Command '{0.clean_context}' requires additional arguments.".format(
                     ctx.message)
             )
         elif isinstance(error, commands.CommandNotFound):
-            await bot.send(
-                ctx.message.channel,
+            await ctx.message.channel.send(
                 "error: Command '{0.clean_context}' is not found.".format(
                     ctx.message),
             )
         elif isinstance(error, NeedAdmin):
-            await bot.send(
-                ctx.message.channel,
+            await ctx.message.channel.send(
                 "error: Command '{0.clean_context}' requires admin privileges, loser.".format(
                     ctx.message),
             )
         else:
-            await bot.send(
-                ctx.message.channel, "Error caught. Type: {}".format(
+            await ctx.message.channel.send(
+                "Error caught. Type: {}".format(
                     str(error))
             )
 
@@ -145,68 +141,65 @@ def main():
         )
         print("Logged in as: {}".format(bot.user.name))
 
-    @bot.group(pass_context=True)
+    @bot.group()
     async def admin(ctx):
         if ctx.message.author.id not in admin_list:
             raise NeedAdmin("You are not an administrator of the bot.")
         if ctx.invoked.subcommand is None:
-            await bot.say("Invalid usage of command: use {}admin to prefix command.".format(bot_prefix))
+            await ctx.send("Invalid usage of command: use {}admin to prefix command.".format(bot_prefix))
 
-    @admin.command(pass_context=True)
+    @admin.command()
     async def add(ctx, arg):
         print("add(ctx, arg)")
 
         if arg is None:
-            await bot.say("Invalid usage; use {}admin add <@user>.".format(bot_prefix))
+            await ctx.send("Invalid usage; use {}admin add <@user>.".format(bot_prefix))
         elif check_id_format(arg):
             new_admin_id = strip_dc_id(arg)
 
             if new_admin_id in admin_list:
-                await bot.say("User {} is already an admin.".format(arg))
+                await ctx.send("User {} is already an admin.".format(arg))
             else:
                 admin_list.append(new_admin_id)
                 save_settings(CONFIG_PATH)
-                await bot.say("{} has been added to admin list.".format(arg))
+                await ctx.send("{} has been added to admin list.".format(arg))
         else:
-            await bot.say("Invalid usage; use {}admin add <@user>".format(bot_prefix))
+            await ctx.send("Invalid usage; use {}admin add <@user>".format(bot_prefix))
 
-    @admin.command(pass_context=True)
+    @admin.command()
     async def remove(ctx, arg):
         print("remove(ctx, arg)")
         if arg is None:
-            await bot.say("Missing argument use {}admin remove <@user>'".format(bot_prefix))
+            await ctx.send("Missing argument use {}admin remove <@user>'".format(bot_prefix))
         elif check_id_format(arg):
             remove_admin_id = strip_dc_id(arg)
 
             if remove_admin_id not in admin_list:
-                await bot.say("Admin not found in admin list.")
+                await ctx.send("Admin not found in admin list.")
             else:
                 admin_list.remove(remove_admin_id)
                 save_settings(CONFIG_PATH)
-                await bot.say("{} was removed from admin list.".format(arg))
+                await ctx.send("{} was removed from admin list.".format(arg))
         else:
-            await bot.say("Invalid usage, use {}admin remove <@user>".format(bot_prefix))
+            await ctx.send("Invalid usage, use {}admin remove <@user>".format(bot_prefix))
 
-    @admin.command(pass_context=True)
+    @admin.command()
     async def adminlist(ctx):
         for admin in admin_list:
-            await bot.say(dc_int_id(admin))
+            await ctx.send(dc_int_id(admin))
 
-    @admin.command(pass_context=True)
+    @admin.command()
     async def scattertheweak(ctx):
-        voice_channels = []
-        for server in bot.servers:
-            for channel in server.channels:
-                if not isinstance(channel.type, int):
-                    if channel.type.value == 2:
-                        voice_channels.append(channel)
-            static_member_list = copy_local_voice_users(ctx)
+        vcs = []
+        guilds = await discord.Client.fetch_guilds(ctx, limit=1).flatten()
+        for guild in guilds:
+            for vc in discord.Guild.voice_channels(guild):
+                vcs.append(vc)
+        for member in copy_local_voice_users(ctx):
+            await ctx.send("You are weak, {}".format(dc_int_id(member.id)))
+            await member.move_to(random.choice(vcs), reason="Was too weak.")
 
-            for member in static_member_list:
-                await bot.say("You are weak, {}".format(dc_int_id(member.id)))
-                await bot.move_member(member, random.choice(voice_channels))
-
-    @admin.command(pass_context=True)
+    @admin.command()
     async def whatadick(ctx):
         if "dick" not in SETTINGS:
             SETTINGS["dick"] = 194176688668540929
@@ -214,8 +207,8 @@ def main():
             save_settings(CONFIG_PATH)
         else:
             dick_user = SETTINGS["dick"]
-        await bot.say("Honestly, you're a bit of a dick {}".format(dc_int_id(dick_user)))
-        await bot.ban(dick_user)
+        await ctx.send("Honestly, you're a bit of a dick {}".format(dc_int_id(dick_user)))
+        await dick_user.ban()
 
     @admin.command(pass_context=True)
     async def SNAP(ctx):
@@ -227,17 +220,17 @@ def main():
             ctx.message.server.channels, name="The Soul Stone"
         )
 
-        await bot.say("You should have gone for the head.")
-        await bot.say("**SNAP!**")
+        await ctx.send("You should have gone for the head.")
+        await ctx.send("**SNAP!**")
         for member in snapped_users:
-            await bot.move_member(member, snapped_channel)
+            await member.move_to(snapped_channel, reason="was snapped.")
 
     async def list_servers():
         await bot.wait_until_ready()
         while not bot.is_closed:
             print("Current servers:")
-            for server in bot.servers:
-                print(server.name)
+            for guild in bot.guilds():
+                print(guild.name)
             await sleep(200)
 
     bot.loop.create_task(list_servers())
