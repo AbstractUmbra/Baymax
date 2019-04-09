@@ -114,19 +114,19 @@ def main():
         if hasattr(ctx.command, "on_error"):
             return
 
-        if isinstance(commands.MissingRequiredArgument, error):
+        if isinstance(error, commands.MissingRequiredArgument):
             await bot.send_message(
                 ctx.message.channel,
                 "error: Command '{0.clean_context}' requires additional arguments.".format(
                     ctx.message)
             )
-        elif isinstance(commands.CommandNotFound, error):
+        elif isinstance(error, commands.CommandNotFound):
             await bot.send_message(
                 ctx.message.channel,
                 "error: Command '{0.clean_context}' is not found.".format(
                     ctx.message),
             )
-        elif isinstance(NeedAdmin, error):
+        elif isinstance(error, NeedAdmin):
             await bot.send_message(
                 ctx.message.channel,
                 "error: Command '{0.clean_context}' requires admin privileges, loser.".format(
