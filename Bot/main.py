@@ -115,25 +115,25 @@ def main():
             return
 
         if isinstance(error, commands.MissingRequiredArgument):
-            await bot.send_message(
+            await bot.send(
                 ctx.message.channel,
                 "error: Command '{0.clean_context}' requires additional arguments.".format(
                     ctx.message)
             )
         elif isinstance(error, commands.CommandNotFound):
-            await bot.send_message(
+            await bot.send(
                 ctx.message.channel,
                 "error: Command '{0.clean_context}' is not found.".format(
                     ctx.message),
             )
         elif isinstance(error, NeedAdmin):
-            await bot.send_message(
+            await bot.send(
                 ctx.message.channel,
                 "error: Command '{0.clean_context}' requires admin privileges, loser.".format(
                     ctx.message),
             )
         else:
-            await bot.send_message(
+            await bot.send(
                 ctx.message.channel, "Error caught. Type: {}".format(
                     str(error))
             )
