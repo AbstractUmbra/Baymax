@@ -28,7 +28,7 @@ def save_settings(config):
 
 # Load Settings
 if os.path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH, "r") as read_config_file:
+    with open(CONFIG_PATH) as read_config_file:
         SETTINGS = json.load(read_config_file)
 else:
     print("No settings file exists at {}. Using defaults.".format(CONFIG_PATH))
