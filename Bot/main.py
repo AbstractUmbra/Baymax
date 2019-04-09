@@ -242,3 +242,6 @@ def main():
 
     bot.loop.create_task(list_servers())
     bot.run(bot_token)
+
+if __name__ == "__main__":
+	main()
