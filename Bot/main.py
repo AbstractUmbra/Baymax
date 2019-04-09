@@ -105,7 +105,7 @@ def main():
     bot = Bot(command_prefix=bot_prefix)
 
     @bot.event
-    async def on_command_error(error, ctx):
+    async def on_command_error(ctx, error):
         """The event triggered when an error is raised while invoking a command.
         ctx   : Context
         error : Exception"""
@@ -114,19 +114,19 @@ def main():
         if hasattr(ctx.command, "on_error"):
             return
 
-        if isinstance(error, commands.MissingRequiredArgument):
+        if isinstance(commands.MissingRequiredArgument, error):
             await bot.send_message(
                 ctx.message.channel,
                 "error: Command '{0.clean_context}' requires additional arguments.".format(
                     ctx.message)
             )
-        elif isinstance(error, commands.CommandNotFound):
+        elif isinstance(commands.CommandNotFound, error):
             await bot.send_message(
                 ctx.message.channel,
                 "error: Command '{0.clean_context}' is not found.".format(
                     ctx.message),
             )
-        elif isinstance(error, NeedAdmin):
+        elif isinstance(NeedAdmin, error):
             await bot.send_message(
                 ctx.message.channel,
                 "error: Command '{0.clean_context}' requires admin privileges, loser.".format(
@@ -141,7 +141,7 @@ def main():
     @bot.event
     async def on_ready():
         await bot.change_presence(
-            game=discord.Game(name="Welcome to the Dark Side.")
+            activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.idle
         )
         print("Logged in as: {}".format(bot.user.name))
 
