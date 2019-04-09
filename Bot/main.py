@@ -22,14 +22,14 @@ CONFIG_PATH = "config/bot.json"
 
 
 def save_settings(config):
-    with open(config, "w"):
-        json.dump(SETTINGS, config, indent=4)
+    with open(config, "w") as write_config_file:
+        json.dump(SETTINGS, write_config_file, indent=4)
 
 
 # Load Settings
 if os.path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH, "r") as config_file:
-        SETTINGS = json.load(config_file)
+    with open(CONFIG_PATH, "r") as read_config_file:
+        SETTINGS = json.load(read_config_file)
 else:
     print("No settings file exists at {}. Using defaults.".format(CONFIG_PATH))
     SETTINGS = {
@@ -243,5 +243,6 @@ def main():
     bot.loop.create_task(list_servers())
     bot.run(bot_token)
 
+
 if __name__ == "__main__":
-	main()
+    main()
