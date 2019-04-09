@@ -67,7 +67,7 @@ def copy_local_voice_users(ctx):
 
 def main():
     if "bot_token" in SETTINGS:
-        if SETTINGS["Bot_Token"] != 1234567890:
+        if SETTINGS["bot_token"] != 1234567890:
             bot_token = SETTINGS["bot_token"]
         else:
             bot_token = input("Please input your bot token here: ")
