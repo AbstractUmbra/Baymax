@@ -7,8 +7,7 @@ verify_ssl = true
 
 [packages]
 discord = "*"
-aiohttp = "*"
-async = "*"
+asyncio = "*"
 
 [requires]
 python_version = "3.7"
