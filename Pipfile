@@ -6,8 +6,10 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-discord = "*"
 asyncio = "*"
+async = "*"
+pip = "*"
+discord-py = {file = "https://github.com/Rapptz/discord.py/archive/rewrite.zip"}
 
 [requires]
 python_version = "3.7"
