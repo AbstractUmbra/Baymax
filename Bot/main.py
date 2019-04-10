@@ -108,9 +108,11 @@ def main():
     else:
         server_id = SETTINGS["server_id"]
 
-    bot = commands.Bot(command_prefix=bot_prefix)
+    client = discord.Client(command_prefix=bot_prefix)
 
-    @bot.event
+ ################ ALL BELOW HERE IS WRONG ####################
+
+    @client.event
     async def on_command_error(ctx, error):
         """The event triggered when an error is raised while invoking a command.
         ctx   : Context
@@ -141,17 +143,17 @@ def main():
                     str(error))
             )
 
-    @bot.event
+    @client.event
     async def on_ready(ctx):
-        await bot.change_presence(
+        await client.change_presence(
             activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.idle
         )
-        print("Logged in as: {}".format(bot.user.name))
+        print("Logged in as: {}".format(client.user.name))
 
         main_guild = discord.Client.fetch_guild(ctx, server_id)
         print(main_guild.name)
 
-    @bot.group()
+    @client.group()
     async def admin(ctx):
         if ctx.message.author.id not in admin_list:
             raise NeedAdmin("You are not an administrator of the bot.")
@@ -202,7 +204,7 @@ def main():
     async def scattertheweak(ctx):
         for member in copy_local_voice_users(ctx):
             await ctx.send("You are weak, {}".format(dc_int_id(member.id)))
-            await member.move_to(random.choice(main_guild.voice_channels), reason="Was too weak.")
+            await member.move_to(random.choice(discord.Guild.voice_channels), reason="Was too weak.")
 
     @admin.command()
     async def whatadick(ctx):
@@ -230,7 +232,7 @@ def main():
         for member in snapped_users:
             await member.move_to(snapped_channel, reason="was snapped.")
 
-    bot.run(bot_token)
+    client.run(bot_token)
 
 
 if __name__ == "__main__":
