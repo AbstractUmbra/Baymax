@@ -203,21 +203,35 @@ def main():
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid usage of command: use {}admin to prefix command.".format(bot_prefix))
 
-    @admin.command()
-    async def add(ctx, arg):
-        if arg is None:
-            await ctx.send("Invalid usage; use {}admin add <@user>. -NoPassedUser".format(bot_prefix))
-        elif check_id_format(arg):
-            new_admin_id = strip_dc_id(arg)
+    # @admin.command()
+    # async def add(ctx, arg):
+    #     if arg is None:
+    #         await ctx.send("Invalid usage; use {}admin add <@user>. -NoPassedUser".format(bot_prefix))
+    #     elif check_id_format(arg):
+    #         new_admin_id = strip_dc_id(arg)
 
-            if new_admin_id in SETTINGS["admins"]:
-                await ctx.send("User {} is already an admin.".format(arg))
+    #         if new_admin_id in SETTINGS["admins"]:
+    #             await ctx.send("User {} is already an admin.".format(arg))
+    #         else:
+    #             SETTINGS["admins"].append(new_admin_id)
+    #             save_settings(CONFIG_PATH)
+    #             await ctx.send("{} has been added to admin list.".format(arg))
+    #     else:
+    #         await ctx.send("Invalid usage; use {}admin add <@user>. -PassedBadUser: {}".format(bot_prefix, arg))
+
+    @admin.command()
+    async def add(ctx, member: discord.Member):
+        if member is None:
+            await ctx.send("Invalid usage; use {}admin add <@user>. -NoPassedUser".format(bot_prefix))
+
+            if member in SETTINGS["admins"]:
+                await ctx.send("User {} is already an admin.".format(member))
             else:
-                SETTINGS["admins"].append(new_admin_id)
+                SETTINGS["admins"].append(member)
                 save_settings(CONFIG_PATH)
-                await ctx.send("{} has been added to admin list.".format(arg))
+                await ctx.send("{} has been added to admin list.".format(member))
         else:
-            await ctx.send("Invalid usage; use {}admin add <@user>. -PassedBadUser: {}".format(bot_prefix, arg))
+            await ctx.send("Invalid usage; use {}admin add <@user>. -PassedBadUser: {}".format(bot_prefix, member))
 
     @admin.command()
     async def remove(ctx, arg):
