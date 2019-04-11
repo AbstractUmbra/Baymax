@@ -219,9 +219,9 @@ def main():
                     await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
 
     @admin.command()
-    async def whatadick(ctx, member: discord.ext.commands.MemberConverter = dick_user):
-        await ctx.send("Honestly, you're a bit of a dick {}".format(member))
-        await ctx.guild.ban(member)
+    async def whatadick(ctx):
+        await ctx.send("Honestly, you're a bit of a dick {}".format(ctx.guild.get_member(int(dick_user))))
+        await ctx.guild.ban(discord.Object(id=int(dick_user)))
 
     @admin.command()
     async def SNAP(ctx):
