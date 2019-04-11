@@ -63,7 +63,10 @@ def check_id_format(idstr):
 
 # Grab voice users in authors voice channel:
 def copy_local_voice_users(ctx):
-    return ctx.message.author.voice.voice_channel.voice_members.copy()
+    try:
+        return ctx.message.author.voice.voice_channel.voice_members.copy()
+    except AttributeError:
+        await ctx.send("You are not in a voice channel, you cannot use this function.")
 
 
 def main():
