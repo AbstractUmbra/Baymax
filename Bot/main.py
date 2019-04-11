@@ -235,9 +235,12 @@ def main():
             ctx.message.guild.channels, name="The Soul Stone"
         )
 
-        await ctx.send("You should have gone for the head.")
-        await ctx.send("**SNAP!**")
+        # await ctx.send("You should have gone for the head.")
+        # await ctx.send("**SNAP!**")
+        with open("content/snap.gif", "r") as fp:
+            await ctx.send(file=fp)
         for member in snapped_users:
+            print("Snapped {}".format(member.name))
             await member.move_to(snapped_channel, reason="was snapped.")
 
     bot.run(bot_token)
