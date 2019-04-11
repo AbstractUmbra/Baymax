@@ -166,10 +166,6 @@ def main():
                 traceback.print_tb(original.__traceback__)
                 print(f"{original.__class__.__name__}: {original}",
                       file=sys.stderr)
-            await ctx.author.send(
-                "error: Command '{}' This command cannot be used in private messages.".format(
-                    ctx.message),
-            )
         elif isinstance(error, commands.ArgumentParsingError):
             await ctx.send(error)
         else:
@@ -222,10 +218,10 @@ def main():
     @admin.command()
     async def scattertheweak(ctx):
         try:
-            voice_list = copy_local_voice_users(ctx)
+            copy_local_voice_users(ctx)
         except AttributeError:
             await ctx.send("You are not in a voice channel, you cannot use this function.")
-        for member in voice_list:
+        for member in copy_local_voice_users(ctx):
             await ctx.send("You are weak, {}".format(dc_int_id(member.id)))
             await member.move_to(random.choice(discord.Guild.voice_channels), reason="Was too weak.")
 
