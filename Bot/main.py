@@ -204,9 +204,10 @@ def main():
         voice_channels = []
         for guild in bot.guilds:
             voice_channels.extend(guild.voice_channels)
-            for member in voice_channels:
-                await ctx.send("You are weak, {}".format(dc_int_id(member.id)))
-                await member.move_to(random.choice(voice_channels), reason="Was too weak.")
+            for vc in voice_channels:
+                for dcmember in vc.members:
+                    await ctx.send("You are weak, {}".format(dc_int_id(dcmember.id)))
+                    await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
 
     @admin.command()
     async def whatadick(ctx):
