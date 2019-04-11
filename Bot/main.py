@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import random
+import traceback
 from math import ceil
 
 import discord
@@ -35,6 +36,7 @@ else:
         "admins": [],
         "bound_text_channels": [],
         "server_id": 1324567890,
+        "bot_description": "A generic use bot for fun, games and memes.",
     }
 
     with open(CONFIG_PATH, "w+"):
@@ -104,15 +106,24 @@ def main():
     if "server_id" not in SETTINGS:
         # defaults to 1234567890
         SETTINGS["server_id"] = 1234567890
+        server_id = SETTINGS["server_id"]
         save_settings(CONFIG_PATH)
     else:
         server_id = SETTINGS["server_id"]
 
-    client = discord.Client(command_prefix=bot_prefix)
+    if "bot_description" not in SETTINGS:
+        # defaults to "blah Blah"
+        SETTINGS["bot_description"] = "Blah Blah"
+        bot_description = SETTINGS["description"]
+        save_settings(CONFIG_PATH)
+    else:
+        bot_description = SETTINGS["description"]
+
+    bot = commands.Bot(command_prefix=bot_prefix, description=bot_description)
 
  ################ ALL BELOW HERE IS WRONG ####################
 
-    @client.event
+    @bot.event
     async def on_command_error(ctx, error):
         """The event triggered when an error is raised while invoking a command.
         ctx   : Context
@@ -123,37 +134,57 @@ def main():
             return
 
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.message.channel.send(
+            await ctx.author.send(
                 "error: Command '{0.clean_context}' requires additional arguments.".format(
                     ctx.message)
             )
         elif isinstance(error, commands.CommandNotFound):
-            await ctx.message.channel.send(
+            await ctx.author.send(
                 "error: Command '{0.clean_context}' is not found.".format(
                     ctx.message),
             )
         elif isinstance(error, NeedAdmin):
-            await ctx.message.channel.send(
+            await ctx.author.send(
                 "error: Command '{0.clean_context}' requires admin privileges, loser.".format(
                     ctx.message),
             )
+        elif isinstance(error, commands.NoPrivateMessage):
+            await ctx.author.send(
+                "error: Command '{0.clean_context}' This command cannot be used in private messages.".format(
+                    ctx.message),
+            )
+        elif isinstance(error, commands.DisabledCommand):
+            await ctx.author.send(
+                "error: Command '{0.clean_context}' This command cannot be used as it is disabled.".format(
+                    ctx.message),
+            )
+        elif isinstance(error, commands.CommandInvokeError):
+            original = error.original
+            if not isinstance(original, discord.HTTPException):
+                print(f'In {ctx.command.qualified_name}:', file=sys.stderr)
+                traceback.print_tb(original.__traceback__)
+                print(f"{original.__class__.__name__}: {original}",
+                      file=sys.stderr)
+            await ctx.author.send(
+                "error: Command '{0.clean_context}' This command cannot be used in private messages.".format(
+                    ctx.message),
+            )
+        elif isinstance(error, commands.ArgumentParsingError):
+            await ctx.send(error)
         else:
-            await ctx.message.channel.send(
+            await ctx.author.send(
                 "Error caught. Type: {}".format(
                     str(error))
             )
 
-    @client.event
-    async def on_ready(ctx):
-        await client.change_presence(
+    @bot.event
+    async def on_ready():
+        await bot.change_presence(
             activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.idle
         )
-        print("Logged in as: {}".format(client.user.name))
+        print("Logged in as: {}: {}".format(bot.user.name, bot.user.id))
 
-        main_guild = discord.Client.fetch_guild(ctx, server_id)
-        print(main_guild.name)
-
-    @client.group()
+    @bot.group()
     async def admin(ctx):
         if ctx.message.author.id not in admin_list:
             raise NeedAdmin("You are not an administrator of the bot.")
@@ -232,7 +263,7 @@ def main():
         for member in snapped_users:
             await member.move_to(snapped_channel, reason="was snapped.")
 
-    client.run(bot_token)
+    bot.run(bot_token)
 
 
 if __name__ == "__main__":
