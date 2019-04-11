@@ -201,15 +201,12 @@ def main():
 
     @admin.command()
     async def scattertheweak(ctx):
-        try:
-            ctx.message.author.voice.voice_channel.voice_members.copy()
-        except AttributeError:
-            await ctx.send("You are not in a voice channel, you cannot use this function.")
-        else:
-            vcs = ctx.message.author.voice.voice_channel.voice_members.copy()
-            for member in vcs:
+        voice_channels = []
+        for guild in bot.guilds:
+            voice_channels.extend(guild.voice_channels)
+            for member in voice_channels:
                 await ctx.send("You are weak, {}".format(dc_int_id(member.id)))
-                await member.move_to(random.choice(discord.Guild.voice_channels), reason="Was too weak.")
+                await member.move_to(random.choice(voice_channels), reason="Was too weak.")
 
     @admin.command()
     async def whatadick(ctx):
