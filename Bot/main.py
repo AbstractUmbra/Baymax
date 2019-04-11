@@ -50,7 +50,7 @@ class NeedAdmin(Exception):
 # Helpful functions - ID based.
 # Get Discord ID based on int - grabbed by adding \ before @'ing a member.
 def dc_int_id(dcid):
-    return "<@!" + dcid + ">"
+    return "<@!{}>".format(dcid)
 
 
 def strip_dc_id(dcid):
