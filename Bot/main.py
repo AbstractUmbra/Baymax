@@ -223,15 +223,12 @@ def main():
     async def add(ctx, member: discord.Member):
         if member is None:
             await ctx.send("Invalid usage; use {}admin add <@user>. -NoPassedUser".format(bot_prefix))
-
-            if member in SETTINGS["admins"]:
-                await ctx.send("User {} is already an admin.".format(member))
-            else:
-                SETTINGS["admins"].append(member)
-                save_settings(CONFIG_PATH)
-                await ctx.send("{} has been added to admin list.".format(member))
+        elif member in SETTINGS["admins"]:
+            await ctx.send("User {} is already an admin.".format(member))
         else:
-            await ctx.send("Invalid usage; use {}admin add <@user>. -PassedBadUser: {}".format(bot_prefix, member))
+            SETTINGS["admins"].append(member)
+            save_settings(CONFIG_PATH)
+            await ctx.send("{} has been added to admin list.".format(member))
 
     @admin.command()
     async def remove(ctx, arg):
