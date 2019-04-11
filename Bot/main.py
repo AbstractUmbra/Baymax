@@ -227,19 +227,18 @@ def main():
 
     @admin.command()
     async def SNAP(ctx):
-        #current_voice_list = ctx.message.author.voice.channel.members.copy()
-        print(ctx.message.author.voice.channel)
-        # half_of_current_voice_list = ceil(len(current_voice_list) / 2)
-        # snapped_users = random.sample(
-        #     current_voice_list, half_of_current_voice_list)
-        # snapped_channel = discord.utils.get(
-        #     ctx.message.server.channels, name="The Soul Stone"
-        # )
+        current_voice_list = ctx.message.author.voice.channel.members.copy()
+        half_of_current_voice_list = ceil(len(current_voice_list) / 2)
+        snapped_users = random.sample(
+            current_voice_list, half_of_current_voice_list)
+        snapped_channel = discord.utils.get(
+            ctx.message.guild.channels, name="The Soul Stone"
+        )
 
-        # await ctx.send("You should have gone for the head.")
-        # await ctx.send("**SNAP!**")
-        # for member in snapped_users:
-        #     await member.move_to(snapped_channel, reason="was snapped.")
+        await ctx.send("You should have gone for the head.")
+        await ctx.send("**SNAP!**")
+        for member in snapped_users:
+            await member.move_to(snapped_channel, reason="was snapped.")
 
     bot.run(bot_token)
 
