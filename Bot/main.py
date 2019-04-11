@@ -208,7 +208,7 @@ def main():
                 print(vc)
                 for dcmember in vc.members:
                     print(dcmember)
-                    await ctx.send("You are weak, {}".format(dc_int_id(dcmember.id)))
+                    await ctx.send("You are weak, {}".format(dcmember))
                     await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
 
     @admin.command()
