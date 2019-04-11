@@ -1,3 +1,4 @@
+""" A simple and fun discord bot. """
 import logging
 from time import sleep
 import json
@@ -17,11 +18,9 @@ logging.basicConfig(level=logging.INFO)
 # Constants
 CONFIG_PATH = "config/bot.json"
 
-# Settings section
-# Save Settings
-
 
 def save_settings(config):
+    """ Save settings in a passed config file. """
     with open(config, "w") as write_config_file:
         json.dump(SETTINGS, write_config_file, indent=4)
 
@@ -45,24 +44,11 @@ else:
 
 
 class NeedAdmin(Exception):
-    pass
-
-
-# Helpful functions - ID based.
-# Get Discord ID based on int - grabbed by adding \ before @'ing a member.
-def dc_int_id(dcid):
-    return "<@!{}>".format(dcid)
-
-
-def strip_dc_id(dcid):
-    return dcid[3:-1]
-
-
-def check_id_format(idstr):
-    return idstr[:3] == "<@!" and idstr[-1:] == ">"
+    """ Exception for the requirement of admin privs. """
 
 
 def main():
+    """ Run the bot woooooo """
     if "bot_token" not in SETTINGS:
         bot_token = input("Please input your bot token here: ")
         SETTINGS["bot_token"] = bot_token
@@ -176,12 +162,13 @@ def main():
         if ctx.message.author.id not in SETTINGS["admins"]:
             raise NeedAdmin("You are not an administrator of the bot.")
         if ctx.invoked_subcommand is None:
-            await ctx.send("Invalid usage of command: use {}admin to prefix command.".format(bot_prefix))
+            await ctx.send("Invalid usage of command: use {}admin to prefix command."
+                           .format(bot_prefix))
 
     @admin.command()
     async def add(ctx, member: discord.Member):
         if member is None:
-            await ctx.send("Invalid usage; use {}admin add <@user>. -NoPassedUser".format(bot_prefix))
+            await ctx.send("Invalid usage; use {}admin add <@user>.".format(bot_prefix))
         elif member.id in SETTINGS["admins"]:
             await ctx.send("User {} is already an admin.".format(member))
         else:
@@ -203,7 +190,7 @@ def main():
     @admin.command()
     async def adminlist(ctx):
         for admin in SETTINGS["admins"]:
-            await ctx.send(dc_int_id(admin))
+            await ctx.send(ctx.guild.get_member(admin))
 
     @admin.command()
     async def scattertheweak(ctx):
