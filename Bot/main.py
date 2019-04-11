@@ -225,7 +225,7 @@ def main():
         if current_dick_user is None:
             await ctx.send("The dick wasn't found on this server.")
         else:
-            await ctx.send("Honestly, you're a bit of a dick {}".format(current_dick_user))
+            await ctx.send("Honestly, you're a bit of a dick {}".format(current_dick_user.mention))
             # await ctx.guild.ban(discord.Object(id=int(SETTINGS["dick"])))
 
     @admin.command()
