@@ -227,8 +227,8 @@ def main():
 
     @admin.command()
     async def SNAP(ctx):
-        current_voice_list = ctx.message.author.voice.channel.members.copy()
-        print(current_voice_list)
+        #current_voice_list = ctx.message.author.voice.channel.members.copy()
+        print(ctx.message.author.voice.channel.members)
         # half_of_current_voice_list = ceil(len(current_voice_list) / 2)
         # snapped_users = random.sample(
         #     current_voice_list, half_of_current_voice_list)
