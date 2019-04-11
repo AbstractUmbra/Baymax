@@ -205,7 +205,9 @@ def main():
         for guild in bot.guilds:
             voice_channels.extend(guild.voice_channels)
             for vc in voice_channels:
+                print(vc)
                 for dcmember in vc.members:
+                    print(dcmember)
                     await ctx.send("You are weak, {}".format(dc_int_id(dcmember.id)))
                     await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
 
