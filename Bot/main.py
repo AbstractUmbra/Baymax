@@ -147,27 +147,27 @@ def main():
 
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.author.send(
-                "error: Command '{0.clean_context}' requires additional arguments.".format(
+                "error: Command '{}' requires additional arguments.".format(
                     ctx.message)
             )
         elif isinstance(error, commands.CommandNotFound):
             await ctx.author.send(
-                "error: Command '{0.clean_context}' is not found.".format(
+                "error: Command '{}' is not found.".format(
                     ctx.message),
             )
         elif isinstance(error, NeedAdmin):
             await ctx.author.send(
-                "error: Command '{0.clean_context}' requires admin privileges, loser.".format(
+                "error: Command '{}' requires admin privileges, loser.".format(
                     ctx.message),
             )
         elif isinstance(error, commands.NoPrivateMessage):
             await ctx.author.send(
-                "error: Command '{0.clean_context}' This command cannot be used in private messages.".format(
+                "error: Command '{}' This command cannot be used in private messages.".format(
                     ctx.message),
             )
         elif isinstance(error, commands.DisabledCommand):
             await ctx.author.send(
-                "error: Command '{0.clean_context}' This command cannot be used as it is disabled.".format(
+                "error: Command '{}' This command cannot be used as it is disabled.".format(
                     ctx.message),
             )
         elif isinstance(error, commands.CommandInvokeError):
@@ -178,7 +178,7 @@ def main():
                 print(f"{original.__class__.__name__}: {original}",
                       file=sys.stderr)
             await ctx.author.send(
-                "error: Command '{0.clean_context}' This command cannot be used in private messages.".format(
+                "error: Command '{}' This command cannot be used in private messages.".format(
                     ctx.message),
             )
         elif isinstance(error, commands.ArgumentParsingError):
