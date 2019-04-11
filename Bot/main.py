@@ -154,11 +154,6 @@ def main():
                 "error: Command '{}' requires admin privileges, loser.".format(
                     ctx.message),
             )
-        elif isinstance(error, commands.NoPrivateMessage):
-            await ctx.author.send(
-                "error: Command '{}' This command cannot be used in private messages.".format(
-                    ctx.message),
-            )
         elif isinstance(error, commands.DisabledCommand):
             await ctx.author.send(
                 "error: Command '{}' This command cannot be used as it is disabled.".format(
@@ -218,22 +213,6 @@ def main():
             SETTINGS["admins"].remove(member.id)
             save_settings(CONFIG_PATH)
             await ctx.send("{} was removed from admin list.".format(member))
-
-    # @admin.command()
-    # async def remove(ctx, arg):
-    #     if arg is None:
-    #         await ctx.send("Missing argument use {}admin remove <@user>'".format(bot_prefix))
-    #     elif check_id_format(arg):
-    #         remove_admin_id = strip_dc_id(arg)
-
-    #         if remove_admin_id not in admin_list:
-    #             await ctx.send("Admin not found in admin list.")
-    #         else:
-    #             admin_list.remove(remove_admin_id)
-    #             save_settings(CONFIG_PATH)
-    #             await ctx.send("{} was removed from admin list.".format(arg))
-    #     else:
-    #         await ctx.send("Invalid usage, use {}admin remove <@user>".format(bot_prefix))
 
     @admin.command()
     async def adminlist(ctx):
