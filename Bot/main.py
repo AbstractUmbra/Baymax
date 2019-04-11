@@ -200,7 +200,7 @@ def main():
     async def admin(ctx):
         if ctx.message.author.id not in admin_list:
             raise NeedAdmin("You are not an administrator of the bot.")
-        if ctx.invoked.subcommand is None:
+        if ctx.invoked_subcommand is None:
             await ctx.send("Invalid usage of command: use {}admin to prefix command.".format(bot_prefix))
 
     @admin.command()
