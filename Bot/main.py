@@ -109,6 +109,13 @@ def main():
     else:
         bot_description = SETTINGS["bot_description"]
 
+        if "dick" not in SETTINGS:
+            SETTINGS["dick"] = 194176688668540929
+            dick_user = SETTINGS["dick"]
+            save_settings(CONFIG_PATH)
+        else:
+            dick_user = SETTINGS["dick"]
+
     bot = commands.Bot(command_prefix=bot_prefix, description=bot_description)
 
  ################ ALL BELOW HERE IS WRONG ####################
@@ -212,15 +219,9 @@ def main():
                     await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
 
     @admin.command()
-    async def whatadick(ctx):
-        if "dick" not in SETTINGS:
-            SETTINGS["dick"] = 194176688668540929
-            dick_user = SETTINGS["dick"]
-            save_settings(CONFIG_PATH)
-        else:
-            dick_user = SETTINGS["dick"]
-        await ctx.send("Honestly, you're a bit of a dick {}".format(dc_int_id(dick_user)))
-        await dick_user.ban()
+    async def whatadick(ctx, member: discord.ext.commands.MemberConverter = dick_user):
+        await ctx.send("Honestly, you're a bit of a dick {}".format(member))
+        await ctx.guild.ban(member)
 
     @admin.command()
     async def SNAP(ctx):
