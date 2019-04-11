@@ -61,11 +61,6 @@ def check_id_format(idstr):
     return idstr[:3] == "<@!" and idstr[-1:] == ">"
 
 
-# Grab voice users in authors voice channel:
-def copy_local_voice_users(ctx):
-    return ctx.message.author.voice.voice_channel.voice_members.copy()
-
-
 def main():
     if "bot_token" not in SETTINGS:
         bot_token = input("Please input your bot token here: ")
@@ -218,10 +213,10 @@ def main():
     @admin.command()
     async def scattertheweak(ctx):
         try:
-            copy_local_voice_users(ctx)
+            vcs = ctx.message.author.voice.voice_channel.voice_members.copy()
         except AttributeError:
             await ctx.send("You are not in a voice channel, you cannot use this function.")
-        for member in copy_local_voice_users(ctx):
+        for member in vcs:
             await ctx.send("You are weak, {}".format(dc_int_id(member.id)))
             await member.move_to(random.choice(discord.Guild.voice_channels), reason="Was too weak.")
 
@@ -238,7 +233,7 @@ def main():
 
     @admin.command()
     async def SNAP(ctx):
-        current_voice_list = copy_local_voice_users(ctx)
+        current_voice_list = ctx.message.author.voice.voice_channel.voice_members.copy()
         half_of_current_voice_list = ceil(len(current_voice_list) / 2)
         snapped_users = random.sample(
             current_voice_list, half_of_current_voice_list)
