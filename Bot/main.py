@@ -67,20 +67,20 @@ def copy_local_voice_users(ctx):
 
 
 def main():
-    if "bot_token" in SETTINGS:
-        if SETTINGS["bot_token"] != 1234567890:
-            bot_token = SETTINGS["bot_token"]
-        else:
-            bot_token = input("Please input your bot token here: ")
-            SETTINGS["bot_token"] = bot_token
-            save_settings(CONFIG_PATH)
+    if "bot_token" not in SETTINGS:
+        bot_token = input("Please input your bot token here: ")
+        SETTINGS["bot_token"] = bot_token
+        save_settings(CONFIG_PATH)
     else:
-        sys.exit("'bot_token' not found in bot config: {}".format(CONFIG_PATH))
+        bot_token = SETTINGS["bot_token"]
 
     if "admins" not in SETTINGS:
         # defaults to Revan#1793
         SETTINGS["admins"] = [155863164544614402]
-        admin_list = SETTINGS["admins"]
+        try:
+            admin_list = SETTINGS["admins"]
+        except KeyError as kerr:
+            print("Error located: {}. No key for 'admins'.".format(kerr))
         save_settings(CONFIG_PATH)
     else:
         admin_list = SETTINGS["admins"]
@@ -88,7 +88,10 @@ def main():
     if "bound_text_channels" not in SETTINGS:
         # defaults to "main-chat-woooo" in "No Swimming Server"
         SETTINGS["bound_text_channels"] = [565093633468923906]
-        bound_text_channels = SETTINGS["bound_text_channels"]
+        try:
+            bound_text_channels = SETTINGS["bound_text_channels"]
+        except KeyError as kerr:
+            print("Error located: {}. No key for 'bound_text_channels'.".format(kerr))
         save_settings(CONFIG_PATH)
     else:
         bound_text_channels = SETTINGS["bound_text_channels"]
@@ -97,7 +100,10 @@ def main():
     if "bot_prefix" not in SETTINGS:
         # defaults to "^"
         SETTINGS["bot_prefix"] = ("^")
-        bot_prefix = SETTINGS["bot_prefix"]
+        try:
+            bot_prefix = SETTINGS["bot_prefix"]
+        except KeyError as kerr:
+            print("Error located: {}. No key found for 'bot_prefix'.".format(kerr))
         save_settings(CONFIG_PATH)
     else:
         bot_prefix = SETTINGS["bot_prefix"]
@@ -106,7 +112,10 @@ def main():
     if "server_id" not in SETTINGS:
         # defaults to 1234567890
         SETTINGS["server_id"] = 1234567890
-        server_id = SETTINGS["server_id"]
+        try:
+            server_id = SETTINGS["server_id"]
+        except KeyError as kerr:
+            print("Error located: {}. No key found for 'server_id'.".format(kerr))
         save_settings(CONFIG_PATH)
     else:
         server_id = SETTINGS["server_id"]
@@ -114,10 +123,13 @@ def main():
     if "bot_description" not in SETTINGS:
         # defaults to "blah Blah"
         SETTINGS["bot_description"] = "Blah Blah"
-        bot_description = SETTINGS["description"]
+        try:
+            bot_description = SETTINGS["bot_description"]
+        except KeyError as kerr:
+            print("Error located: {}. No key found for 'bot_description'.".format(kerr))
         save_settings(CONFIG_PATH)
     else:
-        bot_description = SETTINGS["description"]
+        bot_description = SETTINGS["bot_description"]
 
     bot = commands.Bot(command_prefix=bot_prefix, description=bot_description)
 
