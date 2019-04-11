@@ -98,17 +98,6 @@ def main():
         bot_prefix = SETTINGS["bot_prefix"]
     print("Currently bot prefix is: {}".format(bot_prefix))
 
-    if "server_id" not in SETTINGS:
-        # defaults to 1234567890
-        SETTINGS["server_id"] = 1234567890
-        try:
-            server_id = SETTINGS["server_id"]
-        except KeyError as kerr:
-            print("Error located: {}. No key found for 'server_id'.".format(kerr))
-        save_settings(CONFIG_PATH)
-    else:
-        server_id = SETTINGS["server_id"]
-
     if "bot_description" not in SETTINGS:
         # defaults to "blah Blah"
         SETTINGS["bot_description"] = "Blah Blah"
