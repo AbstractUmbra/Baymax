@@ -84,7 +84,7 @@ def main():
         save_settings(CONFIG_PATH)
     else:
         bound_text_channels = SETTINGS["bound_text_channels"]
-    print("Currently  bound to these text channels: {}".format(bound_text_channels))
+    print("Currently bound to these text channels: {}".format(bound_text_channels))
 
     if "bot_prefix" not in SETTINGS:
         # defaults to "^"
@@ -96,7 +96,7 @@ def main():
         save_settings(CONFIG_PATH)
     else:
         bot_prefix = SETTINGS["bot_prefix"]
-    print("Currently bot prefix is: {}".format(bot_prefix))
+    print("Current bot prefix is: {}".format(bot_prefix))
 
     if "bot_description" not in SETTINGS:
         # defaults to "blah Blah"
@@ -228,7 +228,7 @@ def main():
     @admin.command()
     async def SNAP(ctx):
         #current_voice_list = ctx.message.author.voice.channel.members.copy()
-        print(ctx.message.author.voice.channel.members)
+        print(ctx.message.author.voice.channel)
         # half_of_current_voice_list = ceil(len(current_voice_list) / 2)
         # snapped_users = random.sample(
         #     current_voice_list, half_of_current_voice_list)
