@@ -205,17 +205,15 @@ def main():
 
     @admin.command()
     async def add(ctx, arg):
-        print("add(ctx, arg)")
-
         if arg is None:
             await ctx.send("Invalid usage; use {}admin add <@user>.".format(bot_prefix))
         elif check_id_format(arg):
             new_admin_id = strip_dc_id(arg)
 
-            if new_admin_id in admin_list:
+            if new_admin_id in SETTINGS["admins"]:
                 await ctx.send("User {} is already an admin.".format(arg))
             else:
-                admin_list.append(new_admin_id)
+                SETTINGS["admins"].append(new_admin_id)
                 save_settings(CONFIG_PATH)
                 await ctx.send("{} has been added to admin list.".format(arg))
         else:
@@ -223,7 +221,6 @@ def main():
 
     @admin.command()
     async def remove(ctx, arg):
-        print("remove(ctx, arg)")
         if arg is None:
             await ctx.send("Missing argument use {}admin remove <@user>'".format(bot_prefix))
         elif check_id_format(arg):
