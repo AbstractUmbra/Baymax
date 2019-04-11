@@ -1,4 +1,5 @@
 import logging
+from time import sleep
 import json
 import os
 import sys
@@ -236,9 +237,9 @@ def main():
         )
 
         if os.path.exists("content/snap.gif"):
-            with open("content/snap.gif", "rb") as snappy:
-                snapimg = discord.File(snappy, filename="snap.gif")
-                await ctx.send(file=snapimg)
+            snapimg = discord.File("content/snap.gif")
+            await ctx.send(file=snapimg)
+            sleep(5)
             for member in snapped_users:
                 print("Snapped {}".format(member.name))
                 await member.move_to(snapped_channel, reason="was snapped.")
