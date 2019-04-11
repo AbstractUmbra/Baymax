@@ -54,7 +54,7 @@ def dc_int_id(dcid):
 
 
 def strip_dc_id(dcid):
-    return dcid[3:1]
+    return dcid[3:-1]
 
 
 def check_id_format(idstr):
