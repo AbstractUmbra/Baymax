@@ -217,7 +217,7 @@ def main():
                 save_settings(CONFIG_PATH)
                 await ctx.send("{} has been added to admin list.".format(arg))
         else:
-            await ctx.send("Invalid usage; use {}admin add <@user>. -PassedBadUser".format(bot_prefix))
+            await ctx.send("Invalid usage; use {}admin add <@user>. -PassedBadUser: {}".format(bot_prefix, arg))
 
     @admin.command()
     async def remove(ctx, arg):
