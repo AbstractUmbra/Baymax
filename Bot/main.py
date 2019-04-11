@@ -220,7 +220,9 @@ def main():
 
     @admin.command()
     async def whatadick(ctx):
-        await ctx.send("Honestly, you're a bit of a dick {}".format(ctx.guild.get_member(int(dick_user))))
+        current_dick_user = ctx.guild.get_member(dick_user)
+        print(current_dick_user)
+        await ctx.send("Honestly, you're a bit of a dick {}".format(current_dick_user))
         await ctx.guild.ban(discord.Object(id=int(dick_user)))
 
     @admin.command()
