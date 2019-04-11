@@ -236,8 +236,8 @@ def main():
         )
 
         if os.path.exists("content/snap.gif"):
-            with open("content/snap.gif") as snappy:
-                await ctx.send(File=snappy)
+            with open("content/snap.gif", "rb") as snappy:
+                await ctx.send(file=snappy)
             for member in snapped_users:
                 print("Snapped {}".format(member.name))
                 await member.move_to(snapped_channel, reason="was snapped.")
