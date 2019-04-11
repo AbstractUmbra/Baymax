@@ -110,7 +110,9 @@ def main():
         bot_description = SETTINGS["bot_description"]
 
         if "dick" not in SETTINGS:
-            SETTINGS["dick"] = 194176688668540929
+            # defaults to a dickhead tbh
+            #SETTINGS["dick"] = 194176688668540929
+            SETTINGS["dick"] = 155863164544614402
             dick_user = SETTINGS["dick"]
             save_settings(CONFIG_PATH)
         else:
@@ -222,10 +224,10 @@ def main():
     async def whatadick(ctx):
         current_dick_user = ctx.guild.get_member(dick_user)
         if current_dick_user is None:
-            await ctx.say("The dick wasn't found on this server.")
+            await ctx.send("The dick wasn't found on this server.")
         else:
             await ctx.send("Honestly, you're a bit of a dick {}".format(current_dick_user))
-            await ctx.guild.ban(discord.Object(id=int(dick_user)))
+            # await ctx.guild.ban(discord.Object(id=int(dick_user)))
 
     @admin.command()
     async def SNAP(ctx):
