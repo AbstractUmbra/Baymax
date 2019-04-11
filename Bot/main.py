@@ -77,13 +77,7 @@ def main():
     if "admins" not in SETTINGS:
         # defaults to Revan#1793
         SETTINGS["admins"] = [155863164544614402]
-        try:
-            admin_list = SETTINGS["admins"]
-        except KeyError as kerr:
-            print("Error located: {}. No key for 'admins'.".format(kerr))
         save_settings(CONFIG_PATH)
-    else:
-        admin_list = SETTINGS["admins"]
 
     if "bound_text_channels" not in SETTINGS:
         # defaults to "main-chat-woooo" in "No Swimming Server"
@@ -198,26 +192,10 @@ def main():
 
     @bot.group()
     async def admin(ctx):
-        if ctx.message.author.id not in admin_list:
+        if ctx.message.author.id not in SETTINGS["admins"]:
             raise NeedAdmin("You are not an administrator of the bot.")
         if ctx.invoked_subcommand is None:
             await ctx.send("Invalid usage of command: use {}admin to prefix command.".format(bot_prefix))
-
-    # @admin.command()
-    # async def add(ctx, arg):
-    #     if arg is None:
-    #         await ctx.send("Invalid usage; use {}admin add <@user>. -NoPassedUser".format(bot_prefix))
-    #     elif check_id_format(arg):
-    #         new_admin_id = strip_dc_id(arg)
-
-    #         if new_admin_id in SETTINGS["admins"]:
-    #             await ctx.send("User {} is already an admin.".format(arg))
-    #         else:
-    #             SETTINGS["admins"].append(new_admin_id)
-    #             save_settings(CONFIG_PATH)
-    #             await ctx.send("{} has been added to admin list.".format(arg))
-    #     else:
-    #         await ctx.send("Invalid usage; use {}admin add <@user>. -PassedBadUser: {}".format(bot_prefix, arg))
 
     @admin.command()
     async def add(ctx, member: discord.Member):
@@ -231,24 +209,35 @@ def main():
             await ctx.send("{} has been added to admin list.".format(member))
 
     @admin.command()
-    async def remove(ctx, arg):
-        if arg is None:
+    async def remove(ctx, member: discord.Member):
+        if member is None:
             await ctx.send("Missing argument use {}admin remove <@user>'".format(bot_prefix))
-        elif check_id_format(arg):
-            remove_admin_id = strip_dc_id(arg)
-
-            if remove_admin_id not in admin_list:
-                await ctx.send("Admin not found in admin list.")
-            else:
-                admin_list.remove(remove_admin_id)
-                save_settings(CONFIG_PATH)
-                await ctx.send("{} was removed from admin list.".format(arg))
+        elif member.id not in SETTINGS["admins"]:
+            await ctx.send("Admin not found in admin list.")
         else:
-            await ctx.send("Invalid usage, use {}admin remove <@user>".format(bot_prefix))
+            SETTINGS["admins"].remove(member.id)
+            save_settings(CONFIG_PATH)
+            await ctx.send("{} was removed from admin list.".format(member))
+
+    # @admin.command()
+    # async def remove(ctx, arg):
+    #     if arg is None:
+    #         await ctx.send("Missing argument use {}admin remove <@user>'".format(bot_prefix))
+    #     elif check_id_format(arg):
+    #         remove_admin_id = strip_dc_id(arg)
+
+    #         if remove_admin_id not in admin_list:
+    #             await ctx.send("Admin not found in admin list.")
+    #         else:
+    #             admin_list.remove(remove_admin_id)
+    #             save_settings(CONFIG_PATH)
+    #             await ctx.send("{} was removed from admin list.".format(arg))
+    #     else:
+    #         await ctx.send("Invalid usage, use {}admin remove <@user>".format(bot_prefix))
 
     @admin.command()
     async def adminlist(ctx):
-        for admin in admin_list:
+        for admin in SETTINGS["admins"]:
             await ctx.send(dc_int_id(admin))
 
     @admin.command()
