@@ -211,9 +211,9 @@ def main():
         voice_channels = []
         for guild in bot.guilds:
             voice_channels.extend(guild.voice_channels)
-            for vc in voice_channels:
-                print("Voice Channel: {}".format(vc))
-                for dcmember in vc.members:
+            for channel in voice_channels:
+                print("Voice Channel: {}".format(channel))
+                for dcmember in channel.members:
                     print("\t Member of channel: {}".format(dcmember))
                     await ctx.send("You are weak, {}".format(dcmember))
                     await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
@@ -221,9 +221,11 @@ def main():
     @admin.command()
     async def whatadick(ctx):
         current_dick_user = ctx.guild.get_member(dick_user)
-        print(current_dick_user)
-        await ctx.send("Honestly, you're a bit of a dick {}".format(current_dick_user))
-        await ctx.guild.ban(discord.Object(id=int(dick_user)))
+        if current_dick_user is None:
+            await ctx.say("The dick wasn't found on this server.")
+        else:
+            await ctx.send("Honestly, you're a bit of a dick {}".format(current_dick_user))
+            await ctx.guild.ban(discord.Object(id=int(dick_user)))
 
     @admin.command()
     async def SNAP(ctx):
