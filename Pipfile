@@ -9,10 +9,9 @@ verify_ssl = true
 asyncio = "*"
 async = "*"
 pip = "*"
-discord-py = {extras = ["voice"],version = "*"}
 pylint = "*"
 autopep8 = "*"
-youtube-dl = "*"
+discord-py = "*"
 
 [requires]
 python_version = "3.7"
