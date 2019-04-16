@@ -94,6 +94,11 @@ def main():
         command_prefix=SETTINGS["bot_prefix"], description=SETTINGS["bot_description"]
     )
 
+    def all_voice_members_guild(ctx):
+        guild_vms = list(itertools.chain.from_iterable(
+            [member for member in [ch.members for ch in ctx.guild.voice_channels]]))
+        return guild_vms
+
     @bot.event
     async def on_command_error(ctx, error):
         """The event triggered when an error is raised while invoking a command.
@@ -200,12 +205,10 @@ def main():
     @admin.command()
     @check_bound_text()
     async def scattertheweak(ctx):
-        for channel in ctx.message.guild.voice_channels:
-            print(f"Voice Channel: {channel}")
-            for dcmember in channel.members:
-                print(f"\t Member of channel: {dcmember}")
-                await ctx.send(f"You are weak, {dcmember}")
-                await dcmember.move_to(random.choice(ctx.message.guild.voice_channels), reason="Was too weak.")
+        for dcmember in all_voice_members_guild(ctx):
+            print(f"\t Member of channel: {dcmember}")
+            await ctx.send(f"You are weak, {dcmember}")
+            await dcmember.move_to(random.choice(ctx.message.guild.voice_channels), reason="Was too weak.")
 
     @admin.command()
     @check_bound_text()
@@ -230,14 +233,10 @@ def main():
     @admin.command()
     @check_bound_text()
     async def SNAP(ctx):
-        check_bound_text()
-        try:
-            current_voice_list = ctx.message.guild.voice_channels.members.copy()
-        except AttributeError:
-            return await ctx.send(f"You are not in a voice list, {ctx.message.author.mention}")
-        half_of_current_voice_list = ceil(len(current_voice_list) / 2)
+        half_of_current_voice_list = ceil(
+            len(all_voice_members_guild(ctx)) / 2)
         snapped_users = random.sample(
-            current_voice_list, half_of_current_voice_list)
+            all_voice_members_guild(ctx), half_of_current_voice_list)
         snapped_channel = discord.utils.get(
             ctx.message.guild.channels, name="The Soul Stone"
         )
