@@ -147,6 +147,12 @@ def main():
                 return True
         return commands.check(predicate)
 
+    @bot.command()
+    async def ping(ctx):
+        print(f"ctx.message: {ctx.message}")
+        print(f"ctx.message.author: {ctx.message.author}")
+        print(f"ctx.message.guild.voice_channels.members: {ctx.message.guild.voice_channels.members}")
+
     @bot.group()
     @check_bound_text()
     async def admin(ctx):
@@ -190,16 +196,12 @@ def main():
     @admin.command()
     @check_bound_text()
     async def scattertheweak(ctx):
-        voice_channels = []
-        # for guild in bot.guilds:
-        for voicech in ctx.message.guild.voice_channels:
-            voice_channels.extend(voicech)
-        for channel in voice_channels:
+        for channel in ctx.message.guild.voice_channels:
             print(f"Voice Channel: {channel}")
             for dcmember in channel.members:
                 print(f"\t Member of channel: {dcmember}")
                 await ctx.send(f"You are weak, {dcmember}")
-                await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
+                await dcmember.move_to(random.choice(ctx.message.guild.voice_channels), reason="Was too weak.")
 
     @admin.command()
     @check_bound_text()
@@ -222,7 +224,7 @@ def main():
                 await ctx.guild.ban(discord.Object(id=current_dick_user.id))
 
     @admin.command()
-    # #@check_bound_text()
+    @check_bound_text()
     async def SNAP(ctx):
         check_bound_text()
         try:
