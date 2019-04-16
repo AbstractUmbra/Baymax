@@ -148,7 +148,7 @@ def main():
         return commands.check(predicate)
 
     @bot.group()
-    # @check_bound_text()
+    @check_bound_text()
     async def admin(ctx):
         if ctx.message.author.id not in SETTINGS["admins"]:
             raise NeedAdmin("You are not an administrator of the bot.")
@@ -158,7 +158,7 @@ def main():
             )
 
     @admin.command()
-    # @check_bound_text()
+    @check_bound_text()
     async def add(ctx, member: discord.Member):
         if member is None:
             await ctx.send(f"Invalid usage; use {SETTINGS['bot_prefix']}admin add <@user>.")
@@ -170,7 +170,7 @@ def main():
             await ctx.send(f"{member} has been added to admin list.")
 
     @admin.command()
-    # @check_bound_text()
+    @check_bound_text()
     async def remove(ctx, member: discord.Member):
         if member is None:
             await ctx.send(f"Missing argument use {SETTINGS['bot_prefix']}admin remove <@user>")
@@ -182,13 +182,13 @@ def main():
             await ctx.send(f"{member} was removed from admin list.")
 
     @admin.command()
-    # @check_bound_text()
+    @check_bound_text()
     async def adminlist(ctx):
         for admin in SETTINGS["admins"]:
             await ctx.send(ctx.guild.get_member(admin))
 
     @admin.command()
-    # @check_bound_text()
+    @check_bound_text()
     async def scattertheweak(ctx):
         voice_channels = []
         # for guild in bot.guilds:
@@ -202,7 +202,7 @@ def main():
                 await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
 
     @admin.command()
-    # @check_bound_text()
+    @check_bound_text()
     async def addadick(ctx, member: discord.Member):
         if member is None:
             await ctx.send(f"Missing argument, use '{SETTINGS['bot_prefix']}")
@@ -211,7 +211,7 @@ def main():
             save_settings(CONFIG_PATH)
 
     @admin.command()
-    # @check_bound_text()
+    @check_bound_text()
     async def whatadick(ctx):
         for dick in SETTINGS["dicks"]:
             current_dick_user = ctx.guild.get_member(dick)
@@ -250,7 +250,7 @@ def main():
                 await member.move_to(snapped_channel, reason="was snapped.")
 
     @admin.command()
-    # @check_bound_text()
+    @check_bound_text()
     async def setup(ctx):
         """ Performs vanilla server set up - can be tailored. """
         setup_details = {}
