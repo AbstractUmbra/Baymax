@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO)
 
 # Constants
 CONFIG_PATH = "config/settings.json"
+SETTINGS = {}
 
 
 def save_settings(config):
@@ -36,7 +37,6 @@ else:
         "bot_token": 1234567890,
         "admins": [],
         "bound_text_channels": [],
-        "server_id": 1324567890,
         "bot_description": "A generic use bot for fun, games and memes.",
     }
 

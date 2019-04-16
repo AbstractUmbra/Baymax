@@ -1,12 +1,12 @@
 {
     "bot_token": "NTY1MDk1MDE1ODc0MDM1NzQy.XK8UBw._q8fTNP9agyGr5oEjzRE7cyddAw",
-    "server_id": 565093633468923904,
     "admins": [
         155863164544614402,
         252745609079947264
     ],
     "bound_text_channels": [
-        565093862779912193
+        565093862779912193,
+        403643650522873857
     ],
     "bot_prefix": "^",
     "bot_description": "Blah Blah",
