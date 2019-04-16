@@ -30,7 +30,7 @@ if os.path.exists(CONFIG_PATH):
     with open(CONFIG_PATH) as read_config_file:
         SETTINGS = json.load(read_config_file)
 else:
-    print("No settings file exists at {}. Using defaults.".format(CONFIG_PATH))
+    print(f"No settings file exists at {CONFIG_PATH}. Using defaults.")
     SETTINGS = {
         "bot_token": 1234567890,
         "admins": [],
@@ -47,6 +47,10 @@ class NeedAdmin(Exception):
     """ Exception for the requirement of admin privs. """
 
 
+class UnpermittedChannel(Exception):
+    """ Exception for an unpermitted text channel. """
+
+
 def main():
     """ Run the bot woooooo """
     if "bot_token" not in SETTINGS:
@@ -55,17 +59,19 @@ def main():
 
     if "admins" not in SETTINGS:
         # defaults to random int
-        SETTINGS["admins"] = [[123456789123456789, 123456789123456789]]
+        SETTINGS["admins"] = [123456789123456789, 123456789123456789]
         save_settings(CONFIG_PATH)
     print(f"Current list of admins are: {SETTINGS['admins']}")
 
     if "bound_text_channels" not in SETTINGS:
         # defaults to random ints - can be more than one.
         SETTINGS["bound_text_channels"] = [
-            [123456789123456789, 123456789123456789]]
+            123456789123456789, 123456789123456789
+        ]
         save_settings(CONFIG_PATH)
     print(
-        f"Currently bound to these text channels: {SETTINGS['bound_text_channels']}")
+        f"Currently bound to these text channels: {SETTINGS['bound_text_channels']}"
+    )
 
     if "bot_prefix" not in SETTINGS:
         # defaults to "^"
@@ -78,10 +84,10 @@ def main():
         SETTINGS["bot_description"] = "Blah Blah"
         save_settings(CONFIG_PATH)
 
-        if "dick" not in SETTINGS:
-            # defaults to a dickhead tbh
-            SETTINGS["dick"] = 194176688668540929
-            save_settings(CONFIG_PATH)
+    if "dick" not in SETTINGS:
+        # defaults to a dickhead tbh
+        SETTINGS["dick"] = 194176688668540929
+        save_settings(CONFIG_PATH)
 
     bot = commands.Bot(
         command_prefix=SETTINGS["bot_prefix"], description=SETTINGS["bot_description"]
@@ -99,23 +105,19 @@ def main():
 
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.author.send(
-                "error: Command '{}' requires additional arguments.".format(
-                    ctx.message)
+                f"error: Command '{ctx.message}' requires additional arguments."
             )
         elif isinstance(error, commands.CommandNotFound):
             await ctx.author.send(
-                "error: Command '{}' is not found.".format(
-                    ctx.message),
+                f"error: Command '{ctx.message}' is not found."
             )
         elif isinstance(error, NeedAdmin):
             await ctx.author.send(
-                "error: Command '{}' requires admin privileges, loser.".format(
-                    ctx.message),
+                f"error: Command '{ctx.message}' requires admin privileges, loser."
             )
         elif isinstance(error, commands.DisabledCommand):
             await ctx.author.send(
-                "error: Command '{}' This command cannot be used as it is disabled.".format(
-                    ctx.message),
+                f"error: Command '{ctx.message}' This command cannot be used as it is disabled."
             )
         elif isinstance(error, commands.CommandInvokeError):
             original = error.original
@@ -127,24 +129,29 @@ def main():
         elif isinstance(error, commands.ArgumentParsingError):
             await ctx.send(error)
         else:
-            await ctx.author.send(
-                "Error caught. Type: {}".format(
-                    str(error))
-            )
+            await ctx.author.send(f"Error caught. Type: {error}.")
 
     @bot.event
     async def on_ready():
         await bot.change_presence(
             activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.online
         )
-        print("Logged in as: {}: {}".format(bot.user.name, bot.user.id))
+        print(f"Logged in as: {bot.user.name}: {bot.user.id}")
+
+    @bot.group()
+    async def checkbound(ctx):
+        if ctx.message.text_channel.id not in SETTINGS["bound_text_channels"]:
+            raise UnpermittedChannel(
+                f"The bot is not bound to this text channel: {ctx.message.text_channel}")
 
     @bot.group()
     async def admin(ctx):
         if ctx.message.author.id not in SETTINGS["admins"]:
             raise NeedAdmin("You are not an administrator of the bot.")
         if ctx.invoked_subcommand is None:
-            await ctx.send(f"Invalid usage of command: use {SETTINGS['bot_prefix']}admin to prefix command.")
+            await ctx.send(
+                f"Invalid usage of command: use {SETTINGS['bot_prefix']}admin to prefix command."
+            )
 
     @admin.command()
     async def add(ctx, member: discord.Member):
@@ -176,14 +183,15 @@ def main():
     @admin.command()
     async def scattertheweak(ctx):
         voice_channels = []
-        for guild in bot.guilds:
-            voice_channels.extend(guild.voice_channels)
-            for channel in voice_channels:
-                print(f"Voice Channel: {channel}")
-                for dcmember in channel.members:
-                    print(f"\t Member of channel: {dcmember}")
-                    await ctx.send(f"You are weak, {dcmember}")
-                    await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
+        # for guild in bot.guilds:
+        for voicech in ctx.message.guild.voice_channels:
+            voice_channels.extend(voicech)
+        for channel in voice_channels:
+            print(f"Voice Channel: {channel}")
+            for dcmember in channel.members:
+                print(f"\t Member of channel: {dcmember}")
+                await ctx.send(f"You are weak, {dcmember}")
+                await dcmember.move_to(random.choice(voice_channels), reason="Was too weak.")
 
     @admin.command()
     async def addadick(ctx, member: discord.Member):
@@ -203,9 +211,13 @@ def main():
                 await ctx.send(f"Honestly, you're a bit of a dick {current_dick_user.mention}")
                 await ctx.guild.ban(discord.Object(id=current_dick_user.id))
 
+    @checkbound.command()
     @admin.command()
     async def SNAP(ctx):
-        current_voice_list = ctx.message.author.voice.channel.members.copy()
+        try:
+            current_voice_list = ctx.message.guild.voice_channels.members.copy()
+        except AttributeError:
+            return await ctx.send(f"You are not in a voice list, {ctx.message.author.mention}")
         half_of_current_voice_list = ceil(len(current_voice_list) / 2)
         snapped_users = random.sample(
             current_voice_list, half_of_current_voice_list)
@@ -217,13 +229,13 @@ def main():
             await ctx.send(file=discord.File("content/snap.gif"))
             sleep(5)
             for member in snapped_users:
-                print("Snapped {}".format(member.name))
+                print(f"Snapped {member.name}.")
                 await member.move_to(snapped_channel, reason="was snapped.")
         else:
             for member in snapped_users:
                 await ctx.send("You should have gone for the head.")
                 await ctx.send("**SNAP!**")
-                print("Snapped {}".format(member.name))
+                print(f"Snapped {member.name}.")
                 await member.move_to(snapped_channel, reason="was snapped.")
 
     @admin.command()
