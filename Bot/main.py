@@ -7,6 +7,7 @@ import sys
 import random
 import traceback
 from math import ceil
+import itertools
 
 import discord
 from discord.ext import commands
@@ -153,12 +154,8 @@ def main():
         print(f"ctx.message.author: {ctx.message.author}")
         print(
             f"ctx.message.guild.voice_channels: {ctx.message.guild.voice_channels}")
-        for channel in ctx.message.guild.voice_channels.members:
-            print(channel)
-            for vmember in channel:
-                print(f"voice user: {vmember}")
-
-#### [member for member in ch.members for ch in ctx.guild.voice_channels]
+        print(
+            f"voice members: {list(itertools.chain.from_iterable([member for member in [ch.members for ch in ctx.guild.voice_channels]]))}")
 
     @bot.group()
     @check_bound_text()
