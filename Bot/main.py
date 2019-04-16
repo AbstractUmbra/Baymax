@@ -153,15 +153,6 @@ def main():
                 return True
         return commands.check(predicate)
 
-    @bot.command()
-    async def ping(ctx):
-        print(f"ctx.message: {ctx.message}")
-        print(f"ctx.message.author: {ctx.message.author}")
-        print(
-            f"ctx.message.guild.voice_channels: {ctx.message.guild.voice_channels}")
-        print(
-            f"voice members: {list(itertools.chain.from_iterable([member for member in [ch.members for ch in ctx.guild.voice_channels]]))}")
-
     @bot.group()
     @check_bound_text()
     async def admin(ctx):
@@ -198,6 +189,20 @@ def main():
 
     @admin.command()
     @check_bound_text()
+    async def add_channel(ctx, channel: discord.TextChannel):
+        if channel is None:
+            await ctx.send(
+                f"Invalid usage, use {SETTINGS['bot_prefix']}admin add_channel <@text_channel>."
+            )
+        elif channel.id in SETTINGS["bound_text_channels"]:
+            await ctx.send(f"Channel {channel} is already bot bound.")
+        else:
+            SETTINGS["bound_text_channels"].append(channel.id)
+            save_settings(CONFIG_PATH)
+            await ctx.send(f"{channel} has been added to the bound channel list.")
+
+    @admin.command()
+    @check_bound_text()
     async def adminlist(ctx):
         for admin in SETTINGS["admins"]:
             await ctx.send(ctx.guild.get_member(admin))
@@ -206,9 +211,10 @@ def main():
     @check_bound_text()
     async def scattertheweak(ctx):
         for dcmember in all_voice_members_guild(ctx):
-            print(f"\t Member of channel: {dcmember}")
             await ctx.send(f"You are weak, {dcmember}")
-            await dcmember.move_to(random.choice(ctx.message.guild.voice_channels), reason="Was too weak.")
+            await dcmember.move_to(
+                random.choice(ctx.message.guild.voice_channels), reason="Was too weak."
+            )
 
     @admin.command()
     @check_bound_text()
