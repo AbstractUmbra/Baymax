@@ -138,11 +138,14 @@ def main():
         )
         print(f"Logged in as: {bot.user.name}: {bot.user.id}")
 
-    @bot.group()
-    async def checkbound(ctx):
-        if ctx.message.text_channel.id not in SETTINGS["bound_text_channels"]:
-            raise UnpermittedChannel(
-                f"The bot is not bound to this text channel: {ctx.message.text_channel}")
+    def check_bound_text():
+        def predicate(ctx):
+            if ctx.channel.id not in SETTINGS["bound_text_channels"]:
+                raise UnpermittedChannel(
+                    f"The bot is not bound to this text channel: {ctx.channel}")
+            else:
+                return True
+        return commands.check(predicate)
 
     @bot.group()
     async def admin(ctx):
@@ -211,9 +214,10 @@ def main():
                 await ctx.send(f"Honestly, you're a bit of a dick {current_dick_user.mention}")
                 await ctx.guild.ban(discord.Object(id=current_dick_user.id))
 
-    @checkbound.command()
     @admin.command()
+    @check_bound_text()
     async def SNAP(ctx):
+        check_bound_text()
         try:
             current_voice_list = ctx.message.guild.voice_channels.members.copy()
         except AttributeError:
