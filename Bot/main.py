@@ -157,7 +157,6 @@ def main():
                 f"Invalid usage of command: use {SETTINGS['bot_prefix']}admin to prefix command."
             )
 
-    @bot.command()
     @admin.command()
     @check_bound_text()
     async def add(ctx, member: discord.Member):
