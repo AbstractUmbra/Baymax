@@ -85,9 +85,9 @@ def main():
         SETTINGS["bot_description"] = "Blah Blah"
         save_settings(CONFIG_PATH)
 
-    if "dick" not in SETTINGS:
+    if "dicks" not in SETTINGS:
         # defaults to a dickhead tbh
-        SETTINGS["dick"] = 194176688668540929
+        SETTINGS["dicks"] = [123456789123456789, 123456789123456789]
         save_settings(CONFIG_PATH)
 
     bot = commands.Bot(
@@ -110,19 +110,19 @@ def main():
             return
 
         if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.author.send(
+            await ctx.send(
                 f"error: Command '{ctx.message}' requires additional arguments."
             )
         elif isinstance(error, commands.CommandNotFound):
-            await ctx.author.send(
+            await ctx.send(
                 f"error: Command '{ctx.message}' is not found."
             )
         elif isinstance(error, NeedAdmin):
-            await ctx.author.send(
+            await ctx.send(
                 f"error: Command '{ctx.message}' requires admin privileges, loser."
             )
         elif isinstance(error, commands.DisabledCommand):
-            await ctx.author.send(
+            await ctx.send(
                 f"error: Command '{ctx.message}' This command cannot be used as it is disabled."
             )
         elif isinstance(error, commands.CommandInvokeError):
@@ -135,7 +135,7 @@ def main():
         elif isinstance(error, commands.ArgumentParsingError):
             await ctx.send(error)
         else:
-            await ctx.author.send(f"Error caught. Type: {error}.")
+            await ctx.send(f"Error caught. Type: {error}.")
 
     @bot.event
     async def on_ready():
@@ -157,7 +157,8 @@ def main():
     @check_bound_text()
     async def admin(ctx):
         if ctx.message.author.id not in SETTINGS["admins"]:
-            raise NeedAdmin("You are not an administrator of the bot.")
+            await ctx.send(f"You are not an administrator of the bot, {ctx.message.author.mention}")
+            raise NeedAdmin("Non-admin tried to execute...")
         if ctx.invoked_subcommand is None:
             await ctx.send(
                 f"Invalid usage of command: use {SETTINGS['bot_prefix']}admin to prefix command."
@@ -201,7 +202,7 @@ def main():
             save_settings(CONFIG_PATH)
             await ctx.send(f"{channel} has been added to the bound channel list.")
 
-    @admin.command()
+    @bot.command()
     @check_bound_text()
     async def adminlist(ctx):
         for admin in SETTINGS["admins"]:
@@ -220,10 +221,25 @@ def main():
     @check_bound_text()
     async def addadick(ctx, member: discord.Member):
         if member is None:
-            await ctx.send(f"Missing argument, use '{SETTINGS['bot_prefix']}")
+            await ctx.send(f"Missing argument, use '{SETTINGS['bot_prefix']}admin addadick <@user>")
+        elif member.id in SETTINGS["dicks"]:
+            await ctx.send(f"Dick already in the dick list: {member}")
         else:
             SETTINGS["dicks"].append(member.id)
             save_settings(CONFIG_PATH)
+            await ctx.send(f"{member} has been added to the dick list.")
+
+    @admin.command()
+    @check_bound_text()
+    async def removeadick(ctx, member: discord.Member):
+        if member is None:
+            await ctx.send(f"Missing argument use {SETTINGS['bot_prefix']}admin removeadick <@user>")
+        elif member.id not in SETTINGS["dicks"]:
+            await ctx.send("Dick not found in dick list.")
+        else:
+            SETTINGS["dicks"].remove(member.id)
+            save_settings(CONFIG_PATH)
+            await ctx.send(f"{member} was removed from dick list.")
 
     @admin.command()
     @check_bound_text()
@@ -234,22 +250,24 @@ def main():
                 await ctx.send("The dick wasn't found on this server.")
             else:
                 await ctx.send(f"Honestly, you're a bit of a dick {current_dick_user.mention}")
-                await ctx.guild.ban(discord.Object(id=current_dick_user.id))
+                await ctx.guild.ban(current_dick_user, reason="Was a dick.")
+                SETTINGS["dicks"].remove(dick)
 
     @admin.command()
     @check_bound_text()
     async def SNAP(ctx):
         half_of_current_voice_list = ceil(
-            len(all_voice_members_guild(ctx)) / 2)
+            len(all_voice_members_guild(ctx)) / 2
+        )
         snapped_users = random.sample(
-            all_voice_members_guild(ctx), half_of_current_voice_list)
+            all_voice_members_guild(ctx), half_of_current_voice_list
+        )
         snapped_channel = discord.utils.get(
             ctx.message.guild.channels, name="The Soul Stone"
         )
-
         if os.path.exists("content/snap.gif"):
             await ctx.send(file=discord.File("content/snap.gif"))
-            sleep(5)
+            sleep(8)
             for member in snapped_users:
                 print(f"Snapped {member.name}.")
                 await member.move_to(snapped_channel, reason="was snapped.")
@@ -275,7 +293,7 @@ def main():
             print(f"No settings file exists at {setup_file}. Using defaults.")
             setup_details = {
                 "Superadmin": ["Superadmin", 123456789123456789],
-                "Moderators": ["Moderators", 123456789123456789, 123456789123456789],
+                "Moderators": ["Moderators", [123456789123456789, 123456789123456789]],
             }
             with open(setup_file, "w+"):
                 json.dump(setup_details, setup_file)

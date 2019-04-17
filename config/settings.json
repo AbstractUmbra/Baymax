@@ -2,7 +2,8 @@
     "bot_token": "NTY1MDk1MDE1ODc0MDM1NzQy.XK8UBw._q8fTNP9agyGr5oEjzRE7cyddAw",
     "admins": [
         155863164544614402,
-        252745609079947264
+        252745609079947264,
+        172080059849506816
     ],
     "bound_text_channels": [
         565093862779912193,
@@ -10,5 +11,5 @@
     ],
     "bot_prefix": "^",
     "bot_description": "Blah Blah",
-    "dick": 194176688668540929
+    "dicks": []
 }
