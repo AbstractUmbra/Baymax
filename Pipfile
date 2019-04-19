@@ -9,9 +9,9 @@ verify_ssl = true
 asyncio = "*"
 async = "*"
 pip = "*"
-pylint = "*"
 autopep8 = "*"
 discord-py = "*"
+pylint = "*"
 
 [requires]
 python_version = "3.7"

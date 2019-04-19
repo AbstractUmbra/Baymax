@@ -252,6 +252,27 @@ def main():
                 await ctx.send(f"Honestly, you're a bit of a dick {current_dick_user.mention}")
                 await ctx.guild.ban(current_dick_user, reason="Was a dick.")
                 SETTINGS["dicks"].remove(dick)
+                save_settings(CONFIG_PATH)
+
+    @admin.command()
+    @check_bound_text()
+    async def mutethedicks(ctx):
+        for dick in SETTINGS["dicks"]:
+            current_dick_user = ctx.guild.get_member(dick)
+            if current_dick_user is None:
+                await ctx.send(f"The dick '{dick.name}' wasn't found on this server.")
+            else:
+                await current_dick_user.edit(mute=True, reason="Is a dick.")
+
+    @admin.command()
+    @check_bound_text()
+    async def summonfucker(ctx, member: discord.Member):
+        if member is None:
+            await ctx.send(f"Missing argument, use `{SETTINGS['bot_prefix']}admin summonfucker <@user>`.")
+        elif member.voice.channel is ctx.message.author.voice.channel:
+            await ctx.send(f"They're already in your voice chat, you wank.")
+        else:
+            await member.move_to(ctx.message.author.voice.channel)
 
     @admin.command()
     @check_bound_text()
