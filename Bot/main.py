@@ -164,6 +164,12 @@ def main():
                 f"Invalid usage of command: use {SETTINGS['bot_prefix']}admin to prefix command."
             )
 
+    @bot.command()
+    @check_bound_text()
+    async def adminlist(ctx):
+        for admin in SETTINGS["admins"]:
+            await ctx.send(ctx.guild.get_member(admin))
+
     @admin.command()
     @check_bound_text()
     async def add(ctx, member: discord.Member):
@@ -202,12 +208,6 @@ def main():
             save_settings(CONFIG_PATH)
             await ctx.send(f"{channel} has been added to the bound channel list.")
 
-    @bot.command()
-    @check_bound_text()
-    async def adminlist(ctx):
-        for admin in SETTINGS["admins"]:
-            await ctx.send(ctx.guild.get_member(admin))
-
     @admin.command()
     @check_bound_text()
     async def scattertheweak(ctx):
@@ -216,6 +216,12 @@ def main():
             await dcmember.move_to(
                 random.choice(ctx.message.guild.voice_channels), reason="Was too weak."
             )
+
+    @bot.command()
+    @check_bound_text()
+    async def dicklist(ctx):
+        for dick in SETTINGS["dicks"]:
+            await ctx.send(ctx.guild.get_member(dick))
 
     @admin.command()
     @check_bound_text()
@@ -233,7 +239,9 @@ def main():
     @check_bound_text()
     async def removeadick(ctx, member: discord.Member):
         if member is None:
-            await ctx.send(f"Missing argument use {SETTINGS['bot_prefix']}admin removeadick <@user>")
+            await ctx.send(
+                f"Missing argument use {SETTINGS['bot_prefix']}admin removeadick <@user>"
+            )
         elif member.id not in SETTINGS["dicks"]:
             await ctx.send("Dick not found in dick list.")
         else:
@@ -268,7 +276,9 @@ def main():
     @check_bound_text()
     async def summonfucker(ctx, member: discord.Member):
         if member is None:
-            await ctx.send(f"Missing argument, use `{SETTINGS['bot_prefix']}admin summonfucker <@user>`.")
+            await ctx.send(
+                f"Missing argument, use `{SETTINGS['bot_prefix']}admin summonfucker <@user>`."
+            )
         elif member.voice.channel is ctx.message.author.voice.channel:
             await ctx.send(f"They're already in your voice chat, you wank.")
         else:
@@ -313,7 +323,7 @@ def main():
         else:
             print(f"No settings file exists at {setup_file}. Using defaults.")
             setup_details = {
-                "Superadmin": ["Superadmin", 123456789123456789],
+                "Superadmin": ["Superadmin", [123456789123456789]],
                 "Moderators": ["Moderators", [123456789123456789, 123456789123456789]],
             }
             with open(setup_file, "w+"):
