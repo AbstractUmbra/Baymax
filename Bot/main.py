@@ -8,6 +8,7 @@ import random
 import traceback
 from math import ceil
 import itertools
+import urllib.parse
 
 import discord
 from discord.ext import commands
@@ -196,7 +197,7 @@ def main():
 
     @admin.command()
     @check_bound_text()
-    async def add_channel(ctx, channel: discord.TextChannel):
+    async def add_bound_channel(ctx, channel: discord.TextChannel):
         if channel is None:
             await ctx.send(
                 f"Invalid usage, use {SETTINGS['bot_prefix']}admin add_channel <@text_channel>."
@@ -274,7 +275,7 @@ def main():
 
     @admin.command()
     @check_bound_text()
-    async def summonfucker(ctx, member: discord.Member):
+    async def summon(ctx, member: discord.Member):
         if member is None:
             await ctx.send(
                 f"Missing argument, use `{SETTINGS['bot_prefix']}admin summonfucker <@user>`."
@@ -309,36 +310,20 @@ def main():
                 print(f"Snapped {member.name}.")
                 await member.move_to(snapped_channel, reason="was snapped.")
 
-    @admin.command()
+    @bot.command()
     @check_bound_text()
-    async def setup(ctx):
-        """ Performs vanilla server set up - can be tailored. """
-        setup_details = {}
-        setup_file = "config/setup.json"
+    async def dumbass(ctx):
+        """ Generates a LMGTFY link of the passed text. """
+        msg_body = ctx.message.system_content.replace("^dumbass ", "")
+        def url_encode(query):
+            """ Encodes URL formatting for query. """
+            encoded_query = urllib.parse.quote(str(query), safe='')
+            return encoded_query
 
-        # Load Settings
-        if os.path.exists(setup_file):
-            with open(setup_file) as read_setup_file:
-                setup_details = json.load(read_setup_file)
-        else:
-            print(f"No settings file exists at {setup_file}. Using defaults.")
-            setup_details = {
-                "Superadmin": ["Superadmin", [123456789123456789]],
-                "Moderators": ["Moderators", [123456789123456789, 123456789123456789]],
-            }
-            with open(setup_file, "w+"):
-                json.dump(setup_details, setup_file)
-
-        # Sanity Checks
-        if "Superadmin" not in setup_details:
-            # Should be RoleName and  list of user IDs to apply - generally just one user.
-            setup_details["Superadmin"] = ["Superadmin", [123456789123456789]]
-            save_settings(setup_file)
-
-        if "Moderators" not in setup_details:
-            # Should be RoleName and a list of user IDs to apply - multiple users preferably.
-            setup_details["Moderators"] = ["Moderators", [123456789123456789]]
-            save_settings(setup_file)
+        base_url = "http://lmgtfy.com/?q=^QUERY^"
+        lmgtfy_url = base_url.replace(
+            "^QUERY^", url_encode(str(msg_body)))
+        await ctx.send(lmgtfy_url)
 
     bot.run(SETTINGS["bot_token"])
 
