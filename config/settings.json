@@ -1,5 +1,5 @@
 {
-    "bot_token": "NTY1MDk1MDE1ODc0MDM1NzQy.XK8UBw._q8fTNP9agyGr5oEjzRE7cyddAw",
+    "bot_token": "NTY1MDk1MDE1ODc0MDM1NzQy.XYOW7A.OGSIagj3b_p1fGbvX_bZKam_7x0",
     "admins": [
         155863164544614402,
         252745609079947264,
@@ -10,9 +10,5 @@
         403643650522873857
     ],
     "bot_prefix": "^",
-    "bot_description": "Blah Blah",
-    "dicks": [
-        175030721876852736,
-        194178066170249216
-    ]
+    "bot_description": "Blah Blah"
 }

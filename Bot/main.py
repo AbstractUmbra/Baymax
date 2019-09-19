@@ -86,11 +86,6 @@ def main():
         SETTINGS["bot_description"] = "Blah Blah"
         save_settings(CONFIG_PATH)
 
-    if "dicks" not in SETTINGS:
-        # defaults to a dickhead tbh
-        SETTINGS["dicks"] = [123456789123456789, 123456789123456789]
-        save_settings(CONFIG_PATH)
-
     bot = commands.Bot(
         command_prefix=SETTINGS["bot_prefix"], description=SETTINGS["bot_description"]
     )
@@ -218,61 +213,6 @@ def main():
                 random.choice(ctx.message.guild.voice_channels), reason="Was too weak."
             )
 
-    @bot.command()
-    @check_bound_text()
-    async def dicklist(ctx):
-        for dick in SETTINGS["dicks"]:
-            await ctx.send(ctx.guild.get_member(dick))
-
-    @admin.command()
-    @check_bound_text()
-    async def addadick(ctx, member: discord.Member):
-        if member is None:
-            await ctx.send(f"Missing argument, use '{SETTINGS['bot_prefix']}admin addadick <@user>")
-        elif member.id in SETTINGS["dicks"]:
-            await ctx.send(f"Dick already in the dick list: {member}")
-        else:
-            SETTINGS["dicks"].append(member.id)
-            save_settings(CONFIG_PATH)
-            await ctx.send(f"{member} has been added to the dick list.")
-
-    @admin.command()
-    @check_bound_text()
-    async def removeadick(ctx, member: discord.Member):
-        if member is None:
-            await ctx.send(
-                f"Missing argument use {SETTINGS['bot_prefix']}admin removeadick <@user>"
-            )
-        elif member.id not in SETTINGS["dicks"]:
-            await ctx.send("Dick not found in dick list.")
-        else:
-            SETTINGS["dicks"].remove(member.id)
-            save_settings(CONFIG_PATH)
-            await ctx.send(f"{member} was removed from dick list.")
-
-    @admin.command()
-    @check_bound_text()
-    async def whatadick(ctx):
-        for dick in SETTINGS["dicks"]:
-            current_dick_user = ctx.guild.get_member(dick)
-            if current_dick_user is None:
-                await ctx.send("The dick wasn't found on this server.")
-            else:
-                await ctx.send(f"Honestly, you're a bit of a dick {current_dick_user.mention}")
-                await ctx.guild.ban(current_dick_user, reason="Was a dick.")
-                SETTINGS["dicks"].remove(dick)
-                save_settings(CONFIG_PATH)
-
-    @admin.command()
-    @check_bound_text()
-    async def mutethedicks(ctx):
-        for dick in SETTINGS["dicks"]:
-            current_dick_user = ctx.guild.get_member(dick)
-            if current_dick_user is None:
-                await ctx.send(f"The dick '{dick.name}' wasn't found on this server.")
-            else:
-                await current_dick_user.edit(mute=True, reason="Is a dick.")
-
     @admin.command()
     @check_bound_text()
     async def summon(ctx, member: discord.Member):
@@ -287,7 +227,7 @@ def main():
 
     @admin.command()
     @check_bound_text()
-    async def SNAP(ctx):
+    async def snap(ctx):
         half_of_current_voice_list = ceil(
             len(all_voice_members_guild(ctx)) / 2
         )
@@ -315,6 +255,7 @@ def main():
     async def dumbass(ctx):
         """ Generates a LMGTFY link of the passed text. """
         msg_body = ctx.message.system_content.replace("^dumbass ", "")
+
         def url_encode(query):
             """ Encodes URL formatting for query. """
             encoded_query = urllib.parse.quote(str(query), safe='')
