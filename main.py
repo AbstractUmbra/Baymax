@@ -20,6 +20,7 @@ logging.basicConfig(level=logging.INFO)
 # Constants
 CONFIG_PATH = "config/settings.json"
 SETTINGS = {}
+INVITE_LINK = "https://discordapp.com/api/oauth2/authorize?client_id=^ID^&permissions=0&scope=bot"
 
 
 def save_settings(config):
@@ -35,6 +36,7 @@ if os.path.exists(CONFIG_PATH):
 else:
     print(f"No settings file exists at {CONFIG_PATH}. Using defaults.")
     SETTINGS = {
+        "bot_id": 1234567890,
         "bot_token": 1234567890,
         "admins": [],
         "bound_text_channels": [],
@@ -57,6 +59,10 @@ def main():
     """ Run the bot woooooo """
     if "bot_token" not in SETTINGS:
         SETTINGS["bot_token"] = input("Please input your bot token here: ")
+        save_settings(CONFIG_PATH)
+
+    if "bot_id" not in SETTINGS:
+        SETTINGS["bot_token"] = 1234567890
         save_settings(CONFIG_PATH)
 
     if "admins" not in SETTINGS:
@@ -139,15 +145,18 @@ def main():
             activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.online
         )
         print(f"Logged in as: {bot.user.name}: {bot.user.id}")
+        new_link = INVITE_LINK.replace("^ID^", str(SETTINGS['bot_id']))
+        print(
+            f"Use this URL to invite the bot to your server: {new_link}")
 
     def check_bound_text():
-        def predicate(ctx):
+        def permitted_text(ctx):
             if ctx.channel.id not in SETTINGS["bound_text_channels"]:
                 raise UnpermittedChannel(
                     f"The bot is not bound to this text channel: {ctx.channel}")
             else:
                 return True
-        return commands.check(predicate)
+        return commands.check(permitted_text)
 
     @bot.group()
     @check_bound_text()
@@ -265,6 +274,19 @@ def main():
         lmgtfy_url = base_url.replace(
             "^QUERY^", url_encode(str(msg_body)))
         await ctx.send(lmgtfy_url)
+
+    @admin.command()
+    @check_bound_text()
+    async def perms(ctx, member: discord.Member):
+        """ Print the bot perms to the console. """
+        user_roles = {role: boolean for role,
+                      boolean in member.guild_permissions}
+        role_embed = discord.Embed(title=f"User roles for {member}",
+                                   description="",
+                                   colour=0x00ff00)
+        role_embed.add_field(
+            name="Roles", value=f"{user_roles}", inline=True)
+        await ctx.send(embed=role_embed)
 
     bot.run(SETTINGS["bot_token"])
 
