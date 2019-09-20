@@ -144,7 +144,7 @@ def main():
         new_user_role = discord.utils.get(
             member.guild.roles, id=174703372631277569
         )
-        await member.add_roles(roles=[new_user_role], reason="Server welcome.", atomic=True)
+        await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
 
     @bot.event
     async def on_ready():
