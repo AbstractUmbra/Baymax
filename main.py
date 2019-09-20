@@ -140,6 +140,10 @@ def main():
             await ctx.send(f"Error caught. Type: {error}.")
 
     @bot.event
+    async def on_member_join(member):
+        await member.edit(roles=[624726664731164682], reason="Server welcome.")
+
+    @bot.event
     async def on_ready():
         await bot.change_presence(
             activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.online
@@ -287,6 +291,28 @@ def main():
         role_embed.add_field(
             name="Roles", value=f"{user_roles}", inline=True)
         await ctx.send(embed=role_embed)
+
+    @bot.command()
+    @check_bound_text()
+    async def votes(ctx, channel: discord.TextChannel):
+        """ Count the reactions in the channel to get a 'vote list'. """
+        count = {}
+        total = discord.Embed(title="**Vote Count**",
+                              description="Votey lads",
+                              color=0x00ff00)
+        total.set_author(name=bot.user.name)
+        total.set_thumbnail(url=bot.user.avatar_url)
+        async for msg in channel.history(limit=200):
+            if msg.author.id != bot.user.id:
+                for reaction in msg.reactions:
+                    count[msg.content] = reaction.count
+                total.add_field(
+                    name=f"{msg.content}",
+                    value=f"Votes: {count.get(msg.content)}",
+                    inline=True)
+        total.add_field(name="**Highest voted**",
+                        value=f"**{max(count, key=count.get)}**", inline=False)
+        await channel.send(embed=total)
 
     bot.run(SETTINGS["bot_token"])
 
