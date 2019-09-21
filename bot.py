@@ -110,7 +110,6 @@ def main():
         # This prevents any commands with local handlers being handled here in on_command_error.
         if hasattr(ctx.command, "on_error"):
             return
-
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(
                 f"error: Command '{ctx.message}' requires additional arguments."
