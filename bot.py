@@ -281,18 +281,19 @@ def main():
             "^QUERY^", url_encode(str(msg_body)))
         await ctx.send(lmgtfy_url)
 
-    @admin.command()
+    @bot.command()
     @check_bound_text()
     async def perms(ctx, member: discord.Member):
         """ Print the bot perms to the console. """
-        user_roles = {role: boolean for role,
-                      boolean in member.guild_permissions}
+        user_roles = '\n'.join(
+            perm for perm, value in member.guild_permissions if value)
         role_embed = discord.Embed(title=f"User roles for {member}",
-                                   description="",
-                                   colour=0x00ff00)
+                                   description=f"Server: {ctx.guild.name}",
+                                   colour=member.colour)
+        role_embed.set_author(icon_url=member.avatar_url, name=str(member))
         role_embed.add_field(
-            name="Roles", value=f"{user_roles}", inline=True)
-        await ctx.send(embed=role_embed)
+            name="\uFEFF", value=user_roles, inline=True)
+        await member.send(embed=role_embed)
 
     @bot.command()
     @check_bound_text()
