@@ -283,8 +283,10 @@ def main():
 
     @bot.command()
     @check_bound_text()
-    async def perms(ctx, member: discord.Member):
-        """ Print the bot perms to the console. """
+    async def perms(ctx, member: discord.Member=None):
+        """ Print the passed user perms to the console. """
+        if member is None:
+            member = ctx.author
         user_roles = '\n'.join(
             perm for perm, value in member.guild_permissions if value)
         role_embed = discord.Embed(title=f"User roles for {member}",
@@ -293,7 +295,7 @@ def main():
         role_embed.set_author(icon_url=member.avatar_url, name=str(member))
         role_embed.add_field(
             name="\uFEFF", value=user_roles, inline=True)
-        await member.send(embed=role_embed)
+        await ctx.author.send(embed=role_embed)
 
     @bot.command()
     @check_bound_text()
