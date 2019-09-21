@@ -1,0 +1,15 @@
+[Unit]
+Description=Discord Bot Unit file.
+After=network.target
+
+[Service]
+Type=idle
+WorkingDirectory=/home/pi/Robo-Hz/
+User=pi
+Restart=on-failure
+ExecStart=/usr/local/bin/python3.7 main.py
+RestartSec=15
+TimeoutStartSec=15
+
+[Install]
+WantedBy=multi-user.target
