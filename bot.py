@@ -281,18 +281,9 @@ def main():
             "^QUERY^", url_encode(str(msg_body)))
         await ctx.send(lmgtfy_url)
 
-    def is_pinned(msg):
-        if msg.pinned:
-            return False
-        return True
-
-    @admin.command()
-    async def prune(ctx, limit):
-        await ctx.message.channel.purge(limit=int(limit), check=is_pinned)
-
     @bot.command()
     @check_bound_text()
-    async def perms(ctx, member: discord.Member = None):
+    async def perms(ctx, member: discord.Member=None):
         """ Print the passed user perms to the console. """
         if member is None:
             member = ctx.author
