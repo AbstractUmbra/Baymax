@@ -9,6 +9,7 @@ import traceback
 from math import ceil
 import itertools
 import urllib.parse
+from heapq import nlargest
 
 import discord
 from discord.ext import commands
@@ -283,7 +284,7 @@ def main():
 
     @bot.command()
     @check_bound_text()
-    async def perms(ctx, member: discord.Member=None):
+    async def perms(ctx, member: discord.Member = None):
         """ Print the passed user perms to the console. """
         if member is None:
             member = ctx.author
@@ -315,8 +316,10 @@ def main():
                     name=f"{msg.content}",
                     value=f"Votes: {count.get(msg.content)}",
                     inline=True)
+        count_list = nlargest(3, count, key=count.get)
+        count_string = "\n".join(item for item in count_list)
         total.add_field(name="**Highest voted**",
-                        value=f"**{max(count, key=count.get)}**", inline=False)
+                        value=f"**{count_string}**", inline=False)
         await channel.send(embed=total)
 
     bot.run(SETTINGS["bot_token"])
