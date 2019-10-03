@@ -103,6 +103,10 @@ def main():
         return guild_vms
 
     @bot.event
+    async def on_command_completion(ctx):
+        await ctx.message.delete(delay=5)
+
+    @bot.event
     async def on_command_error(ctx, error):
         """The event triggered when an error is raised while invoking a command.
         ctx   : Context
@@ -166,7 +170,6 @@ def main():
         return commands.check(permitted_text)
 
     @bot.group()
-    @check_bound_text()
     async def admin(ctx):
         if ctx.message.author.id not in SETTINGS["admins"]:
             await ctx.send(f"You are not an administrator of the bot, {ctx.message.author.mention}")
@@ -321,6 +324,47 @@ def main():
         total.add_field(name="**Highest voted**",
                         value=f"**{count_string}**", inline=False)
         await channel.send(embed=total)
+
+    def is_pinned(msg):
+        if msg.pinned:
+            return False
+        return True
+
+    @admin.command(aliases=["purge"])
+    async def prune(ctx, count: int, channel: discord.TextChannel = None):
+        """ Prune a channel. """
+        if count > 100:
+            await ctx.send("Sorry, you cannot purge more than 100 messages at a time.")
+        else:
+            if channel is None:
+                channel = ctx.channel
+            deleted = await channel.purge(limit=count, check=is_pinned)
+            await channel.send(
+                f"Deleted {len(deleted)} messages from {channel.mention}", delete_after=5
+            )
+
+    def is_music_command(msg):
+        if msg.content.startswith("-") or msg.author.id is 234395307759108106:
+            return True
+        return False
+
+    @bot.command()
+    async def music_cleanup(ctx, count: int = 100):
+        if count > 300:
+            await ctx.send(f"Fuck you, no more than 300 messages to clean.")
+        else:
+            deleted = await ctx.channel.purge(limit=count, check=is_music_command)
+            await ctx.channel.send(
+                f"Deleted {len(deleted)} music bot messages from {ctx.channel.mention}",
+                delete_after=5
+            )
+
+    @bot.event
+    async def on_message(msg):
+        if msg.content.startswith("-"):
+            await msg.delete(delay=3)
+        await bot.process_commands(msg)
+
 
     bot.run(SETTINGS["bot_token"])
 
