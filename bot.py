@@ -111,37 +111,38 @@ def main():
         """The event triggered when an error is raised while invoking a command.
         ctx   : Context
         error : Exception"""
-
-        # This prevents any commands with local handlers being handled here in on_command_error.
-        if hasattr(ctx.command, "on_error"):
-            return
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(
-                f"error: Command '{ctx.message}' requires additional arguments."
-            )
-        elif isinstance(error, commands.CommandNotFound):
-            await ctx.send(
-                f"error: Command '{ctx.message}' is not found."
-            )
-        elif isinstance(error, NeedAdmin):
-            await ctx.send(
-                f"error: Command '{ctx.message}' requires admin privileges, loser."
-            )
-        elif isinstance(error, commands.DisabledCommand):
-            await ctx.send(
-                f"error: Command '{ctx.message}' This command cannot be used as it is disabled."
-            )
-        elif isinstance(error, commands.CommandInvokeError):
-            original = error.original
-            if not isinstance(original, discord.HTTPException):
-                print(f'In {ctx.command.qualified_name}:', file=sys.stderr)
-                traceback.print_tb(original.__traceback__)
-                print(f"{original.__class__.__name__}: {original}",
-                      file=sys.stderr)
-        elif isinstance(error, commands.ArgumentParsingError):
-            await ctx.send(error)
-        else:
-            await ctx.send(f"Error caught. Type: {error}.")
+        await ctx.message.delete(delay=5)
+        # # This prevents any commands with local handlers being handled here in on_command_error.
+        # if hasattr(ctx.command, "on_error"):
+        #     return
+        # if isinstance(error, commands.MissingRequiredArgument):
+        #     await ctx.send(
+        #         f"error: Command '{ctx.message.content}' requires additional arguments."
+        #     )
+        # elif isinstance(error, commands.CommandNotFound):
+        #     await ctx.send(
+        #         f"error: Command '{ctx.message.content}' is not found."
+        #     )
+        # elif isinstance(error, NeedAdmin):
+        #     await ctx.send(
+        #         f"error: Command '{ctx.message.content}' requires admin privileges, loser."
+        #     )
+        # elif isinstance(error, commands.DisabledCommand):
+        #     await ctx.send(
+        #         f"error: Command '{ctx.message.content}' This command cannot be used as it is disabled."
+        #     )
+        # elif isinstance(error, commands.CommandInvokeError):
+        #     original = error.original
+        #     if not isinstance(original, discord.HTTPException):
+        #         print(f'In {ctx.command.qualified_name}:', file=sys.stderr)
+        #         traceback.print_tb(original.__traceback__)
+        #         print(f"{original.__class__.__name__}: {original}",
+        #               file=sys.stderr)
+        # elif isinstance(error, commands.ArgumentParsingError):
+        #     await ctx.send(error)
+        #     await ctx.message.delete(delay=5)
+        # else:
+        #     await ctx.send(f"Error caught. Type: {error}.")
 
     @bot.event
     async def on_member_join(member):
@@ -336,6 +337,7 @@ def main():
         if count > 100:
             await ctx.send("Sorry, you cannot purge more than 100 messages at a time.")
         else:
+            count = count=+1
             if channel is None:
                 channel = ctx.channel
             deleted = await channel.purge(limit=count, check=is_pinned)
@@ -344,7 +346,7 @@ def main():
             )
 
     def is_music_command(msg):
-        if msg.content.startswith("-") or msg.author.id is 234395307759108106:
+        if msg.content.startswith("-") or msg.author.id == 234395307759108106:
             return True
         return False
 
@@ -361,7 +363,7 @@ def main():
 
     @bot.event
     async def on_message(msg):
-        if msg.content.startswith("-"):
+        if msg.content.startswith("-") or msg.author.id is 234395307759108106:
             await msg.delete(delay=3)
         await bot.process_commands(msg)
 
