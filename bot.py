@@ -134,7 +134,8 @@ def main():
             await ctx.message.delete(delay=5)
         elif isinstance(error, commands.DisabledCommand):
             await ctx.send(
-                f"error: Command '{ctx.message.content}' This command cannot be used as it is disabled.",
+                f"error: Command '{ctx.message.content}' "
+                "This command cannot be used as it is disabled.",
                 delete_after=5
             )
             await ctx.message.delete(delay=5)
@@ -311,7 +312,7 @@ def main():
 
     @bot.command()
     @check_bound_text()
-    async def votes(ctx, channel: discord.TextChannel):
+    async def votes(channel: discord.TextChannel):
         """ Count the reactions in the channel to get a 'vote list'. """
         count = {}
         total = discord.Embed(title="**Vote Count**",
