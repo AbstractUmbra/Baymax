@@ -4,7 +4,7 @@ from time import sleep
 import json
 import os
 import sys
-import random
+from random import choice, sample
 import traceback
 from math import ceil
 import itertools
@@ -178,6 +178,10 @@ def main():
                 return True
         return commands.check(permitted_text)
 
+    @bot.command()
+    async def ping(ctx):
+        await ctx.send("Pong!")
+
     @bot.group()
     async def admin(ctx):
         if ctx.message.author.id not in SETTINGS["admins"]:
@@ -238,7 +242,7 @@ def main():
         for dcmember in all_voice_members_guild(ctx):
             await ctx.send(f"You are weak, {dcmember}")
             await dcmember.move_to(
-                random.choice(ctx.message.guild.voice_channels), reason="Was too weak."
+                choice(ctx.message.guild.voice_channels), reason="Was too weak."
             )
 
     @admin.command()
@@ -259,7 +263,7 @@ def main():
         half_of_current_voice_list = ceil(
             len(all_voice_members_guild(ctx)) / 2
         )
-        snapped_users = random.sample(
+        snapped_users = sample(
             all_voice_members_guild(ctx), half_of_current_voice_list
         )
         snapped_channel = discord.utils.get(
@@ -277,6 +281,27 @@ def main():
                 await ctx.send("**SNAP!**")
                 print(f"Snapped {member.name}.")
                 await member.move_to(snapped_channel, reason="was snapped.")
+
+    @admin.command()
+    @check_bound_text()
+    async def spelling(ctx):
+        vowels = "aeiou"
+        # Blacklist server admin.
+        for member in ctx.guild.members:
+            if member is ctx.guild.owner:
+                continue
+            original_name = member.display_name
+            await ctx.send(f"Jumbling {member.display_name}'s name..", delete_after=10)
+            # time to jumble...
+            new_name = ""
+            if "[𝓒𝓕𝓢] " in original_name:
+                original_name = original_name.replace("[𝓒𝓕𝓢] ", "")
+            for char in f"{original_name.capitalize()}":
+                if char in vowels:
+                    new_name += choice(list(vowels))
+                else:
+                    new_name += char
+            await member.edit(nick=new_name, reason="Cannot spell.")
 
     @bot.command()
     @check_bound_text()
@@ -311,17 +336,18 @@ def main():
         await ctx.author.send(embed=role_embed)
 
     @bot.command()
-    @check_bound_text()
-    async def votes(channel: discord.TextChannel):
+    async def votes(ctx, channel: discord.TextChannel = None):
         """ Count the reactions in the channel to get a 'vote list'. """
+        if channel is None:
+            channel = ctx.channel
         count = {}
         total = discord.Embed(title="**Vote Count**",
                               description="Votey lads",
                               color=0x00ff00)
         total.set_author(name=bot.user.name)
         total.set_thumbnail(url=bot.user.avatar_url)
-        async for msg in channel.history(limit=200):
-            if msg.author.id != bot.user.id:
+        async for msg in channel.history(limit=50):
+            if msg.author.id != bot.user.id and not msg.content.startswith("^"):
                 for reaction in msg.reactions:
                     count[msg.content] = reaction.count
                 total.add_field(
@@ -332,7 +358,8 @@ def main():
         count_string = "\n".join(item for item in count_list)
         total.add_field(name="**Highest voted**",
                         value=f"**{count_string}**", inline=False)
-        await channel.send(embed=total)
+        to_pin = await channel.send(embed=total)
+        await to_pin.pin()
 
     def is_pinned(msg):
         if msg.pinned:
@@ -345,7 +372,7 @@ def main():
         if count > 100:
             await ctx.send("Sorry, you cannot purge more than 100 messages at a time.")
         else:
-            count = count = + 1
+            count += 1
             if channel is None:
                 channel = ctx.channel
             deleted = await channel.purge(limit=count, check=is_pinned)
@@ -371,7 +398,7 @@ def main():
 
     @bot.event
     async def on_message(msg):
-        if msg.content.startswith("-") or msg.author.id is 234395307759108106:
+        if msg.content.startswith("-") or msg.author.id == 234395307759108106:
             await msg.delete(delay=3)
         await bot.process_commands(msg)
 
