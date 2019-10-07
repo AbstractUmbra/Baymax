@@ -10,6 +10,7 @@ from math import ceil
 import itertools
 import urllib.parse
 from heapq import nlargest
+from unidecode import unidecode
 
 import discord
 from discord.ext import commands
@@ -285,7 +286,7 @@ def main():
     @admin.command()
     @check_bound_text()
     async def spelling(ctx):
-        vowels = "aeiou"
+        vowels = "aeiouAEIOU"
         # Blacklist server admin.
         for member in ctx.guild.members:
             if member is ctx.guild.owner:
@@ -296,12 +297,14 @@ def main():
             new_name = ""
             if "[𝓒𝓕𝓢] " in original_name:
                 original_name = original_name.replace("[𝓒𝓕𝓢] ", "")
-            for char in f"{original_name.capitalize()}":
+            original_name = unidecode(original_name).replace(
+                "[", "").replace("]", "")
+            for char in f"{original_name}":
                 if char in vowels:
                     new_name += choice(list(vowels))
                 else:
                     new_name += char
-            await member.edit(nick=new_name, reason="Cannot spell.")
+            await member.edit(nick=new_name.capitalize(), reason="Cannot spell.")
 
     @bot.command()
     @check_bound_text()
