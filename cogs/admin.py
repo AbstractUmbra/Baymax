@@ -1,8 +1,5 @@
 """ Cleanup Cog. """
 
-from random import choice
-from unidecode import unidecode
-
 import discord
 from discord.ext import commands
 from bot import SETTINGS, CONFIG_PATH, check_bound_text, save_settings, admin_check

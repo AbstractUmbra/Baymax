@@ -25,7 +25,8 @@ class Memes(commands.Cog):
     async def twist(self, ctx):
         """ Moves all voice members to a random VC. """
         for dcmember in all_voice_members_guild(ctx):
-            await ctx.send(f"You are weak, {dcmember}")
+            await ctx.send(f"You are weak, {dcmember}",
+                           delete_after=5)
             await dcmember.move_to(
                 choice(ctx.message.guild.voice_channels), reason="Was too weak."
             )
@@ -99,6 +100,7 @@ class Memes(commands.Cog):
         lmgtfy_url = base_url.replace(
             "^QUERY^", url_encode(str(msg_body)))
         await ctx.send(lmgtfy_url)
+
 
 def setup(bot):
     """ Cog setup function. """

@@ -41,6 +41,7 @@ class Voting(commands.Cog):
         to_pin = await channel.send(embed=total)
         await to_pin.pin()
 
+
 def setup(bot):
     """ Cog setup function. """
     bot.add_cog(Voting(bot))

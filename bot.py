@@ -53,6 +53,7 @@ def check_bound_text():
             return True
     return commands.check(permitted_text)
 
+
 def all_voice_members_guild(ctx):
     """ Gets all the members currently in a voice channel. """
     guild_vms = list(itertools.chain.from_iterable(
@@ -67,6 +68,7 @@ def admin_check():
             return False
         return True
     return commands.check(predicate)
+
 
 class UnpermittedChannel(Exception):
     """ Exception for an unpermitted text channel. """
@@ -177,7 +179,6 @@ def main():
     @bot.command()
     async def ping(ctx):
         await ctx.send("Pong!")
-
 
     @bot.command()
     @check_bound_text()

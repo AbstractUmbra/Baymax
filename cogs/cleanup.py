@@ -11,6 +11,7 @@ def is_music_command(msg):
         return True
     return False
 
+
 def is_pinned(msg):
     """ Is it a pinned command? """
     if msg.pinned:
@@ -20,6 +21,7 @@ def is_pinned(msg):
 
 class Cleanup(commands.Cog):
     """ Cleanup """
+
     def __init__(self, bot):
         self.bot = bot
 
