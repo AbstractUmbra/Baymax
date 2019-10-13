@@ -1,16 +1,10 @@
 """ A simple and fun discord bot. """
 import logging
-from time import sleep
 import json
 import os
 import sys
-from random import choice, sample
 import traceback
-from math import ceil
 import itertools
-import urllib.parse
-from heapq import nlargest
-from unidecode import unidecode
 
 import discord
 from discord.ext import commands
@@ -185,93 +179,6 @@ def main():
         await ctx.send("Pong!")
 
 
-    @admin_check()
-    @check_bound_text()
-    async def scattertheweak(ctx):
-        for dcmember in all_voice_members_guild(ctx):
-            await ctx.send(f"You are weak, {dcmember}")
-            await dcmember.move_to(
-                choice(ctx.message.guild.voice_channels), reason="Was too weak."
-            )
-
-    @admin_check()
-    @check_bound_text()
-    async def summon(ctx, member: discord.Member):
-        if member is None:
-            await ctx.send(
-                f"Missing argument, use `{SETTINGS['bot_prefix']}admin summonfucker <@user>`."
-            )
-        elif member.voice.channel is ctx.message.author.voice.channel:
-            await ctx.send(f"They're already in your voice chat, you wank.")
-        else:
-            await member.move_to(ctx.message.author.voice.channel)
-
-    @admin_check()
-    @check_bound_text()
-    async def snap(ctx):
-        half_of_current_voice_list = ceil(
-            len(all_voice_members_guild(ctx)) / 2
-        )
-        snapped_users = sample(
-            all_voice_members_guild(ctx), half_of_current_voice_list
-        )
-        snapped_channel = discord.utils.get(
-            ctx.message.guild.channels, name="The Soul Stone"
-        )
-        if os.path.exists("content/snap.gif"):
-            await ctx.send(file=discord.File("content/snap.gif"))
-            sleep(8)
-            for member in snapped_users:
-                print(f"Snapped {member.name}.")
-                await member.move_to(snapped_channel, reason="was snapped.")
-        else:
-            for member in snapped_users:
-                await ctx.send("You should have gone for the head.")
-                await ctx.send("**SNAP!**")
-                print(f"Snapped {member.name}.")
-                await member.move_to(snapped_channel, reason="was snapped.")
-
-    @admin_check()
-    @check_bound_text()
-    async def spelling(ctx):
-        vowels = "aeiouAEIOU"
-        # Blacklist server admin.
-        for member in ctx.guild.members:
-            if member is ctx.guild.owner:
-                continue
-            original_name = member.display_name
-            await ctx.send(f"Jumbling {member.display_name}'s name..", delete_after=10)
-            # time to jumble...
-            new_name = ""
-            # Remove CFS Tag
-            if "[𝓒𝓕𝓢] " in original_name:
-                original_name = original_name.replace("[𝓒𝓕𝓢] ", "")
-            # Take away non-utf8 cahracters.
-            original_name = unidecode(original_name).replace(
-                "[", "").replace("]", "")
-            for char in f"{original_name}":
-                if char in vowels:
-                    new_name += choice(list(vowels))
-                else:
-                    new_name += char
-            await member.edit(nick=new_name.capitalize(), reason="Cannot spell.")
-
-    @bot.command()
-    @check_bound_text()
-    async def dumbass(ctx):
-        """ Generates a LMGTFY link of the passed text. """
-        msg_body = ctx.message.system_content.replace("^dumbass ", "")
-
-        def url_encode(query):
-            """ Encodes URL formatting for query. """
-            encoded_query = urllib.parse.quote(str(query), safe='')
-            return encoded_query
-
-        base_url = "http://lmgtfy.com/?q=^QUERY^"
-        lmgtfy_url = base_url.replace(
-            "^QUERY^", url_encode(str(msg_body)))
-        await ctx.send(lmgtfy_url)
-
     @bot.command()
     @check_bound_text()
     async def perms(ctx, member: discord.Member = None):
@@ -287,34 +194,6 @@ def main():
         role_embed.add_field(
             name="\uFEFF", value=user_roles, inline=True)
         await ctx.author.send(embed=role_embed)
-
-    @bot.command()
-    async def votes(ctx, channel: discord.TextChannel = None):
-        """ Count the reactions in the channel to get a 'vote list'. """
-        if channel is None:
-            channel = ctx.channel
-        count = {}
-        total = discord.Embed(title="**Vote Count**",
-                              color=0x00ff00)
-        total.set_author(name=bot.user.name)
-        total.set_thumbnail(url=bot.user.avatar_url)
-        async for msg in channel.history(limit=50):
-            if msg.author.id != bot.user.id and not msg.content.startswith("^"):
-                if msg.reactions is None:
-                    count[msg.content] = 0
-                    continue
-                for reaction in msg.reactions:
-                    count[msg.content] = reaction.count
-                total.add_field(
-                    name=f"{msg.content}",
-                    value=f"Votes: {count.get(msg.content)}",
-                    inline=True)
-        count_list = nlargest(5, count, key=count.get)
-        count_string = "\n".join(item for item in count_list)
-        total.add_field(name="**Highest voted**",
-                        value=f"**{count_string}**", inline=False)
-        to_pin = await channel.send(embed=total)
-        await to_pin.pin()
 
     # Load these two, make the others extra.
     bot.load_extension("cogs.admin")
