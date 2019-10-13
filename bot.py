@@ -49,9 +49,30 @@ else:
         json.dump(SETTINGS, CONFIG_PATH)
 
 
-class NeedAdmin(Exception):
-    """ Exception for the requirement of admin privs. """
+def check_bound_text():
+    """ Checks the channel executing from is in the whitelist. """
+    def permitted_text(ctx):
+        if ctx.channel.id not in SETTINGS["bound_text_channels"]:
+            raise UnpermittedChannel(
+                f"The bot is not bound to this text channel: {ctx.channel}")
+        else:
+            return True
+    return commands.check(permitted_text)
 
+def all_voice_members_guild(ctx):
+    """ Gets all the members currently in a voice channel. """
+    guild_vms = list(itertools.chain.from_iterable(
+        [member for member in [ch.members for ch in ctx.guild.voice_channels]]))
+    return guild_vms
+
+
+def admin_check():
+    """ Checks the executing user is in the Admin list. """
+    def predicate(ctx):
+        if ctx.message.author.id not in SETTINGS["admins"]:
+            return False
+        return True
+    return commands.check(predicate)
 
 class UnpermittedChannel(Exception):
     """ Exception for an unpermitted text channel. """
@@ -98,11 +119,6 @@ def main():
         command_prefix=SETTINGS["bot_prefix"], description=SETTINGS["bot_description"]
     )
 
-    def all_voice_members_guild(ctx):
-        guild_vms = list(itertools.chain.from_iterable(
-            [member for member in [ch.members for ch in ctx.guild.voice_channels]]))
-        return guild_vms
-
     @bot.event
     async def on_command_completion(ctx):
         await ctx.message.delete(delay=5)
@@ -124,12 +140,6 @@ def main():
         elif isinstance(error, commands.CommandNotFound):
             await ctx.send(
                 f"error: Command '{ctx.message.content}' is not found.",
-                delete_after=5
-            )
-            await ctx.message.delete(delay=5)
-        elif isinstance(error, NeedAdmin):
-            await ctx.send(
-                f"error: Command '{ctx.message.content}' requires admin privileges, loser.",
                 delete_after=5
             )
             await ctx.message.delete(delay=5)
@@ -170,74 +180,12 @@ def main():
         print(
             f"Use this URL to invite the bot to your server: {new_link}")
 
-    def check_bound_text():
-        def permitted_text(ctx):
-            if ctx.channel.id not in SETTINGS["bound_text_channels"]:
-                raise UnpermittedChannel(
-                    f"The bot is not bound to this text channel: {ctx.channel}")
-            else:
-                return True
-        return commands.check(permitted_text)
-
     @bot.command()
     async def ping(ctx):
         await ctx.send("Pong!")
 
-    @bot.group()
-    async def admin(ctx):
-        if ctx.message.author.id not in SETTINGS["admins"]:
-            await ctx.send(f"You are not an administrator of the bot, {ctx.message.author.mention}")
-            raise NeedAdmin("Non-admin tried to execute...")
-        if ctx.invoked_subcommand is None:
-            await ctx.send(
-                f"Invalid usage of command: use {SETTINGS['bot_prefix']}admin to prefix command."
-            )
 
-    @bot.command()
-    @check_bound_text()
-    async def adminlist(ctx):
-        for admin in SETTINGS["admins"]:
-            await ctx.send(ctx.guild.get_member(admin))
-
-    @admin.command()
-    @check_bound_text()
-    async def add(ctx, member: discord.Member):
-        if member is None:
-            await ctx.send(f"Invalid usage; use {SETTINGS['bot_prefix']}admin add <@user>.")
-        elif member.id in SETTINGS["admins"]:
-            await ctx.send(f"User {member} is already an admin.")
-        else:
-            SETTINGS["admins"].append(member.id)
-            save_settings(CONFIG_PATH)
-            await ctx.send(f"{member} has been added to admin list.")
-
-    @admin.command()
-    @check_bound_text()
-    async def remove(ctx, member: discord.Member):
-        if member is None:
-            await ctx.send(f"Missing argument use {SETTINGS['bot_prefix']}admin remove <@user>")
-        elif member.id not in SETTINGS["admins"]:
-            await ctx.send("Admin not found in admin list.")
-        else:
-            SETTINGS["admins"].remove(member.id)
-            save_settings(CONFIG_PATH)
-            await ctx.send(f"{member} was removed from admin list.")
-
-    @admin.command()
-    @check_bound_text()
-    async def add_bound_channel(ctx, channel: discord.TextChannel):
-        if channel is None:
-            await ctx.send(
-                f"Invalid usage, use {SETTINGS['bot_prefix']}admin add_channel <@text_channel>."
-            )
-        elif channel.id in SETTINGS["bound_text_channels"]:
-            await ctx.send(f"Channel {channel} is already bot bound.")
-        else:
-            SETTINGS["bound_text_channels"].append(channel.id)
-            save_settings(CONFIG_PATH)
-            await ctx.send(f"{channel} has been added to the bound channel list.")
-
-    @admin.command()
+    @admin_check()
     @check_bound_text()
     async def scattertheweak(ctx):
         for dcmember in all_voice_members_guild(ctx):
@@ -246,7 +194,7 @@ def main():
                 choice(ctx.message.guild.voice_channels), reason="Was too weak."
             )
 
-    @admin.command()
+    @admin_check()
     @check_bound_text()
     async def summon(ctx, member: discord.Member):
         if member is None:
@@ -258,7 +206,7 @@ def main():
         else:
             await member.move_to(ctx.message.author.voice.channel)
 
-    @admin.command()
+    @admin_check()
     @check_bound_text()
     async def snap(ctx):
         half_of_current_voice_list = ceil(
@@ -283,7 +231,7 @@ def main():
                 print(f"Snapped {member.name}.")
                 await member.move_to(snapped_channel, reason="was snapped.")
 
-    @admin.command()
+    @admin_check()
     @check_bound_text()
     async def spelling(ctx):
         vowels = "aeiouAEIOU"
@@ -295,8 +243,10 @@ def main():
             await ctx.send(f"Jumbling {member.display_name}'s name..", delete_after=10)
             # time to jumble...
             new_name = ""
+            # Remove CFS Tag
             if "[𝓒𝓕𝓢] " in original_name:
                 original_name = original_name.replace("[𝓒𝓕𝓢] ", "")
+            # Take away non-utf8 cahracters.
             original_name = unidecode(original_name).replace(
                 "[", "").replace("]", "")
             for char in f"{original_name}":
@@ -345,65 +295,30 @@ def main():
             channel = ctx.channel
         count = {}
         total = discord.Embed(title="**Vote Count**",
-                              description="Votey lads",
                               color=0x00ff00)
         total.set_author(name=bot.user.name)
         total.set_thumbnail(url=bot.user.avatar_url)
         async for msg in channel.history(limit=50):
             if msg.author.id != bot.user.id and not msg.content.startswith("^"):
+                if msg.reactions is None:
+                    count[msg.content] = 0
+                    continue
                 for reaction in msg.reactions:
                     count[msg.content] = reaction.count
                 total.add_field(
                     name=f"{msg.content}",
                     value=f"Votes: {count.get(msg.content)}",
                     inline=True)
-        count_list = nlargest(3, count, key=count.get)
+        count_list = nlargest(5, count, key=count.get)
         count_string = "\n".join(item for item in count_list)
         total.add_field(name="**Highest voted**",
                         value=f"**{count_string}**", inline=False)
         to_pin = await channel.send(embed=total)
         await to_pin.pin()
 
-    def is_pinned(msg):
-        if msg.pinned:
-            return False
-        return True
-
-    @admin.command(aliases=["purge"])
-    async def prune(ctx, count: int, channel: discord.TextChannel = None):
-        """ Prune a channel. """
-        if count > 100:
-            await ctx.send("Sorry, you cannot purge more than 100 messages at a time.")
-        else:
-            count += 1
-            if channel is None:
-                channel = ctx.channel
-            deleted = await channel.purge(limit=count, check=is_pinned)
-            await channel.send(
-                f"Deleted {len(deleted)} messages from {channel.mention}", delete_after=5
-            )
-
-    def is_music_command(msg):
-        if msg.content.startswith("-") or msg.author.id == 234395307759108106:
-            return True
-        return False
-
-    @bot.command()
-    async def music_cleanup(ctx, count: int = 100):
-        if count > 300:
-            await ctx.send(f"Fuck you, no more than 300 messages to clean.")
-        else:
-            deleted = await ctx.channel.purge(limit=count, check=is_music_command)
-            await ctx.channel.send(
-                f"Deleted {len(deleted)} music bot messages from {ctx.channel.mention}",
-                delete_after=5
-            )
-
-    @bot.event
-    async def on_message(msg):
-        if msg.content.startswith("-") or msg.author.id == 234395307759108106:
-            await msg.delete(delay=3)
-        await bot.process_commands(msg)
+    # Load these two, make the others extra.
+    bot.load_extension("cogs.admin")
+    bot.load_extension("cogs.cleanup")
 
     bot.run(SETTINGS["bot_token"])
 
