@@ -14,33 +14,6 @@ class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @admin_check()
-    @check_bound_text()
-    @commands.command(hidden=True)
-    async def spelling(self, ctx):
-        """ Time to mess with vowels! >:D """
-        vowels = "aeiouAEIOU"
-        # Blacklist server admin.
-        for member in ctx.guild.members:
-            if member is ctx.guild.owner:
-                continue
-            original_name = member.display_name
-            await ctx.send(f"Jumbling {member.display_name}'s name..", delete_after=10)
-            # time to jumble...
-            new_name = ""
-            # Remove CFS Tag
-            if "[𝓒𝓕𝓢] " in original_name:
-                original_name = original_name.replace("[𝓒𝓕𝓢] ", "")
-            # Take away non-utf8 cahracters.
-            original_name = unidecode(original_name).replace(
-                "[", "").replace("]", "")
-            for char in f"{original_name}":
-                if char in vowels:
-                    new_name += choice(list(vowels))
-                else:
-                    new_name += char
-            await member.edit(nick=new_name.capitalize(), reason="Cannot spell.")
-
     @commands.command()
     async def adminlist(self, ctx):
         """ Prints the admin list. """
