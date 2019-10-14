@@ -1,125 +1,36 @@
 """ A simple and fun discord bot. """
 import logging
-import json
-import os
 import sys
 import traceback
-import itertools
 
 import discord
 from discord.ext import commands
 import discord.utils
+
+from utils.settings import SETTINGS, load_settings
+from utils.checks import check_bound_text
 
 # Set logging
 logging.basicConfig(level=logging.INFO)
 
 # Constants
 CONFIG_PATH = "config/settings.json"
-SETTINGS = {}
+SETTINGS = load_settings()
 INVITE_LINK = "https://discordapp.com/api/oauth2/authorize?client_id=^ID^&permissions=0&scope=bot"
 
 
-def save_settings(config):
-    """ Save settings in a passed config file. """
-    with open(config, "w") as write_config_file:
-        json.dump(SETTINGS, write_config_file, indent=4)
-
-
-# Load Settings
-if os.path.exists(CONFIG_PATH):
-    with open(CONFIG_PATH) as read_config_file:
-        SETTINGS = json.load(read_config_file)
-else:
-    print(f"No settings file exists at {CONFIG_PATH}. Using defaults.")
-    SETTINGS = {
-        "bot_id": 1234567890,
-        "bot_token": 1234567890,
-        "admins": [],
-        "bound_text_channels": [],
-        "bot_description": "A generic use bot for fun, games and memes.",
-    }
-
-    with open(CONFIG_PATH, "w+"):
-        json.dump(SETTINGS, CONFIG_PATH)
-
-
-def check_bound_text():
-    """ Checks the channel executing from is in the whitelist. """
-    def permitted_text(ctx):
-        if ctx.channel.id not in SETTINGS["bound_text_channels"]:
-            raise UnpermittedChannel(
-                f"The bot is not bound to this text channel: {ctx.channel}")
-        else:
-            return True
-    return commands.check(permitted_text)
-
-
-def all_voice_members_guild(ctx):
-    """ Gets all the members currently in a voice channel. """
-    guild_vms = list(itertools.chain.from_iterable(
-        [member for member in [ch.members for ch in ctx.guild.voice_channels]]))
-    return guild_vms
-
-
-def admin_check():
-    """ Checks the executing user is in the Admin list. """
-    def predicate(ctx):
-        if ctx.message.author.id not in SETTINGS["admins"]:
-            return False
-        return True
-    return commands.check(predicate)
-
-
-class UnpermittedChannel(Exception):
-    """ Exception for an unpermitted text channel. """
-
-
-if "bot_token" not in SETTINGS:
-    SETTINGS["bot_token"] = input("Please input your bot token here: ")
-    save_settings(CONFIG_PATH)
-
-if "bot_id" not in SETTINGS:
-    SETTINGS["bot_token"] = 1234567890
-    save_settings(CONFIG_PATH)
-
-if "admins" not in SETTINGS:
-    # defaults to random int
-    SETTINGS["admins"] = [123456789123456789, 123456789123456789]
-    save_settings(CONFIG_PATH)
-print(f"Current list of admins are: {SETTINGS['admins']}")
-
-if "bound_text_channels" not in SETTINGS:
-    # defaults to random ints - can be more than one.
-    SETTINGS["bound_text_channels"] = [
-        123456789123456789, 123456789123456789
-    ]
-    save_settings(CONFIG_PATH)
-print(
-    f"Currently bound to these text channels: {SETTINGS['bound_text_channels']}"
-)
-
-if "bot_prefix" not in SETTINGS:
-    # defaults to "^"
-    SETTINGS["bot_prefix"] = ("^")
-    save_settings(CONFIG_PATH)
-print(f"Current bot prefix is: {SETTINGS['bot_prefix']}")
-
-if "bot_description" not in SETTINGS:
-    # defaults to "blah Blah"
-    SETTINGS["bot_description"] = "Blah Blah"
-    save_settings(CONFIG_PATH)
-
-bot = commands.Bot(
+BOT = commands.Bot(
     command_prefix=SETTINGS["bot_prefix"], description=SETTINGS["bot_description"]
 )
 
 
-@bot.event
+@BOT.event
 async def on_command_completion(ctx):
+    """ When a command successfully completes. """
     await ctx.message.delete(delay=5)
 
 
-@bot.event
+@BOT.event
 async def on_command_error(ctx, error):
     """The event triggered when an error is raised while invoking a command.
     ctx   : Context
@@ -160,31 +71,34 @@ async def on_command_error(ctx, error):
         await ctx.send(f"Error caught. Type: {error}.")
 
 
-@bot.event
+@BOT.event
 async def on_member_join(member):
+    """ When a new member joins. """
     new_user_role = discord.utils.get(
         member.guild.roles, id=174703372631277569
     )
     await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
 
 
-@bot.event
+@BOT.event
 async def on_ready():
-    await bot.change_presence(
+    """ When Discord bot is ready. """
+    await BOT.change_presence(
         activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.online
     )
-    print(f"Logged in as: {bot.user.name}: {bot.user.id}")
+    print(f"Logged in as: {BOT.user.name}: {BOT.user.id}")
     new_link = INVITE_LINK.replace("^ID^", str(SETTINGS['bot_id']))
     print(
         f"Use this URL to invite the bot to your server: {new_link}")
 
 
-@bot.command()
+@BOT.command()
 async def ping(ctx):
+    """ Alive checker. """
     await ctx.send("Pong!")
 
 
-@bot.command()
+@BOT.command()
 @check_bound_text()
 async def perms(ctx, member: discord.Member = None):
     """ Print the passed user perms to the console. """
@@ -201,7 +115,7 @@ async def perms(ctx, member: discord.Member = None):
     await ctx.author.send(embed=role_embed)
 
 # Load these two, make the others extra.
-bot.load_extension("cogs.admin")
-bot.load_extension("cogs.cleanup")
+BOT.load_extension("cogs.admin")
+BOT.load_extension("cogs.cleanup")
 
-bot.run(SETTINGS["bot_token"])
+BOT.run(SETTINGS["bot_token"])

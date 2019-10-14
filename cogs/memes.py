@@ -11,6 +11,9 @@ from unidecode import unidecode
 import discord
 from discord.ext import commands
 
+from utils.checks import admin_check, check_bound_text
+from utils.members import all_voice_members_guild
+
 
 class Memes(commands.Cog):
     """ Meme cog, fun shit goes here. """

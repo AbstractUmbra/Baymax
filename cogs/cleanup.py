@@ -3,6 +3,7 @@
 import discord
 from discord.ext import commands
 
+from utils.checks import admin_check
 
 def is_music_command(msg):
     """ Is it a Groovy command? """

@@ -3,6 +3,9 @@
 import discord
 from discord.ext import commands
 
+from utils.settings import SETTINGS, save_settings
+from utils.checks import admin_check, check_bound_text
+
 
 class Admin(commands.Cog):
     """ Admin only commands. """
@@ -29,7 +32,7 @@ class Admin(commands.Cog):
                            delete_after=5)
         else:
             SETTINGS["admins"].append(member.id)
-            save_settings(CONFIG_PATH)
+            save_settings(SETTINGS)
             await ctx.send(f"{member} has been added to admin list.",
                            delete_after=5)
 
@@ -46,7 +49,7 @@ class Admin(commands.Cog):
                            delete_after=5)
         else:
             SETTINGS["admins"].remove(member.id)
-            save_settings(CONFIG_PATH)
+            save_settings(SETTINGS)
             await ctx.send(f"{member} was removed from admin list.",
                            delete_after=5)
 
@@ -65,7 +68,7 @@ class Admin(commands.Cog):
                            delete_after=5)
         else:
             SETTINGS["bound_text_channels"].append(channel.id)
-            save_settings(CONFIG_PATH)
+            save_settings(SETTINGS)
             await ctx.send(f"{channel} has been added to the bound channel list.",
                            elete_after=5)
 
