@@ -2,7 +2,6 @@
 
 import discord
 from discord.ext import commands
-from bot import SETTINGS, CONFIG_PATH, check_bound_text, save_settings, admin_check
 
 
 class Admin(commands.Cog):

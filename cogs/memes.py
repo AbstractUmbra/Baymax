@@ -10,7 +10,6 @@ from unidecode import unidecode
 
 import discord
 from discord.ext import commands
-from bot import SETTINGS, admin_check, check_bound_text, all_voice_members_guild
 
 
 class Memes(commands.Cog):

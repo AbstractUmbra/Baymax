@@ -74,134 +74,134 @@ class UnpermittedChannel(Exception):
     """ Exception for an unpermitted text channel. """
 
 
-def main():
-    """ Run the bot woooooo """
-    if "bot_token" not in SETTINGS:
-        SETTINGS["bot_token"] = input("Please input your bot token here: ")
-        save_settings(CONFIG_PATH)
+if "bot_token" not in SETTINGS:
+    SETTINGS["bot_token"] = input("Please input your bot token here: ")
+    save_settings(CONFIG_PATH)
 
-    if "bot_id" not in SETTINGS:
-        SETTINGS["bot_token"] = 1234567890
-        save_settings(CONFIG_PATH)
+if "bot_id" not in SETTINGS:
+    SETTINGS["bot_token"] = 1234567890
+    save_settings(CONFIG_PATH)
 
-    if "admins" not in SETTINGS:
-        # defaults to random int
-        SETTINGS["admins"] = [123456789123456789, 123456789123456789]
-        save_settings(CONFIG_PATH)
-    print(f"Current list of admins are: {SETTINGS['admins']}")
+if "admins" not in SETTINGS:
+    # defaults to random int
+    SETTINGS["admins"] = [123456789123456789, 123456789123456789]
+    save_settings(CONFIG_PATH)
+print(f"Current list of admins are: {SETTINGS['admins']}")
 
-    if "bound_text_channels" not in SETTINGS:
-        # defaults to random ints - can be more than one.
-        SETTINGS["bound_text_channels"] = [
-            123456789123456789, 123456789123456789
-        ]
-        save_settings(CONFIG_PATH)
-    print(
-        f"Currently bound to these text channels: {SETTINGS['bound_text_channels']}"
-    )
+if "bound_text_channels" not in SETTINGS:
+    # defaults to random ints - can be more than one.
+    SETTINGS["bound_text_channels"] = [
+        123456789123456789, 123456789123456789
+    ]
+    save_settings(CONFIG_PATH)
+print(
+    f"Currently bound to these text channels: {SETTINGS['bound_text_channels']}"
+)
 
-    if "bot_prefix" not in SETTINGS:
-        # defaults to "^"
-        SETTINGS["bot_prefix"] = ("^")
-        save_settings(CONFIG_PATH)
-    print(f"Current bot prefix is: {SETTINGS['bot_prefix']}")
+if "bot_prefix" not in SETTINGS:
+    # defaults to "^"
+    SETTINGS["bot_prefix"] = ("^")
+    save_settings(CONFIG_PATH)
+print(f"Current bot prefix is: {SETTINGS['bot_prefix']}")
 
-    if "bot_description" not in SETTINGS:
-        # defaults to "blah Blah"
-        SETTINGS["bot_description"] = "Blah Blah"
-        save_settings(CONFIG_PATH)
+if "bot_description" not in SETTINGS:
+    # defaults to "blah Blah"
+    SETTINGS["bot_description"] = "Blah Blah"
+    save_settings(CONFIG_PATH)
 
-    bot = commands.Bot(
-        command_prefix=SETTINGS["bot_prefix"], description=SETTINGS["bot_description"]
-    )
+bot = commands.Bot(
+    command_prefix=SETTINGS["bot_prefix"], description=SETTINGS["bot_description"]
+)
 
-    @bot.event
-    async def on_command_completion(ctx):
+
+@bot.event
+async def on_command_completion(ctx):
+    await ctx.message.delete(delay=5)
+
+
+@bot.event
+async def on_command_error(ctx, error):
+    """The event triggered when an error is raised while invoking a command.
+    ctx   : Context
+    error : Exception"""
+    # This prevents any commands with local handlers being handled here in on_command_error.
+    if hasattr(ctx.command, "on_error"):
+        return
+    if isinstance(error, commands.MissingRequiredArgument):
+        await ctx.send(
+            f"error: Command '{ctx.message.content}' requires additional arguments.",
+            delete_after=5
+        )
         await ctx.message.delete(delay=5)
-
-    @bot.event
-    async def on_command_error(ctx, error):
-        """The event triggered when an error is raised while invoking a command.
-        ctx   : Context
-        error : Exception"""
-        # This prevents any commands with local handlers being handled here in on_command_error.
-        if hasattr(ctx.command, "on_error"):
-            return
-        if isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(
-                f"error: Command '{ctx.message.content}' requires additional arguments.",
-                delete_after=5
-            )
-            await ctx.message.delete(delay=5)
-        elif isinstance(error, commands.CommandNotFound):
-            await ctx.send(
-                f"error: Command '{ctx.message.content}' is not found.",
-                delete_after=5
-            )
-            await ctx.message.delete(delay=5)
-        elif isinstance(error, commands.DisabledCommand):
-            await ctx.send(
-                f"error: Command '{ctx.message.content}' "
-                "This command cannot be used as it is disabled.",
-                delete_after=5
-            )
-            await ctx.message.delete(delay=5)
-        elif isinstance(error, commands.CommandInvokeError):
-            original = error.original
-            if not isinstance(original, discord.HTTPException):
-                print(f'In {ctx.command.qualified_name}:', file=sys.stderr)
-                traceback.print_tb(original.__traceback__)
-                print(f"{original.__class__.__name__}: {original}",
-                      file=sys.stderr)
-        elif isinstance(error, commands.ArgumentParsingError):
-            await ctx.send(error)
-            await ctx.message.delete(delay=5)
-        else:
-            await ctx.send(f"Error caught. Type: {error}.")
-
-    @bot.event
-    async def on_member_join(member):
-        new_user_role = discord.utils.get(
-            member.guild.roles, id=174703372631277569
+    elif isinstance(error, commands.CommandNotFound):
+        await ctx.send(
+            f"error: Command '{ctx.message.content}' is not found.",
+            delete_after=5
         )
-        await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
-
-    @bot.event
-    async def on_ready():
-        await bot.change_presence(
-            activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.online
+        await ctx.message.delete(delay=5)
+    elif isinstance(error, commands.DisabledCommand):
+        await ctx.send(
+            f"error: Command '{ctx.message.content}' "
+            "This command cannot be used as it is disabled.",
+            delete_after=5
         )
-        print(f"Logged in as: {bot.user.name}: {bot.user.id}")
-        new_link = INVITE_LINK.replace("^ID^", str(SETTINGS['bot_id']))
-        print(
-            f"Use this URL to invite the bot to your server: {new_link}")
-
-    @bot.command()
-    async def ping(ctx):
-        await ctx.send("Pong!")
-
-    @bot.command()
-    @check_bound_text()
-    async def perms(ctx, member: discord.Member = None):
-        """ Print the passed user perms to the console. """
-        if member is None:
-            member = ctx.author
-        user_roles = '\n'.join(
-            perm for perm, value in member.guild_permissions if value)
-        role_embed = discord.Embed(title=f"User roles for {member}",
-                                   description=f"Server: {ctx.guild.name}",
-                                   colour=member.colour)
-        role_embed.set_author(icon_url=member.avatar_url, name=str(member))
-        role_embed.add_field(
-            name="\uFEFF", value=user_roles, inline=True)
-        await ctx.author.send(embed=role_embed)
-
-    # Load these two, make the others extra.
-    bot.load_extension("cogs.admin")
-    bot.load_extension("cogs.cleanup")
-
-    bot.run(SETTINGS["bot_token"])
+        await ctx.message.delete(delay=5)
+    elif isinstance(error, commands.CommandInvokeError):
+        original = error.original
+        if not isinstance(original, discord.HTTPException):
+            print(f'In {ctx.command.qualified_name}:', file=sys.stderr)
+            traceback.print_tb(original.__traceback__)
+            print(f"{original.__class__.__name__}: {original}",
+                  file=sys.stderr)
+    elif isinstance(error, commands.ArgumentParsingError):
+        await ctx.send(error)
+        await ctx.message.delete(delay=5)
+    else:
+        await ctx.send(f"Error caught. Type: {error}.")
 
 
-if __name__ == "__main__":
-    main()
+@bot.event
+async def on_member_join(member):
+    new_user_role = discord.utils.get(
+        member.guild.roles, id=174703372631277569
+    )
+    await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
+
+
+@bot.event
+async def on_ready():
+    await bot.change_presence(
+        activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.online
+    )
+    print(f"Logged in as: {bot.user.name}: {bot.user.id}")
+    new_link = INVITE_LINK.replace("^ID^", str(SETTINGS['bot_id']))
+    print(
+        f"Use this URL to invite the bot to your server: {new_link}")
+
+
+@bot.command()
+async def ping(ctx):
+    await ctx.send("Pong!")
+
+
+@bot.command()
+@check_bound_text()
+async def perms(ctx, member: discord.Member = None):
+    """ Print the passed user perms to the console. """
+    if member is None:
+        member = ctx.author
+    user_roles = '\n'.join(
+        perm for perm, value in member.guild_permissions if value)
+    role_embed = discord.Embed(title=f"User roles for {member}",
+                               description=f"Server: {ctx.guild.name}",
+                               colour=member.colour)
+    role_embed.set_author(icon_url=member.avatar_url, name=str(member))
+    role_embed.add_field(
+        name="\uFEFF", value=user_roles, inline=True)
+    await ctx.author.send(embed=role_embed)
+
+# Load these two, make the others extra.
+bot.load_extension("cogs.admin")
+bot.load_extension("cogs.cleanup")
+
+bot.run(SETTINGS["bot_token"])

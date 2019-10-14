@@ -2,7 +2,6 @@
 
 import discord
 from discord.ext import commands
-from bot import SETTINGS, admin_check
 
 
 def is_music_command(msg):
