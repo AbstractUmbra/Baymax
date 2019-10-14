@@ -48,7 +48,7 @@ class Memes(commands.Cog):
             ctx.message.guild.channels, name="The Soul Stone"
         )
         if os.path.exists("content/snap.gif"):
-            await ctx.send(file=discord.File("content/snap.gif"))
+            await ctx.send(file=discord.File("content/snap.gif"), delete_after=16)
             sleep(8)
             for member in snapped_users:
                 print(f"Snapped {member.name}.")
