@@ -4,7 +4,6 @@ from heapq import nlargest
 
 import discord
 from discord.ext import commands
-from bot import SETTINGS, admin_check
 
 
 class Voting(commands.Cog):

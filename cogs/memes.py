@@ -10,7 +10,9 @@ from unidecode import unidecode
 
 import discord
 from discord.ext import commands
-from bot import SETTINGS, admin_check, check_bound_text, all_voice_members_guild
+
+from utils.checks import admin_check, check_bound_text
+from utils.members import all_voice_members_guild
 
 
 class Memes(commands.Cog):
@@ -46,7 +48,7 @@ class Memes(commands.Cog):
             ctx.message.guild.channels, name="The Soul Stone"
         )
         if os.path.exists("content/snap.gif"):
-            await ctx.send(file=discord.File("content/snap.gif"))
+            await ctx.send(file=discord.File("content/snap.gif"), delete_after=16)
             sleep(8)
             for member in snapped_users:
                 print(f"Snapped {member.name}.")
