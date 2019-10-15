@@ -117,6 +117,6 @@ async def perms(ctx, member: discord.Member = None):
 # Load these two, make the others extra.
 BOT.load_extension("cogs.admin")
 BOT.load_extension("cogs.cleanup")
-BOT.load_extension("cogs.tag")
+BOT.load_extension("cogs.audio")
 
 BOT.run(SETTINGS["bot_token"])
