@@ -50,6 +50,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     async def from_url(cls, url, *, loop=None, stream=False):
+        """ Youtube from URL. """
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(None, lambda: YTDL.extract_info(url, download=not stream))
 
@@ -137,6 +138,7 @@ class Audio(commands.Cog):
     @tag.before_invoke
     @youtube.before_invoke
     async def ensure_voice(self, ctx):
+        """ Ensures a voice client exists. """
         if ctx.voice_client is None:
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
