@@ -120,8 +120,7 @@ class Admin(commands.Cog):
         """ Reload a cog module. """
         cog_full = f"cogs.{cog}"
         try:
-            self.bot.unload_extension(cog_full)
-            self.bot.load_extension(cog_full)
+            self.bot.reload_extension(cog_full)
         except Exception as err:
             await ctx.send(f"**`ERROR:`** {type(err).__name__} - {err}",
                            delete_after=10)

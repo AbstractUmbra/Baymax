@@ -39,6 +39,7 @@ YTDL = youtube_dl.YoutubeDL(YTDL_OPTIONS)
 
 class YTDLSource(discord.PCMVolumeTransformer):
     """ YTDL Configure wooo. """
+
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source, volume)
 
@@ -70,6 +71,7 @@ if path.exists(TAG_PATH):
 
 class Audio(commands.Cog):
     """ Audio cog. """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -99,8 +101,17 @@ class Audio(commands.Cog):
         await ctx.send(f"Changed volume to {volume}%.", delete_after=3)
 
     @commands.command()
-    async def tag(self, ctx, tag_name: str):
+    async def tag(self, ctx, tag_name: str = None):
         """ Play a tag... hopefully!. """
+        if tag_name is None or tag_name is "list":
+            tag_embed = discord.Embed(title="**Tag List**",
+                                      color=0x00ff00)
+            tag_embed.set_author(name=self.bot.user.name)
+            tag_embed.set_thumbnail(url=self.bot.user.avatar_url)
+            tag_list = "\n".join(tag for tag in TAG.keys())
+            tag_embed.add_field(name="**Current Tags**",
+                                value=f"{tag_list}", inline=True)
+            return await ctx.channel.send(embed=tag_embed, delete_after=15)
         if TAG.get(f"{tag_name}") is None:
             return await ctx.send(f"Unable to locate tag: {tag_name}.")
         tag_path = path.join(PATH, f"../content/tags/{tag_name}.mp3")
@@ -135,6 +146,7 @@ class Audio(commands.Cog):
                     "Author not connected to a voice channel.")
         elif ctx.voice_client.is_playing():
             ctx.voice_client.stop()
+
 
 def setup(bot):
     """ Cog setup function. """
