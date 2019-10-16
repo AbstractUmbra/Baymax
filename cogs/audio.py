@@ -114,7 +114,7 @@ class Audio(commands.Cog):
                                 value=f"{tag_list}", inline=True)
             return await ctx.channel.send(embed=tag_embed, delete_after=15)
         if TAG.get(f"{tag_name}") is None:
-            return await ctx.send(f"Unable to locate tag: {tag_name}.")
+            return await ctx.send(f"Unable to locate tag: {tag_name}", delete_after=10)
         tag_path = path.join(PATH, f"../content/tags/{tag_name}.mp3")
         source = discord.PCMVolumeTransformer(
             discord.FFmpegPCMAudio(tag_path))
@@ -142,6 +142,7 @@ class Audio(commands.Cog):
         if ctx.voice_client is None:
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
+                ctx.voice_client.source.volume = 10 / 100
             else:
                 await ctx.send("You are not connected to a voice channel.")
                 raise commands.CommandError(

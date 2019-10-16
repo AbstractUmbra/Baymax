@@ -84,8 +84,9 @@ async def on_member_join(member):
 async def on_ready():
     """ When Discord bot is ready. """
     await BOT.change_presence(
-        activity=discord.Game(name="Welcome to the Dark Side."), status=discord.Status.online
-    )
+        activity=discord.Game(
+            name=f"{SETTINGS['bot_prefix']}help for help, fuckers.",
+            status=discord.Status.online))
     print(f"Logged in as: {BOT.user.name}: {BOT.user.id}")
     new_link = INVITE_LINK.replace("^ID^", str(SETTINGS['bot_id']))
     print(
