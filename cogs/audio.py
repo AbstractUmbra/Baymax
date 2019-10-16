@@ -75,10 +75,9 @@ class Audio(commands.Cog):
 
     @check_bound_text()
     @commands.command()
-    async def join(self, ctx, channel: discord.VoiceChannel = None):
-        """ Play a tag... hopefully!. """
-        if channel is None:
-            channel = ctx.author.voice.channel
+    async def join(self, ctx):
+        """ Join voice. """
+        channel = ctx.author.voice.channel
         if ctx.voice_client is not None:
             return await ctx.voice_client.move_to(channel)
         await channel.connect()
@@ -100,15 +99,8 @@ class Audio(commands.Cog):
         await ctx.send(f"Changed volume to {volume}%.", delete_after=3)
 
     @commands.command()
-    async def tag(self, ctx, tag_name: str, channel: discord.VoiceChannel = None):
+    async def tag(self, ctx, tag_name: str):
         """ Play a tag... hopefully!. """
-        if channel is None:
-            channel = ctx.author.voice.channel
-        if ctx.voice_client is not None:
-            await ctx.voice_client.move_to(channel)
-        else:
-            await channel.connect()
-
         if TAG.get(f"{tag_name}") is None:
             return await ctx.send(f"Unable to locate tag: {tag_name}.")
         tag_path = path.join(PATH, f"../content/tags/{tag_name}.mp3")
@@ -131,6 +123,18 @@ class Audio(commands.Cog):
 
         await ctx.send(f"Now playing: {player.title}")
 
+    @tag.before_invoke
+    @youtube.before_invoke
+    async def ensure_voice(self, ctx):
+        if ctx.voice_client is None:
+            if ctx.author.voice:
+                await ctx.author.voice.channel.connect()
+            else:
+                await ctx.send("You are not connected to a voice channel.")
+                raise commands.CommandError(
+                    "Author not connected to a voice channel.")
+        elif ctx.voice_client.is_playing():
+            ctx.voice_client.stop()
 
 def setup(bot):
     """ Cog setup function. """
