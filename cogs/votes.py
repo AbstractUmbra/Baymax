@@ -28,7 +28,8 @@ class Voting(commands.Cog):
                     count[msg.content] = 0
                     continue
                 for reaction in msg.reactions:
-                    count[msg.content] = reaction.count
+                    if reaction.count is not None:
+                        count[msg.content] = reaction.count
                 total.add_field(
                     name=f"{msg.content}",
                     value=f"Votes: {count.get(msg.content)}",
