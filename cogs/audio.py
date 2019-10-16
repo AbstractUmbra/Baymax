@@ -86,7 +86,7 @@ class Audio(commands.Cog):
 
     @check_bound_text()
     @commands.command()
-    async def dc(self, ctx):
+    async def leave(self, ctx):
         """ Disconnect voice. """
         await ctx.voice_client.disconnect()
 
