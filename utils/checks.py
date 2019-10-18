@@ -18,6 +18,7 @@ def check_bound_text():
     """ Checks the channel executing from is in the whitelist. """
     def permitted_text(ctx):
         if ctx.channel.id not in SETTINGS["bound_text_channels"]:
+            ctx.invoke(ctx.message.delete())
             raise UnpermittedChannel(
                 f"The bot is not bound to this text channel: {ctx.channel}")
         else:
