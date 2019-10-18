@@ -12,12 +12,29 @@ class Admin(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+        print(bot.get_context)
 
     @commands.command()
     async def adminlist(self, ctx):
         """ Prints the admin list. """
-        for admin in SETTINGS["admins"]:
+        for admin in SETTINGS[str(ctx.guild.id)]["admins"]:
             await ctx.send(ctx.guild.get_member(admin), delete_after=20)
+
+    @check_bound_text()
+    @commands.command()
+    async def perms(self, ctx, member: discord.Member = None):
+        """ Print the passed user perms to the console. """
+        if member is None:
+            member = ctx.author
+        user_roles = '\n'.join(
+            perm for perm, value in member.guild_permissions if value)
+        role_embed = discord.Embed(title=f"User roles for {member}",
+                                   description=f"Server: {ctx.guild.name}",
+                                   colour=member.colour)
+        role_embed.set_author(icon_url=member.avatar_url, name=str(member))
+        role_embed.add_field(
+            name="\uFEFF", value=user_roles, inline=True)
+        await ctx.author.send(embed=role_embed)
 
     @admin_check()
     @check_bound_text()
@@ -25,14 +42,15 @@ class Admin(commands.Cog):
     async def add(self, ctx, member: discord.Member):
         """ Add a member to the admin list. """
         if member is None:
-            await ctx.send(f"Invalid usage; use {SETTINGS['bot_prefix']}admin add <@user>.",
+            await ctx.send(f"Invalid usage; use {SETTINGS[str(ctx.guild.id)]['bot_prefix']}"
+                           "admin add <@user>.",
                            delete_after=5)
-        elif member.id in SETTINGS["admins"]:
+        elif member.id in SETTINGS[str(ctx.guild.id)]["admins"]:
             await ctx.send(f"User {member} is already an admin.",
                            delete_after=5)
         else:
-            SETTINGS["admins"].append(member.id)
-            save_settings(SETTINGS)
+            SETTINGS[str(ctx.guild.id)]["admins"].append(member.id)
+            save_settings(SETTINGS[str(ctx.guild.id)])
             await ctx.send(f"{member} has been added to admin list.",
                            delete_after=5)
 
@@ -42,14 +60,15 @@ class Admin(commands.Cog):
     async def remove(self, ctx, member: discord.Member):
         """ Remove a member from the admin list. """
         if member is None:
-            await ctx.send(f"Missing argument use {SETTINGS['bot_prefix']}admin remove <@user>",
+            await ctx.send(f"Missing argument use {SETTINGS[str(ctx.guild.id)]['bot_prefix']}"
+                           "admin remove <@user>",
                            delete_after=5)
-        elif member.id not in SETTINGS["admins"]:
+        elif member.id not in SETTINGS[str(ctx.guild.id)]["admins"]:
             await ctx.send("Admin not found in admin list.",
                            delete_after=5)
         else:
-            SETTINGS["admins"].remove(member.id)
-            save_settings(SETTINGS)
+            SETTINGS[str(ctx.guild.id)]["admins"].remove(member.id)
+            save_settings(SETTINGS[str(ctx.guild.id)])
             await ctx.send(f"{member} was removed from admin list.",
                            delete_after=5)
 
@@ -60,15 +79,17 @@ class Admin(commands.Cog):
         """ Add a text channel to be bound. """
         if channel is None:
             await ctx.send(
-                f"Invalid usage, use {SETTINGS['bot_prefix']}admin add_channel <@text_channel>.",
+                f"Invalid usage, use {SETTINGS[str(ctx.guild.id)]['bot_prefix']}"
+                "admin add_channel <@text_channel>.",
                 delete_after=5
             )
-        elif channel.id in SETTINGS["bound_text_channels"]:
+        elif channel.id in SETTINGS[str(ctx.guild.id)]["bound_text_channels"]:
             await ctx.send(f"Channel {channel} is already bot bound.",
                            delete_after=5)
         else:
-            SETTINGS["bound_text_channels"].append(channel.id)
-            save_settings(SETTINGS)
+            SETTINGS[str(ctx.guild.id)]["bound_text_channels"].append(
+                channel.id)
+            save_settings(SETTINGS[str(ctx.guild.id)])
             await ctx.send(f"{channel} has been added to the bound channel list.",
                            elete_after=5)
 
@@ -79,7 +100,8 @@ class Admin(commands.Cog):
         """ Summon a voice member to current executors voice channel. """
         if member is None:
             await ctx.send(
-                f"Missing argument, use `{SETTINGS['bot_prefix']}admin summonfucker <@user>`.",
+                f"Missing argument, use `{SETTINGS[str(ctx.guild.id)]['bot_prefix']}"
+                f"admin summonfucker <@user>`.",
                 delete_after=5
             )
         elif member.voice.channel is ctx.message.author.voice.channel:

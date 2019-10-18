@@ -379,7 +379,8 @@ class Audio(commands.Cog):
             pass
 
         player.now_playing = await ctx.send(
-            f'**Now Playing:** `{voice_client.source.title}` requested by `{voice_client.source.requester}`',
+            f"** Now Playing: ** `{voice_client.source.title}`"
+            " requested by `{voice_client.source.requester}`",
             delete_after=5)
 
     @check_bound_text()
@@ -437,7 +438,7 @@ class Audio(commands.Cog):
             return await ctx.channel.send(embed=tag_embed, delete_after=15)
         if TAG.get(f"{tag_name}") is None:
             return await ctx.send(f"Unable to locate tag: {tag_name}", delete_after=10)
-        
+
         await ctx.trigger_typing()
         voice_client = ctx.voice_client
 

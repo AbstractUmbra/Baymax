@@ -8,7 +8,6 @@ from discord.ext import commands
 import discord.utils
 
 from utils.settings import SETTINGS, load_settings
-from utils.checks import check_bound_text
 
 # Set logging
 logging.basicConfig(level=logging.INFO)
@@ -97,23 +96,6 @@ async def on_ready():
 async def ping(ctx):
     """ Alive checker. """
     await ctx.send("Pong!")
-
-
-@BOT.command()
-@check_bound_text()
-async def perms(ctx, member: discord.Member = None):
-    """ Print the passed user perms to the console. """
-    if member is None:
-        member = ctx.author
-    user_roles = '\n'.join(
-        perm for perm, value in member.guild_permissions if value)
-    role_embed = discord.Embed(title=f"User roles for {member}",
-                               description=f"Server: {ctx.guild.name}",
-                               colour=member.colour)
-    role_embed.set_author(icon_url=member.avatar_url, name=str(member))
-    role_embed.add_field(
-        name="\uFEFF", value=user_roles, inline=True)
-    await ctx.author.send(embed=role_embed)
 
 # Load these two, make the others extra.
 BOT.load_extension("cogs.admin")
