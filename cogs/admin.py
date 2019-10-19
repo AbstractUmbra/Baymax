@@ -12,7 +12,6 @@ class Admin(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        print(bot.get_context)
 
     @commands.command()
     async def adminlist(self, ctx):
@@ -50,7 +49,7 @@ class Admin(commands.Cog):
                            delete_after=5)
         else:
             SETTINGS[str(ctx.guild.id)]["admins"].append(member.id)
-            save_settings(SETTINGS[str(ctx.guild.id)])
+            save_settings(SETTINGS)
             await ctx.send(f"{member} has been added to admin list.",
                            delete_after=5)
 
@@ -68,7 +67,7 @@ class Admin(commands.Cog):
                            delete_after=5)
         else:
             SETTINGS[str(ctx.guild.id)]["admins"].remove(member.id)
-            save_settings(SETTINGS[str(ctx.guild.id)])
+            save_settings(SETTINGS)
             await ctx.send(f"{member} was removed from admin list.",
                            delete_after=5)
 
@@ -89,9 +88,9 @@ class Admin(commands.Cog):
         else:
             SETTINGS[str(ctx.guild.id)]["bound_text_channels"].append(
                 channel.id)
-            save_settings(SETTINGS[str(ctx.guild.id)])
+            save_settings(SETTINGS)
             await ctx.send(f"{channel} has been added to the bound channel list.",
-                           elete_after=5)
+                           delete_after=5)
 
     @admin_check()
     @check_bound_text()
@@ -148,6 +147,14 @@ class Admin(commands.Cog):
                            delete_after=10)
         else:
             await ctx.send(f"Reloaded Cog: {cog}.", delete_after=5)
+
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        """ When a new member joins. """
+        new_user_role = discord.utils.get(
+            member.guild.roles, id=SETTINGS[str(member.guild.id)]['base_role']
+        )
+        await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
 
 
 def setup(bot):

@@ -71,15 +71,6 @@ async def on_command_error(ctx, error):
 
 
 @BOT.event
-async def on_member_join(member):
-    """ When a new member joins. """
-    new_user_role = discord.utils.get(
-        member.guild.roles, id=174703372631277569
-    )
-    await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
-
-
-@BOT.event
 async def on_ready():
     """ When Discord bot is ready. """
     await BOT.change_presence(

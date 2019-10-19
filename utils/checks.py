@@ -2,14 +2,15 @@
 
 from discord.ext import commands
 from utils.settings import SETTINGS
-from utils.exceptions import UnpermittedChannel
+from utils.exceptions import UnpermittedChannel, NotAnAdmin
 
 
 def admin_check():
     """ Checks the executing user is in the Admin list. """
     def predicate(ctx):
         if ctx.message.author.id not in SETTINGS[str(ctx.guild.id)]["admins"]:
-            return False
+            raise NotAnAdmin(
+                f"You are not an admin of {ctx.guild}: {ctx.guild.id}.")
         return True
     return commands.check(predicate)
 

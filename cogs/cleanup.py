@@ -6,12 +6,11 @@ from discord.ext import commands
 from utils.checks import admin_check
 
 
-def is_music_command(msg):
+def is_groovy_command(msg):
     """ Is it a Groovy command? """
     if msg.content.startswith("-") or msg.author.id == 234395307759108106:
         return True
     return False
-
 
 def is_pinned(msg):
     """ Is it a pinned command? """
@@ -38,7 +37,7 @@ class Cleanup(commands.Cog):
         if count > 300:
             await ctx.send(f"Fuck you, no more than 300 messages to clean.")
         else:
-            deleted = await ctx.channel.purge(limit=count, check=is_music_command)
+            deleted = await ctx.channel.purge(limit=count, check=is_groovy_command)
             await ctx.channel.send(
                 f"Deleted {len(deleted)} music bot messages from {ctx.channel.mention}",
                 delete_after=5

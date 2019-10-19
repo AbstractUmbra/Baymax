@@ -2,6 +2,10 @@
 from discord.ext import commands
 
 
+class NotAnAdmin(Exception):
+    """ Exception for Not an admin of Server bot. """
+
+
 class UnpermittedChannel(Exception):
     """ Exception for an unpermitted text channel. """
 
