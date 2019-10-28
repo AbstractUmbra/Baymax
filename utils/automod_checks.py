@@ -18,7 +18,7 @@ def load_bans(path=BANNED_PATH):
             "user": 123456789012345678790
         }
         with open(path, "w+") as ban_file:
-            dump(banned_users, ban_file)
+            dump(banned_users, ban_file, indent=4)
     return banned_users
 
 
@@ -33,7 +33,7 @@ def load_mutes(path=MUTED_PATH):
             "user": 123456789012345678790
         }
         with open(path, "w+") as mute_file:
-            dump(muted_users, mute_file)
+            dump(muted_users, mute_file, indent=4)
     return muted_users
 
 
