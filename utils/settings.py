@@ -19,12 +19,15 @@ def load_settings(path=CONFIG_PATH):
             "admins": [],
             "bound_text_channels": [],
             "bot_description": "A generic use bot for fun, games and memes.",
+            "bot_prefix": "^"
         }
-        with open(path, "w+"):
-            json.dump(settings, path)
+        with open(path, "w+") as config_file:
+            json.dump(settings, config_file, indent=4)
     return settings
 
+
 SETTINGS = load_settings()
+
 
 def save_settings(settings_dict: dict, path=CONFIG_PATH):
     """ Save settings in a passed config file. """
