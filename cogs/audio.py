@@ -61,6 +61,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     async def create_source(cls, ctx, search: str, *, loop, download=False):
+        """ Create audio source. """
         loop = loop or asyncio.get_event_loop()
 
         to_run = partial(YTDL.extract_info, url=search, download=download)
@@ -187,6 +188,7 @@ class Audio(commands.Cog):
         self.players = {}
 
     async def cleanup(self, guild):
+        """ Cleanup audio. """
         try:
             await guild.voice_client.disconnect()
         except AttributeError:

@@ -12,6 +12,7 @@ def is_groovy_command(msg):
         return True
     return False
 
+
 def is_pinned(msg):
     """ Is it a pinned command? """
     if msg.pinned:
