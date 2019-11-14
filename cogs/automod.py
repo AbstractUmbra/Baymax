@@ -23,7 +23,7 @@ class AutoMod(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, msg):
         """ Mute someone. """
-        if msg.author.id in MUTED_USERS:
+        if msg.author.id in MUTED_USERS.values():
             return await msg.delete()
 
     @admin_check()
@@ -34,6 +34,18 @@ class AutoMod(commands.Cog):
         MUTED_USERS[member.display_name] = member.id
         save_mute(MUTED_USERS)
         print(f"{member.display_name} added to mute list.")
+
+    @admin_check()
+    @check_bound_text()
+    @commands.command(hidden=True)
+    async def unmute(self, ctx, member: discord.Member):
+        """ Mute a user - delete ANY message they send. """
+        for name, user_id in MUTED_USERS.items():
+            if member.id == user_id:
+                unmute_me = name
+                break
+        MUTED_USERS.pop(str(unmute_me), None)
+        save_mute(MUTED_USERS)
 
     @admin_check()
     @check_bound_text()

@@ -67,7 +67,7 @@ async def on_command_error(ctx, error):
         await ctx.send(error)
         await ctx.message.delete(delay=5)
     else:
-        await ctx.send(f"Error caught. Type: {error}.")
+        await ctx.send(f"Error caught. Type: {error}.", delete_after=10)
 
 
 @BOT.event

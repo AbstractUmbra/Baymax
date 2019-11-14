@@ -40,7 +40,6 @@ def load_mutes(path=MUTED_PATH):
 MUTED_USERS = load_mutes()
 BANNED_USERS = load_bans()
 
-
 def save_bans(ban_dict: dict, path=BANNED_PATH):
     """ Save ban dict. """
     with open(path, "w") as ban_path:

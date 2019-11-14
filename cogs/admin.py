@@ -110,6 +110,13 @@ class Admin(commands.Cog):
             await member.move_to(ctx.message.author.voice.channel)
 
     @admin_check()
+    @check_bound_text()
+    @commands.command(hidden=True)
+    async def delrole(self, ctx, role: discord.Role):
+        """ Delete a discord role. """
+        return await role.delete()
+
+    @admin_check()
     @commands.command(hidden=True, name="load")
     async def load_cog(self, ctx, *, cog: str):
         """ Load a cog module. """

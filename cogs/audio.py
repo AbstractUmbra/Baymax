@@ -337,7 +337,7 @@ class Audio(commands.Cog):
             return
 
         voice_client.stop()
-        await ctx.send(f'**`{ctx.author}`**: Skipped the song!')
+        await ctx.send(f'**`{ctx.author}`**: Skipped the song!', delete_after=3)
 
     @check_bound_text()
     @commands.command(aliases=['q', 'playlist'])
@@ -461,7 +461,7 @@ class Audio(commands.Cog):
             if ctx.author.voice:
                 await ctx.author.voice.channel.connect()
             else:
-                await ctx.send("You are not connected to a voice channel.")
+                await ctx.send("You are not connected to a voice channel.", delete_after=10)
                 raise commands.CommandError(
                     "Author not connected to a voice channel.")
         elif ctx.voice_client.is_playing():
