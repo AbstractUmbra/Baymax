@@ -411,7 +411,7 @@ class Audio(commands.Cog):
         await ctx.send(f'**`{ctx.author}`**: Set the volume to **{vol}%**', delete_after=5)
 
     @check_bound_text()
-    @commands.command()
+    @commands.command(aliases=["dc"])
     async def stop(self, ctx):
         """Stop the currently playing song and destroy the player.
         !Warning!
