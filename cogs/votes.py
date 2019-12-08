@@ -23,10 +23,10 @@ class Voting(commands.Cog):
         total.set_author(name=self.bot.user.name)
         total.set_thumbnail(url=self.bot.user.avatar_url)
         async for msg in channel.history(limit=50):
+            if not msg.reactions:
+                #count[msg.content] = None
+                continue
             if msg.author.id != self.bot.user.id and not msg.content.startswith("^"):
-                if msg.reactions is None:
-                    count[msg.content] = 0
-                    continue
                 for reaction in msg.reactions:
                     if reaction.count is not None:
                         count[msg.content] = reaction.count
@@ -37,10 +37,16 @@ class Voting(commands.Cog):
         count_list = nlargest(5, count, key=count.get)
         count_string = "\n".join(item for item in count_list)
         total.add_field(name="**Highest voted**",
-                        value=f"**{count_string}**", inline=False)
+                        value=f"**{count_string}**", inline=True)
         to_pin = await channel.send(embed=total)
         await to_pin.pin()
 
+    @commands.command(hidden=True)
+    async def new_votecount(self, ctx, channel: discord.TextChannel = None):
+        if channel is None:
+            channel = ctx.channel
+        async for msg in channel.history(limit=50):
+            
 
 def setup(bot):
     """ Cog setup function. """
