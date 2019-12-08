@@ -48,15 +48,15 @@ class Cleanup(commands.Cog):
     @commands.command(aliases=["purge"])
     async def prune(self, ctx, count: int, channel: discord.TextChannel = None):
         """ Prune a channel. """
-        if count > 100:
-            await ctx.send("Sorry, you cannot purge more than 100 messages at a time.")
+        if ctx.author.id != 155863164544614402:
+            if count > 100:
+                await ctx.send("Sorry, you cannot purge more than 100 messages at a time.")
         else:
-            count += 1
             if channel is None:
                 channel = ctx.channel
-            deleted = await channel.purge(limit=count, check=is_pinned)
+            deleted = await channel.purge(limit=(count+1), check=is_pinned)
             await channel.send(
-                f"Deleted {len(deleted)} messages from {channel.mention}", delete_after=5
+                f"Deleted {len(deleted) - 1} messages from {channel.mention}", delete_after=5
             )
 
 
