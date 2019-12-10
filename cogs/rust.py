@@ -1,8 +1,8 @@
 """ Rust Updates Cog. """
 import time
 
-import discord
 import aiohttp
+import discord
 from discord.ext import commands, tasks
 
 from utils.rust_checks import save_rust_config, RUST_CONFIG
@@ -62,11 +62,10 @@ class Rust(commands.Cog):
     async def rust_server_update(self):
         """ Post the update. """
         # Get the update details first, returns json dict
-        async with self.rust_cs.get("https://api.rust-servers.info/update-server/") as srv_update:
-                details = await srv_update.json()
-                print(f"details: {details}")
-                epoch = details['timestamp']
-                srv_build_id = details['buildID']
+        async with self.rust_cs.get("https://api.rust-servers.info/update_server/") as srv_update:
+            details = await srv_update.json()
+            epoch = details['timestamp']
+            srv_build_id = details['buildID']
 
         if srv_build_id == RUST_CONFIG['srv_build_id']:
             return
