@@ -6,7 +6,9 @@ import aiohttp
 import discord
 from discord.ext import commands, tasks
 
-from utils.rust_checks import save_rust_config, RUST_CONFIG
+from utils.rust_checks import load_rust_config, save_rust_config
+
+RUST_CONFIG = load_rust_config("../config/rust-updates.json")
 
 
 class Rust(commands.Cog):
@@ -53,9 +55,10 @@ class Rust(commands.Cog):
 
         if build_id == RUST_CONFIG['build_id']:
             # No update since last check
-            return
+            pass
         else:
             RUST_CONFIG["build_id"] = build_id
+
         RUST_CONFIG["last_client_update_check"] = datetime.now().strftime(
             "%d-%m-%Y %H:%M")
         save_rust_config(RUST_CONFIG)
@@ -91,9 +94,10 @@ class Rust(commands.Cog):
             srv_build_id = details['buildID']
 
         if srv_build_id == RUST_CONFIG['srv_build_id']:
-            return
+            pass
         else:
             RUST_CONFIG["srv_build_id"] = srv_build_id
+
         RUST_CONFIG["last_srv_update_check"] = datetime.now().strftime(
             "%d-%m-%Y %H:%M")
         save_rust_config(RUST_CONFIG)
@@ -130,6 +134,7 @@ class Rust(commands.Cog):
     async def after_rust_client_update(self):
         """ After task for client. """
         await self.rust_cs.close()
+        RUST_CONFIG = load_rust_config("../config/rust-updates.json")
 
     @rust_server_update.before_loop
     async def before_rust_server_update(self):
@@ -142,6 +147,7 @@ class Rust(commands.Cog):
     async def after_rust_server_update(self):
         """ After task for server. """
         await self.rust_cs.close()
+        RUST_CONFIG = load_rust_config("../config/rust-updates.json")
 
 
 def setup(bot):
