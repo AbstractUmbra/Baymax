@@ -1,4 +1,5 @@
 """ Rust Updates Cog. """
+from datetime import datetime
 import time
 
 import aiohttp
@@ -21,6 +22,26 @@ class Rust(commands.Cog):
         self.rust_client_update.cancel()
         self.rust_server_update.cancel()
 
+    @commands.command(hidden=True)
+    async def manual_client_check(self, ctx):
+        """ Manually post the client update details - tests if api works. """
+        async with self.rust_cs.get("https://api.rust-servers.info/update/") as cli_update:
+            details = await cli_update.json()
+        cli_time = time.strftime(
+            '%d-%m-%Y %H:%M', time.localtime(int(details['timestamp'])))
+        await ctx.send(f"Client ID: {details['buildID']}", delete_after=10)
+        return await ctx.send(f"Client TD: {cli_time}", delete_after=10)
+
+    @commands.command(hidden=True)
+    async def manual_server_check(self, ctx):
+        """ Manually post the server update details - tests if api works. """
+        async with self.rust_cs.get("https://api.rust-servers.info/update_server/") as srv_update:
+            details = await srv_update.json()
+        cli_time = time.strftime(
+            '%d-%m-%Y %H:%M', time.localtime(int(details['timestamp'])))
+        await ctx.send(f"Client ID: {details['buildID']}", delete_after=10)
+        return await ctx.send(f"Client TD: {cli_time}", delete_after=10)
+
     @tasks.loop(minutes=5.0)
     async def rust_client_update(self):
         """ Post the update. """
@@ -35,7 +56,9 @@ class Rust(commands.Cog):
             return
         else:
             RUST_CONFIG["build_id"] = build_id
-            save_rust_config(RUST_CONFIG)
+        RUST_CONFIG["last_client_update_check"] = datetime.now().strftime(
+            "%d-%m-%Y %H:%M")
+        save_rust_config(RUST_CONFIG)
 
         # get the channel to send to.
         rust_channel = self.bot.get_channel(
@@ -71,7 +94,9 @@ class Rust(commands.Cog):
             return
         else:
             RUST_CONFIG["srv_build_id"] = srv_build_id
-            save_rust_config(RUST_CONFIG)
+        RUST_CONFIG["last_srv_update_check"] = datetime.now().strftime(
+            "%d-%m-%Y %H:%M")
+        save_rust_config(RUST_CONFIG)
 
         # get the channel to send to.
         rust_channel = self.bot.get_channel(
@@ -96,22 +121,26 @@ class Rust(commands.Cog):
 
     @rust_client_update.before_loop
     async def before_rust_client_update(self):
+        """ Before task for client. """
         await self.bot.wait_until_ready()
         if self.rust_cs.closed:
             self.rust_cs = aiohttp.ClientSession()
 
     @rust_client_update.after_loop
     async def after_rust_client_update(self):
+        """ After task for client. """
         await self.rust_cs.close()
 
     @rust_server_update.before_loop
     async def before_rust_server_update(self):
+        """ Before task for server. """
         await self.bot.wait_until_ready()
         if self.rust_cs.closed:
             self.rust_cs = aiohttp.ClientSession()
 
     @rust_server_update.after_loop
     async def after_rust_server_update(self):
+        """ After task for server. """
         await self.rust_cs.close()
 
 
