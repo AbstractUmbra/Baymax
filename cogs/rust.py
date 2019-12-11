@@ -53,36 +53,32 @@ class Rust(commands.Cog):
             epoch = details['timestamp']
             build_id = details['buildID']
 
-        if build_id == RUST_CONFIG['build_id']:
-            # No update since last check
-            pass
-        else:
-            RUST_CONFIG["build_id"] = build_id
-
         RUST_CONFIG["last_client_update_check"] = datetime.now().strftime(
             "%d-%m-%Y %H:%M")
-        save_rust_config(RUST_CONFIG)
 
-        # get the channel to send to.
-        rust_channel = self.bot.get_channel(
-            int(RUST_CONFIG["174702278673039360"]['channel']))
+        if build_id != RUST_CONFIG['build_id']:
+            RUST_CONFIG["build_id"] = build_id
 
-        actual_time = time.strftime(
-            "%d-%m-%Y %H:%M", time.localtime(int(epoch)))
+            # get the channel to send to.
+            rust_channel = self.bot.get_channel(
+                int(RUST_CONFIG["174702278673039360"]['channel']))
 
-        update_embed = discord.Embed(title="Client update released!",
-                                     color=0xb7410e)
-        update_embed.set_author(name="Rust Update API")
-        update_embed.set_thumbnail(
-            url="https://pbs.twimg.com/profile_images/"
-            "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
-        update_embed.add_field(name=f"Build ID",
-                               value=f"{build_id}",
-                               inline=True)
-        update_embed.add_field(name="Released at",
-                               value=f"{actual_time}",
-                               inline=True)
-        return await rust_channel.send(embed=update_embed)
+            actual_time = time.strftime(
+                "%d-%m-%Y %H:%M", time.localtime(int(epoch)))
+
+            update_embed = discord.Embed(title="Client update released!",
+                                         color=0xb7410e)
+            update_embed.set_author(name="Rust Update API")
+            update_embed.set_thumbnail(
+                url="https://pbs.twimg.com/profile_images/"
+                "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
+            update_embed.add_field(name=f"Build ID",
+                                   value=f"{build_id}",
+                                   inline=True)
+            update_embed.add_field(name="Released at",
+                                   value=f"{actual_time}",
+                                   inline=True)
+            return await rust_channel.send(embed=update_embed)
 
     @tasks.loop(minutes=5.0)
     async def rust_server_update(self):
@@ -93,40 +89,38 @@ class Rust(commands.Cog):
             epoch = details['timestamp']
             srv_build_id = details['buildID']
 
-        if srv_build_id == RUST_CONFIG['srv_build_id']:
-            pass
-        else:
-            RUST_CONFIG["srv_build_id"] = srv_build_id
-
         RUST_CONFIG["last_srv_update_check"] = datetime.now().strftime(
             "%d-%m-%Y %H:%M")
-        save_rust_config(RUST_CONFIG)
 
-        # get the channel to send to.
-        rust_channel = self.bot.get_channel(
-            int(RUST_CONFIG["174702278673039360"]['channel']))
+        if srv_build_id != RUST_CONFIG['srv_build_id']:
+            RUST_CONFIG["srv_build_id"] = srv_build_id
 
-        actual_time = time.strftime(
-            "%d-%m-%Y %H:%M", time.localtime(int(epoch)))
+            # get the channel to send to.
+            rust_channel = self.bot.get_channel(
+                int(RUST_CONFIG["174702278673039360"]['channel']))
 
-        update_embed = discord.Embed(title="Server update released - WIPE HYPE",
-                                     color=0xb7410e)
-        update_embed.set_author(name="Rust Update API")
-        update_embed.set_thumbnail(
-            url="https://pbs.twimg.com/profile_images/"
-            "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
-        update_embed.add_field(name=f"Server Build ID",
-                               value=f"{srv_build_id}",
-                               inline=True)
-        update_embed.add_field(name="Released at",
-                               value=f"{actual_time}",
-                               inline=True)
-        return await rust_channel.send(embed=update_embed)
+            actual_time = time.strftime(
+                "%d-%m-%Y %H:%M", time.localtime(int(epoch)))
+
+            update_embed = discord.Embed(title="Server update released - WIPE HYPE",
+                                         color=0xb7410e)
+            update_embed.set_author(name="Rust Update API")
+            update_embed.set_thumbnail(
+                url="https://pbs.twimg.com/profile_images/"
+                "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
+            update_embed.add_field(name=f"Server Build ID",
+                                   value=f"{srv_build_id}",
+                                   inline=True)
+            update_embed.add_field(name="Released at",
+                                   value=f"{actual_time}",
+                                   inline=True)
+            return await rust_channel.send(embed=update_embed)
 
     @rust_client_update.before_loop
     async def before_rust_client_update(self):
         """ Before task for client. """
         await self.bot.wait_until_ready()
+        RUST_CONFIG = load_rust_config("../config/rust-updates.json")
         if self.rust_cs.closed:
             self.rust_cs = aiohttp.ClientSession()
 
@@ -134,12 +128,13 @@ class Rust(commands.Cog):
     async def after_rust_client_update(self):
         """ After task for client. """
         await self.rust_cs.close()
-        RUST_CONFIG = load_rust_config("../config/rust-updates.json")
+        save_rust_config(RUST_CONFIG)
 
     @rust_server_update.before_loop
     async def before_rust_server_update(self):
         """ Before task for server. """
         await self.bot.wait_until_ready()
+        RUST_CONFIG = load_rust_config("../config/rust-updates.json")
         if self.rust_cs.closed:
             self.rust_cs = aiohttp.ClientSession()
 
@@ -147,7 +142,7 @@ class Rust(commands.Cog):
     async def after_rust_server_update(self):
         """ After task for server. """
         await self.rust_cs.close()
-        RUST_CONFIG = load_rust_config("../config/rust-updates.json")
+        save_rust_config(RUST_CONFIG)
 
 
 def setup(bot):
