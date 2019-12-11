@@ -142,7 +142,6 @@ class Admin(commands.Cog):
         else:
             await ctx.send(f"Unloaded Cog: {cog}.", delete_after=5)
 
-    @admin_check()
     @commands.command(hidden=True, name="reload")
     async def reload_cog(self, ctx, *, cog: str):
         """ Reload a cog module. """
