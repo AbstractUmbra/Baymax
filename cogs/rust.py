@@ -16,13 +16,13 @@ class Rust(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.rust_client_update.start()
-        self.rust_server_update.start()
+        self.client_update.start()
+        self.server_update.start()
         self.rust_cs = aiohttp.ClientSession()
 
     def cog_unload(self):
-        self.rust_client_update.cancel()
-        self.rust_server_update.cancel()
+        self.client_update.cancel()
+        self.server_update.cancel()
 
     @commands.command(hidden=True)
     async def manual_client_check(self, ctx):
@@ -45,7 +45,7 @@ class Rust(commands.Cog):
         return await ctx.send(f"Client TD: {cli_time}", delete_after=10)
 
     @tasks.loop(minutes=5.0)
-    async def rust_client_update(self):
+    async def client_update(self):
         """ Post the update. """
         # Get the update details first, returns json dict
         async with self.rust_cs.get("https://api.rust-servers.info/update/") as update:
@@ -78,10 +78,11 @@ class Rust(commands.Cog):
             update_embed.add_field(name="Released at",
                                    value=f"{actual_time}",
                                    inline=True)
-            return await rust_channel.send(embed=update_embed)
+            await rust_channel.send(embed=update_embed)
+        save_rust_config(RUST_CONFIG)
 
     @tasks.loop(minutes=5.0)
-    async def rust_server_update(self):
+    async def server_update(self):
         """ Post the update. """
         # Get the update details first, returns json dict
         async with self.rust_cs.get("https://api.rust-servers.info/update_server/") as srv_update:
@@ -114,9 +115,10 @@ class Rust(commands.Cog):
             update_embed.add_field(name="Released at",
                                    value=f"{actual_time}",
                                    inline=True)
-            return await rust_channel.send(embed=update_embed)
+            await rust_channel.send(embed=update_embed)
+        save_rust_config(RUST_CONFIG)
 
-    @rust_client_update.before_loop
+    @client_update.before_loop
     async def before_rust_client_update(self):
         """ Before task for client. """
         await self.bot.wait_until_ready()
@@ -124,13 +126,12 @@ class Rust(commands.Cog):
         if self.rust_cs.closed:
             self.rust_cs = aiohttp.ClientSession()
 
-    @rust_client_update.after_loop
+    @client_update.after_loop
     async def after_rust_client_update(self):
         """ After task for client. """
         await self.rust_cs.close()
-        save_rust_config(RUST_CONFIG)
 
-    @rust_server_update.before_loop
+    @server_update.before_loop
     async def before_rust_server_update(self):
         """ Before task for server. """
         await self.bot.wait_until_ready()
@@ -138,11 +139,10 @@ class Rust(commands.Cog):
         if self.rust_cs.closed:
             self.rust_cs = aiohttp.ClientSession()
 
-    @rust_server_update.after_loop
+    @server_update.after_loop
     async def after_rust_server_update(self):
         """ After task for server. """
         await self.rust_cs.close()
-        save_rust_config(RUST_CONFIG)
 
 
 def setup(bot):
