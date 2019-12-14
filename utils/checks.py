@@ -1,6 +1,6 @@
 """ Utils addon - Checks. """
 
-from discord.ext import commands
+from discord.ext.commands import check
 from utils.settings import SETTINGS
 from utils.exceptions import UnpermittedChannel, NotAnAdmin
 
@@ -12,7 +12,7 @@ def admin_check():
             raise NotAnAdmin(
                 f"You are not an admin of {ctx.guild}: {ctx.guild.id}.")
         return True
-    return commands.check(predicate)
+    return check(predicate)
 
 
 def check_bound_text():
@@ -24,4 +24,4 @@ def check_bound_text():
                 f"The bot is not bound to this text channel: {ctx.channel}")
         else:
             return True
-    return commands.check(permitted_text)
+    return check(permitted_text)
