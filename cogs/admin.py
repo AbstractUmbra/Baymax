@@ -181,16 +181,19 @@ class Admin(commands.Cog):
         new_user_role = discord.utils.get(
             member.guild.roles, id=SETTINGS[str(member.guild.id)]['base_role']
         )
+
         def check(reaction, user):
             return user == member and str(reaction.emoji) == "👍"
 
-        await member.send(f"Add '👍' reaction to gain access to {member.guild.name}.")
+        await member.send(
+            f"Add '👍' reaction to solemly swear you'll be up to no good in {member.guild.name}."
+        )
         try:
-            reaction, user = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
+            _, _ = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
         except AsynTimeOut:
-            await member.send("Get fucked you didn't access fast enough.")
+            await member.send("Get fucked you didn't promise fast enough.")
         else:
-            await member.send("Noice")
+            await member.send("Mischief managed.")
             await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
 
 
