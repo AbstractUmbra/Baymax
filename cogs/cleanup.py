@@ -46,7 +46,7 @@ class Cleanup(commands.Cog):
 
     @admin_check()
     @commands.command(aliases=["purge"])
-    async def prune(self, ctx, count: int, channel: discord.TextChannel = None):
+    async def prune(self, ctx, count: int = 100, channel: discord.TextChannel = None):
         """ Prune a channel. """
         if ctx.author.id != 155863164544614402:
             if count > 100:
