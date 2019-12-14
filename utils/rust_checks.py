@@ -1,14 +1,14 @@
 """ Rust utils. """
 from json import load, dump
-from os import path as f_path
+from os import path as fpath
 
-PATH = f_path.join(f_path.dirname(__file__))
+PATH = fpath.join(fpath.dirname(__file__))
 
 
 def load_rust_config(path="../config/rust-updates.json"):
     """ Load update dict. """
-    actual_path = f_path.join(PATH, str(path))
-    if f_path.exists(actual_path):
+    actual_path = fpath.join(PATH, str(path))
+    if fpath.exists(actual_path):
         with open(actual_path) as conf_file:
             rust_config = load(conf_file)
     else:
@@ -23,7 +23,7 @@ def load_rust_config(path="../config/rust-updates.json"):
 
 def save_rust_config(rust_config: dict, path="../config/rust-updates.json"):
     """ Save the Rust config. """
-    actual_path = f_path.join(PATH, str(path))
-    with open(actual_path, "w+") as conf_path:
-        dump(rust_config, conf_path, indent=4)
+    actual_path = fpath.join(PATH, str(path))
+    with open(actual_path, "w+") as confpath:
+        dump(rust_config, confpath, indent=4)
     return True
