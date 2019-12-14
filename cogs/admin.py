@@ -185,9 +185,11 @@ class Admin(commands.Cog):
         def check(reaction, user):
             return user == member and str(reaction.emoji) == "👍"
 
-        await member.send(
+        message = await member.send(
             f"Add '👍' reaction to solemly swear you'll be up to no good in {member.guild.name}."
         )
+        await message.add_reaction("👍")
+
         try:
             _, _ = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
         except AsynTimeOut:
