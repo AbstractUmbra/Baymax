@@ -26,6 +26,14 @@ class AutoMod(commands.Cog):
         if msg.author.id in MUTED_USERS.values():
             return await msg.delete()
 
+    @commands.Cog.listener()
+    async def on_reaction_add(self, reaction, user):
+        """ On reactions are added... do this. """
+        # Debug stuff, lol
+        if reaction.message.id == 655269349925584896:
+            if reaction.emoji == "❤️":
+                await user.send("We love you too.")
+
     @admin_check()
     @check_bound_text()
     @commands.command(hidden=True)
@@ -33,7 +41,7 @@ class AutoMod(commands.Cog):
         """ Mute a user - delete ANY message they send. """
         MUTED_USERS[member.display_name] = member.id
         save_mute(MUTED_USERS)
-        print(f"{member.display_name} added to mute list.")
+        await ctx.author.send(f"{member.display_name} added to mute list.")
 
     @admin_check()
     @check_bound_text()
@@ -45,6 +53,7 @@ class AutoMod(commands.Cog):
                 unmute_me = name
                 break
         MUTED_USERS.pop(str(unmute_me), None)
+        await ctx.author.send(f"{member.display_name} removed from the mute list.")
         save_mute(MUTED_USERS)
 
     @admin_check()
@@ -53,6 +62,7 @@ class AutoMod(commands.Cog):
     async def autoban(self, ctx, member: discord.Member):
         """ Add user to autoban - as soon as they join they are autobanned. """
         BANNED_USERS[member.display_name] = member.id
+        await ctx.author.send(f"{member.display_name} added to the ban list.")
         save_bans(BANNED_USERS)
         await member.send("Absolutely cuntstain.")
         await member.ban(reason="Absolutely cuntstain.")
