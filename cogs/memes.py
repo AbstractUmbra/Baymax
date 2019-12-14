@@ -103,6 +103,10 @@ class Memes(commands.Cog):
             "^QUERY^", url_encode(str(msg_body)))
         await ctx.send(lmgtfy_url)
 
+    @commands.command()
+    async def emojipls(self, ctx, emoji):
+        """ Returns the char of emoji. """
+        await ctx.send(fr"\{emoji}", delete_after=20)
 
 def setup(bot):
     """ Cog setup function. """
