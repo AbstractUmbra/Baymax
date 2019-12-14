@@ -1,15 +1,15 @@
 """ Automod utils. """
 from json import load, dump
-from os import path as f_path
+from os import path as fpath
 
-PATH = f_path.join(f_path.dirname(__file__))
-BANNED_PATH = f_path.join(PATH, "../config/banned.json")
-MUTED_PATH = f_path.join(PATH, "../config/muted.json")
+PATH = fpath.join(fpath.dirname(__file__))
+BANNED_PATH = fpath.join(PATH, "../config/banned.json")
+MUTED_PATH = fpath.join(PATH, "../config/muted.json")
 
 
 def load_bans(path=BANNED_PATH):
     """ Load ban dict. """
-    if f_path.exists(path):
+    if fpath.exists(path):
         with open(path) as ban_file:
             banned_users = load(ban_file)
     else:
@@ -24,7 +24,7 @@ def load_bans(path=BANNED_PATH):
 
 def load_mutes(path=MUTED_PATH):
     """ Load mute dict. """
-    if f_path.exists(path):
+    if fpath.exists(path):
         with open(path) as mute_file:
             muted_users = load(mute_file)
     else:
