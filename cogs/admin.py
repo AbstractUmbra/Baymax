@@ -1,4 +1,5 @@
 """ Cleanup Cog. """
+from asyncio import TimeoutError as AsynTimeOut
 
 import discord
 from discord.ext import commands
@@ -12,6 +13,33 @@ class Admin(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(name="id")
+    async def get_channel_id(self, ctx, channel: discord.TextChannel = None):
+        """ List the ID of a passed channel or current channel. """
+        if channel is None:
+            channel = ctx.channel
+        await ctx.send(f"{channel.name}: `{channel.id}`", delete_after=20)
+
+    @commands.command(name="ids")
+    async def get_all_ids(self, ctx):
+        """ prints all IDs in an embed. """
+        texties = ctx.guild.text_channels
+        voicies = ctx.guild.voice_channels
+        texties_string = "\n".join(
+            f"{chann.name}: {chann.id}" for chann in texties)
+        voicies_string = "\n".join(
+            f"{chann.name}: {chann.id}" for chann in voicies)
+        id_embed = discord.Embed(title=f"IDs for {ctx.guild.name}",
+                                 description="List of all IDs.",
+                                 colour=ctx.author.colour)
+        id_embed.set_author(icon_url=self.bot.user.avatar_url,
+                            name=self.bot.user.name)
+        id_embed.add_field(name="Text Channels",
+                           value=f"{texties_string}", inline=True)
+        id_embed.add_field(name="Voice Channels",
+                           value=f"{voicies_string}", inline=True)
+        await ctx.author.send(embed=id_embed)
 
     @commands.command()
     async def adminlist(self, ctx):
@@ -110,13 +138,6 @@ class Admin(commands.Cog):
             await member.move_to(ctx.message.author.voice.channel)
 
     @admin_check()
-    @check_bound_text()
-    @commands.command(hidden=True)
-    async def delrole(self, ctx, role: discord.Role):
-        """ Delete a discord role. """
-        return await role.delete()
-
-    @admin_check()
     @commands.command(hidden=True, name="load")
     async def load_cog(self, ctx, *, cog: str):
         """ Load a cog module. """
@@ -160,7 +181,17 @@ class Admin(commands.Cog):
         new_user_role = discord.utils.get(
             member.guild.roles, id=SETTINGS[str(member.guild.id)]['base_role']
         )
-        await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
+        def check(reaction, user):
+            return user == member and str(reaction.emoji) == "👍"
+
+        await member.send(f"Add '👍' reaction to gain access to {member.guild.name}.")
+        try:
+            reaction, user = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
+        except AsynTimeOut:
+            await member.send("Get fucked you didn't access fast enough.")
+        else:
+            await member.send("Noice")
+            await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
 
 
 def setup(bot):
