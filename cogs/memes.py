@@ -106,7 +106,10 @@ class Memes(commands.Cog):
     @commands.command()
     async def emojipls(self, ctx, emoji):
         """ Returns the char of emoji. """
-        await ctx.send(fr"\{emoji}", delete_after=20)
+        for g_emoji in ctx.guild.emojis:
+            if str(g_emoji) == emoji:
+                await ctx.send(f"{g_emoji} | {g_emoji.id}", delete_after=20)
+
 
 def setup(bot):
     """ Cog setup function. """
