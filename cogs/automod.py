@@ -26,14 +26,6 @@ class AutoMod(commands.Cog):
         if msg.author.id in MUTED_USERS.values():
             return await msg.delete()
 
-    @commands.Cog.listener()
-    async def on_reaction_add(self, reaction, user):
-        """ On reactions are added... do this. """
-        # Debug stuff, lol
-        if reaction.message.id == 655269349925584896:
-            if reaction.emoji == "❤️":
-                await user.send("We love you too.")
-
     @admin_check()
     @check_bound_text()
     @commands.command(hidden=True)
