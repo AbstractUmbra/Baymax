@@ -77,7 +77,7 @@ async def on_ready():
         activity=discord.Game(
             name=f"{SETTINGS['bot_prefix']}help for help, fuckers.",
             status=discord.Status.online))
-    print(f"Logged in as: {BOT.user.name}: {BOT.user.id}")
+    print(f"Logged in as {BOT.user.name}: {BOT.user.id}")
     new_link = INVITE_LINK.replace("^ID^", str(SETTINGS['bot_id']))
     print(
         f"Use this URL to invite the bot to your server: {new_link}")
@@ -92,6 +92,7 @@ async def ping(ctx):
 BOT.load_extension("cogs.admin")
 BOT.load_extension("cogs.cleanup")
 BOT.load_extension("cogs.automod")
+BOT.load_extension("cogs.autoroles")
 BOT.load_extension("cogs.rust")
 
 BOT.run(SETTINGS["bot_token"])
