@@ -1,6 +1,4 @@
 """ Cleanup Cog. """
-from asyncio import TimeoutError as AsynTimeOut
-
 import discord
 from discord.ext import commands
 
@@ -169,34 +167,13 @@ class Admin(commands.Cog):
         cog_full = f"cogs.{cog}"
         try:
             self.bot.reload_extension(cog_full)
+        except commands.ExtensionNotLoaded:
+            self.bot.load_cog(cog_full)
         except Exception as err:
             await ctx.send(f"**`ERROR:`** {type(err).__name__} - {err}",
                            delete_after=10)
         else:
             await ctx.send(f"Reloaded Cog: {cog}.", delete_after=5)
-
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        """ When a new member joins. """
-        new_user_role = discord.utils.get(
-            member.guild.roles, id=SETTINGS[str(member.guild.id)]['base_role']
-        )
-
-        def check(reaction, user):
-            return user == member and str(reaction.emoji) == "👍"
-
-        message = await member.send(
-            f"Add '👍' reaction to solemly swear you'll be up to no good in {member.guild.name}."
-        )
-        await message.add_reaction("👍")
-
-        try:
-            _, _ = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
-        except AsynTimeOut:
-            await member.send("Get fucked you didn't promise fast enough.")
-        else:
-            await member.send("Mischief managed.")
-            await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
 
 
 def setup(bot):
