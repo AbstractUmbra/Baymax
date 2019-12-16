@@ -78,6 +78,7 @@ class Rust(commands.Cog):
             update_embed.add_field(name="Released at",
                                    value=f"{actual_time}",
                                    inline=True)
+            await rust_channel.send("@here")
             await rust_channel.send(embed=update_embed)
         save_rust_config(RUST_CONFIG)
 
