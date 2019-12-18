@@ -11,14 +11,20 @@ def mod_approval_check(reaction, user):
     """ Approval for moderator status. """
     guild = user.guild
     mod_role = discord.utils.get(guild.roles, id=315825729373732867)
-    return mod_role in user.roles and str(reaction.emoji) == "👍"
+    return ((mod_role in user.roles or
+             user.id == 155863164544614402)
+            and str(reaction.emoji) == "👍"
+            and reaction.message.channel.id == 656204288271319064)
 
 
 def dnd_approval_check(reaction, user):
     """ Approval for DnD chat. """
     guild = user.guild
     mod_role = discord.utils.get(guild.roles, id=460536832635961374)
-    return mod_role in user.roles and str(reaction.emoji) == "👍"
+    return ((mod_role in user.roles or
+             user.id == 155863164544614402)
+            and str(reaction.emoji) == "👍"
+            and reaction.message.channel.id == 460536968565227550)
 
 
 class AutoRoles(commands.Cog):
@@ -101,7 +107,7 @@ class AutoRoles(commands.Cog):
                 await message.add_reaction("👍")
 
                 try:
-                    _, react_member = await self.bot.wait_for(
+                    emoji, react_member = await self.bot.wait_for(
                         "reaction_add", timeout=28800.0, check=mod_approval_check)
                 except AsynTimeOut:
                     await mod_channel.send(
