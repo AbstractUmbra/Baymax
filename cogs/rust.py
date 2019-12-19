@@ -74,9 +74,6 @@ class Rust(commands.Cog):
             rust_channel = self.bot.get_channel(
                 int(RUST_CONFIG["174702278673039360"]['channel']))
 
-            actual_time = time.strftime(
-                "%d-%m-%Y %H:%M", time.localtime(int(epoch)))
-
             update_embed = discord.Embed(title="Client update released!",
                                          color=0xb7410e)
             update_embed.set_author(name="Rust Update API")
@@ -85,10 +82,7 @@ class Rust(commands.Cog):
                 "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
             update_embed.timestamp = datetime.fromtimestamp(int(epoch))
             update_embed.add_field(name=f"Build ID",
-                                   value=f"{build_id}",
-                                   inline=True)
-            update_embed.add_field(name="Released at",
-                                   value=f"{actual_time}",
+                                   value=f"`{build_id}`",
                                    inline=True)
             await rust_channel.send("@here")
             await rust_channel.send(embed=update_embed)
@@ -110,9 +104,6 @@ class Rust(commands.Cog):
             rust_channel = self.bot.get_channel(
                 int(RUST_CONFIG["174702278673039360"]['channel']))
 
-            actual_time = time.strftime(
-                "%d-%m-%Y %H:%M", time.localtime(int(epoch)))
-
             update_embed = discord.Embed(title="Server update released - WIPE HYPE",
                                          color=0xb7410e)
             update_embed.set_author(name="Rust Update API")
@@ -121,10 +112,7 @@ class Rust(commands.Cog):
                 "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
             update_embed.timestamp = datetime.fromtimestamp(int(epoch))
             update_embed.add_field(name=f"Server Build ID",
-                                   value=f"{srv_build_id}",
-                                   inline=True)
-            update_embed.add_field(name="Released at",
-                                   value=f"{actual_time}",
+                                   value=f"`{srv_build_id}`",
                                    inline=True)
             await rust_channel.send("@here")
             await rust_channel.send(embed=update_embed)
