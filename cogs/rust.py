@@ -83,7 +83,7 @@ class Rust(commands.Cog):
             update_embed.set_thumbnail(
                 url="https://pbs.twimg.com/profile_images/"
                 "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
-            update_embed.timestamp = datetime.now()
+            update_embed.timestamp = datetime.fromtimestamp(int(epoch))
             update_embed.add_field(name=f"Build ID",
                                    value=f"{build_id}",
                                    inline=True)
@@ -119,13 +119,14 @@ class Rust(commands.Cog):
             update_embed.set_thumbnail(
                 url="https://pbs.twimg.com/profile_images/"
                 "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
-            update_embed.timestamp = datetime.now()
+            update_embed.timestamp = datetime.fromtimestamp(int(epoch))
             update_embed.add_field(name=f"Server Build ID",
                                    value=f"{srv_build_id}",
                                    inline=True)
             update_embed.add_field(name="Released at",
                                    value=f"{actual_time}",
                                    inline=True)
+            await rust_channel.send("@here")
             await rust_channel.send(embed=update_embed)
         save_rust_config(RUST_CONFIG)
 
@@ -140,7 +141,7 @@ class Rust(commands.Cog):
     async def after_rust_client_update(self):
         """ After task for client. """
         save_rust_config(RUST_CONFIG)
-        await self.rust_cs.close()
+        # await self.rust_cs.close()
 
     @server_update.before_loop
     async def before_rust_server_update(self):
@@ -153,7 +154,7 @@ class Rust(commands.Cog):
     async def after_rust_server_update(self):
         """ After task for server. """
         save_rust_config(RUST_CONFIG)
-        await self.rust_cs.close()
+        # await self.rust_cs.close()
 
 
 def setup(bot):
