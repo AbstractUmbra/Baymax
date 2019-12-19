@@ -32,18 +32,6 @@ class Cleanup(commands.Cog):
         if msg.content.startswith("-") or msg.author.id == 234395307759108106:
             await msg.delete(delay=3)
 
-    @commands.command()
-    async def music_cleanup(self, ctx, count: int = 100):
-        """ Perform the music cleanup - bins all of 'Groovy' messages. """
-        if count > 300:
-            await ctx.send(f"Fuck you, no more than 300 messages to clean.")
-        else:
-            deleted = await ctx.channel.purge(limit=count, check=is_groovy_command)
-            await ctx.channel.send(
-                f"Deleted {len(deleted)} music bot messages from {ctx.channel.mention}",
-                delete_after=5
-            )
-
     @admin_check()
     @commands.command(aliases=["purge"])
     async def prune(self, ctx, count: int = 100, channel: discord.TextChannel = None):

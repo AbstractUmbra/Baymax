@@ -107,7 +107,7 @@ class AutoRoles(commands.Cog):
                 await message.add_reaction("👍")
 
                 try:
-                    emoji, react_member = await self.bot.wait_for(
+                    _, react_member = await self.bot.wait_for(
                         "reaction_add", timeout=28800.0, check=mod_approval_check)
                 except AsynTimeOut:
                     await mod_channel.send(

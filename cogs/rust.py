@@ -25,6 +25,20 @@ class Rust(commands.Cog):
         self.server_update.cancel()
 
     @commands.command(hidden=True)
+    async def dict_print(self, ctx):
+        """ Print the Current Dict info. """
+        dict_embed = discord.Embed(title="**Rust Dict Info**",
+                                   color=0x00ff00)
+        dict_embed.set_author(name=self.bot.user.name)
+        dict_embed.set_thumbnail(url=self.bot.user.avatar_url)
+        dict_embed.timestamp = datetime.now()
+        for key, value in RUST_CONFIG.items():
+            dict_embed.add_field(name=f"**{key}**",
+                                 value=f"{value}",
+                                 inline=True)
+        await ctx.send(embed=dict_embed)
+
+    @commands.command(hidden=True)
     async def manual_client_check(self, ctx):
         """ Manually post the client update details - tests if api works. """
         async with self.rust_cs.get("https://api.rust-servers.info/update/") as cli_update:
@@ -53,9 +67,6 @@ class Rust(commands.Cog):
             epoch = details['timestamp']
             build_id = details['buildID']
 
-        RUST_CONFIG["last_client_update_check"] = datetime.now().strftime(
-            "%d-%m-%Y %H:%M")
-
         if build_id != RUST_CONFIG['build_id']:
             RUST_CONFIG["build_id"] = build_id
 
@@ -72,6 +83,7 @@ class Rust(commands.Cog):
             update_embed.set_thumbnail(
                 url="https://pbs.twimg.com/profile_images/"
                 "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
+            update_embed.timestamp = datetime.now()
             update_embed.add_field(name=f"Build ID",
                                    value=f"{build_id}",
                                    inline=True)
@@ -91,9 +103,6 @@ class Rust(commands.Cog):
             epoch = details['timestamp']
             srv_build_id = details['buildID']
 
-        RUST_CONFIG["last_srv_update_check"] = datetime.now().strftime(
-            "%d-%m-%Y %H:%M")
-
         if srv_build_id != RUST_CONFIG['srv_build_id']:
             RUST_CONFIG["srv_build_id"] = srv_build_id
 
@@ -110,6 +119,7 @@ class Rust(commands.Cog):
             update_embed.set_thumbnail(
                 url="https://pbs.twimg.com/profile_images/"
                 "378800000826280720/8f9145eff97d162122af02fc1488c611_400x400.png")
+            update_embed.timestamp = datetime.now()
             update_embed.add_field(name=f"Server Build ID",
                                    value=f"{srv_build_id}",
                                    inline=True)
@@ -123,26 +133,26 @@ class Rust(commands.Cog):
     async def before_rust_client_update(self):
         """ Before task for client. """
         await self.bot.wait_until_ready()
-        RUST_CONFIG = load_rust_config("../config/rust-updates.json")
         if self.rust_cs.closed:
             self.rust_cs = aiohttp.ClientSession()
 
     @client_update.after_loop
     async def after_rust_client_update(self):
         """ After task for client. """
+        save_rust_config(RUST_CONFIG)
         await self.rust_cs.close()
 
     @server_update.before_loop
     async def before_rust_server_update(self):
         """ Before task for server. """
         await self.bot.wait_until_ready()
-        RUST_CONFIG = load_rust_config("../config/rust-updates.json")
         if self.rust_cs.closed:
             self.rust_cs = aiohttp.ClientSession()
 
     @server_update.after_loop
     async def after_rust_server_update(self):
         """ After task for server. """
+        save_rust_config(RUST_CONFIG)
         await self.rust_cs.close()
 
 
