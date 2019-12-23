@@ -3,7 +3,7 @@ import discord
 from discord.ext import commands
 
 from utils.settings import SETTINGS, save_settings
-from utils.checks import admin_check, check_bound_text
+from utils.decorators import with_roles, in_channel
 
 
 class Admin(commands.Cog):
@@ -45,60 +45,56 @@ class Admin(commands.Cog):
         for admin in SETTINGS[str(ctx.guild.id)]["admins"]:
             await ctx.send(ctx.guild.get_member(admin), delete_after=20)
 
-    @check_bound_text()
+    @with_roles(*SETTINGS['admins'])
     @commands.command()
-    async def perms(self, ctx, member: discord.Member = None):
+    async def perms(self, ctx, role: discord.Member = None):
         """ Print the passed user perms to the console. """
-        if member is None:
-            member = ctx.author
+        if role is None:
+            role = ctx.author
         user_roles = '\n'.join(
-            perm for perm, value in member.guild_permissions if value)
-        role_embed = discord.Embed(title=f"User roles for {member}",
+            perm for perm, value in role.guild_permissions if value)
+        role_embed = discord.Embed(title=f"User roles for {role}",
                                    description=f"Server: {ctx.guild.name}",
-                                   colour=member.colour)
-        role_embed.set_author(icon_url=member.avatar_url, name=str(member))
+                                   colour=role.colour)
+        role_embed.set_author(icon_url=role.avatar_url, name=str(role))
         role_embed.add_field(
             name="\uFEFF", value=user_roles, inline=True)
         await ctx.author.send(embed=role_embed)
 
-    @admin_check()
-    @check_bound_text()
+    @with_roles(*SETTINGS['admins'])
     @commands.command()
-    async def add(self, ctx, member: discord.Member):
-        """ Add a member to the admin list. """
-        if member is None:
+    async def add(self, ctx, role: discord.Role):
+        """ Add a role to the admin list. """
+        if role is None:
             await ctx.send(f"Invalid usage; use {SETTINGS[str(ctx.guild.id)]['bot_prefix']}"
                            "admin add <@user>.",
                            delete_after=5)
-        elif member.id in SETTINGS[str(ctx.guild.id)]["admins"]:
-            await ctx.send(f"User {member} is already an admin.",
+        elif role.id in SETTINGS[str(ctx.guild.id)]["admins"]:
+            await ctx.send(f"User {role} is already an admin.",
                            delete_after=5)
         else:
-            SETTINGS[str(ctx.guild.id)]["admins"].append(member.id)
+            SETTINGS[str(ctx.guild.id)]["admins"].append(role.id)
             save_settings(SETTINGS)
-            await ctx.send(f"{member} has been added to admin list.",
+            await ctx.send(f"{role} has been added to admin list.",
                            delete_after=5)
 
-    @admin_check()
-    @check_bound_text()
+    @with_roles(*SETTINGS['admins'])
     @commands.command()
-    async def remove(self, ctx, member: discord.Member):
-        """ Remove a member from the admin list. """
-        if member is None:
+    async def remove(self, ctx, role: discord.Role):
+        """ Remove a role from the admin list. """
+        if role is None:
             await ctx.send(f"Missing argument use {SETTINGS[str(ctx.guild.id)]['bot_prefix']}"
                            "admin remove <@user>",
                            delete_after=5)
-        elif member.id not in SETTINGS[str(ctx.guild.id)]["admins"]:
+        elif role.id not in SETTINGS[str(ctx.guild.id)]["admins"]:
             await ctx.send("Admin not found in admin list.",
                            delete_after=5)
         else:
-            SETTINGS[str(ctx.guild.id)]["admins"].remove(member.id)
+            SETTINGS[str(ctx.guild.id)]["admins"].remove(role.id)
             save_settings(SETTINGS)
-            await ctx.send(f"{member} was removed from admin list.",
+            await ctx.send(f"{role} was removed from admin list.",
                            delete_after=5)
 
-    @admin_check()
-    @check_bound_text()
     @commands.command()
     async def add_bound_channel(self, ctx, channel: discord.TextChannel):
         """ Add a text channel to be bound. """
@@ -118,24 +114,21 @@ class Admin(commands.Cog):
             await ctx.send(f"{channel} has been added to the bound channel list.",
                            delete_after=5)
 
-    @admin_check()
-    @check_bound_text()
     @commands.command(hidden=True)
-    async def summon(self, ctx, member: discord.Member):
-        """ Summon a voice member to current executors voice channel. """
-        if member is None:
+    async def summon(self, ctx, role: discord.Member):
+        """ Summon a voice role to current executors voice channel. """
+        if role is None:
             await ctx.send(
                 f"Missing argument, use `{SETTINGS[str(ctx.guild.id)]['bot_prefix']}"
                 f"admin summonfucker <@user>`.",
                 delete_after=5
             )
-        elif member.voice.channel is ctx.message.author.voice.channel:
+        elif role.voice.channel is ctx.message.author.voice.channel:
             await ctx.send(f"They're already in your voice chat, you wank.",
                            delete_after=5)
         else:
-            await member.move_to(ctx.message.author.voice.channel)
+            await role.move_to(ctx.message.author.voice.channel)
 
-    @admin_check()
     @commands.command(hidden=True, name="load")
     async def load_cog(self, ctx, *, cog: str):
         """ Load a cog module. """
@@ -148,7 +141,6 @@ class Admin(commands.Cog):
         else:
             await ctx.send(f"Loaded Cog: {cog}.", delete_after=5)
 
-    @admin_check()
     @commands.command(hidden=True, name="unload")
     async def unload_cog(self, ctx, *, cog: str):
         """ Unload a cog module. """

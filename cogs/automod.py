@@ -3,7 +3,8 @@
 import discord
 from discord.ext import commands
 
-from utils.checks import check_bound_text, admin_check
+from utils.settings import SETTINGS
+from utils.decorators import with_roles, in_channel
 from utils.automod_checks import save_bans, save_mute, BANNED_USERS, MUTED_USERS
 
 
@@ -26,8 +27,8 @@ class AutoMod(commands.Cog):
         if msg.author.id in MUTED_USERS.values():
             return await msg.delete()
 
-    @admin_check()
-    @check_bound_text()
+    @with_roles(*SETTINGS['admins'])
+    @in_channel(*SETTINGS['whitelisted_channels'])
     @commands.command(hidden=True)
     async def mute(self, ctx, member: discord.Member):
         """ Mute a user - delete ANY message they send. """
@@ -35,8 +36,8 @@ class AutoMod(commands.Cog):
         save_mute(MUTED_USERS)
         await ctx.author.send(f"{member.display_name} added to mute list.")
 
-    @admin_check()
-    @check_bound_text()
+    @with_roles(*SETTINGS['admins'])
+    @in_channel(*SETTINGS['whitelisted_channels'])
     @commands.command(hidden=True)
     async def unmute(self, ctx, member: discord.Member):
         """ Mute a user - delete ANY message they send. """
@@ -48,8 +49,8 @@ class AutoMod(commands.Cog):
         await ctx.author.send(f"{member.display_name} removed from the mute list.")
         save_mute(MUTED_USERS)
 
-    @admin_check()
-    @check_bound_text()
+    @with_roles(*SETTINGS['admins'])
+    @in_channel(*SETTINGS['whitelisted_channels'])
     @commands.command(hidden=True)
     async def autoban(self, ctx, member: discord.Member):
         """ Add user to autoban - as soon as they join they are autobanned. """
@@ -59,14 +60,14 @@ class AutoMod(commands.Cog):
         await member.send("Absolutely cuntstain.")
         await member.ban(reason="Absolutely cuntstain.")
 
-    @check_bound_text()
+    @in_channel(*SETTINGS['whitelisted_channels'])
     @commands.command(hidden=True)
     async def listmutes(self, ctx):
         """ Send author a list of muted. """
         for member in MUTED_USERS.keys():
             await ctx.author.send(f"User {member} in {ctx.guild.name} is muted.")
 
-    @check_bound_text()
+    @in_channel(*SETTINGS['whitelisted_channels'])
     @commands.command(hidden=True)
     async def listbans(self, ctx):
         """ Send author a list of bans. """

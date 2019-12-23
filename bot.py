@@ -90,9 +90,9 @@ async def ping(ctx):
 
 # Load these two, make the others extra.
 BOT.load_extension("cogs.admin")
-BOT.load_extension("cogs.cleanup")
-BOT.load_extension("cogs.automod")
-BOT.load_extension("cogs.autoroles")
-BOT.load_extension("cogs.rust")
+# BOT.load_extension("cogs.cleanup")
+# BOT.load_extension("cogs.automod")
+# BOT.load_extension("cogs.autoroles")
+# BOT.load_extension("cogs.rust")
 
 BOT.run(SETTINGS["bot_token"])

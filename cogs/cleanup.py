@@ -3,7 +3,8 @@
 import discord
 from discord.ext import commands
 
-from utils.checks import admin_check
+from utils.settings import SETTINGS
+from utils.decorators import with_roles
 
 
 def is_groovy_command(msg):
@@ -32,7 +33,7 @@ class Cleanup(commands.Cog):
         if msg.content.startswith("-") or msg.author.id == 234395307759108106:
             await msg.delete(delay=3)
 
-    @admin_check()
+    @with_roles(*SETTINGS['admins'])
     @commands.command(aliases=["purge"])
     async def prune(self, ctx, count: int = 100, channel: discord.TextChannel = None):
         """ Prune a channel. """

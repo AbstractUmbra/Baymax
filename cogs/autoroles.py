@@ -11,20 +11,30 @@ def mod_approval_check(reaction, user):
     """ Approval for moderator status. """
     guild = user.guild
     mod_role = discord.utils.get(guild.roles, id=315825729373732867)
-    return ((mod_role in user.roles or
-             user.id == 155863164544614402)
-            and str(reaction.emoji) == "👍"
-            and reaction.message.channel.id == 656204288271319064)
+    if str(reaction.emoji) == "👍":
+        return ((mod_role in user.roles or
+                 user.id == 155863164544614402)
+                and reaction.message.channel.id == 656204288271319064)
+    elif str(reaction.emoji) == "👎":
+        if (reaction.message.channel.id == 656204288271319064
+                and mod_role in user.roles):
+            return True
+    return False
 
 
 def dnd_approval_check(reaction, user):
     """ Approval for DnD chat. """
     guild = user.guild
-    mod_role = discord.utils.get(guild.roles, id=460536832635961374)
-    return ((mod_role in user.roles or
-             user.id == 155863164544614402)
-            and str(reaction.emoji) == "👍"
-            and reaction.message.channel.id == 460536968565227550)
+    dnd_role = discord.utils.get(guild.roles, id=460536832635961374)
+    if str(reaction.emoji) == "👍":
+        return ((dnd_role in user.roles or
+                 user.id == 155863164544614402)
+                and reaction.message.channel.id == 460536968565227550)
+    elif str(reaction.emoji) == "👎":
+        if (reaction.message.channel.id == 460536968565227550
+                and dnd_role in user.roles):
+            return True
+    return False
 
 
 class AutoRoles(commands.Cog):
@@ -80,9 +90,10 @@ class AutoRoles(commands.Cog):
                     f"{user.name} has requested to join the Bear Trap. "
                     "Reaction approval is required.")
                 await message.add_reaction("👍")
+                await message.add_reaction("👎")
 
                 try:
-                    _, react_member = await self.bot.wait_for(
+                    reaction, react_member = await self.bot.wait_for(
                         "reaction_add", timeout=28800.0, check=dnd_approval_check)
                 except AsynTimeOut:
                     await dnd_channel.send(
@@ -91,10 +102,18 @@ class AutoRoles(commands.Cog):
                     )
                     return await message.delete()
                 else:
-                    await user.add_roles(
-                        dnd_role,
-                        reason=f"Member approval by {react_member.name}.",
-                        atomic=True)
+                    if reaction.emoji == "👎":
+                        await dnd_channel.send(
+                            f"Approval for {user.name} has been rejected.", delete_after=5)  #
+                        request_channel = discord.utils.get(
+                            guild.channels, id=656139436651839488)
+                        request_message = await request_channel.fetch_message(656140119643783178)
+                        await request_message.remove_reaction(payload.emoji, user)
+                    else:
+                        await user.add_roles(
+                            dnd_role,
+                            reason=f"Member approval by {react_member.name}.",
+                            atomic=True)
                     return await message.delete()
             elif payload.emoji.id == 656203981655375887:
                 mod_channel = discord.utils.get(
@@ -105,9 +124,10 @@ class AutoRoles(commands.Cog):
                     f"{user.name} has requested to become an Moderator. "
                     "Reaction approval is required.")
                 await message.add_reaction("👍")
+                await message.add_reaction("👎")
 
                 try:
-                    _, react_member = await self.bot.wait_for(
+                    reaction, react_member = await self.bot.wait_for(
                         "reaction_add", timeout=28800.0, check=mod_approval_check)
                 except AsynTimeOut:
                     await mod_channel.send(
@@ -116,10 +136,18 @@ class AutoRoles(commands.Cog):
                     )
                     return await message.delete()
                 else:
-                    await user.add_roles(
-                        mod_role,
-                        reason=f"Moderator approved by {react_member.name}.",
-                        atomic=True)
+                    if reaction.emoji == "👎":
+                        await mod_channel.send(
+                            f"Approval for {user.name} has been rejected.", delete_after=5)  #
+                        request_channel = discord.utils.get(
+                            guild.channels, id=656139436651839488)
+                        request_message = await request_channel.fetch_message(656140119643783178)
+                        await request_message.remove_reaction(payload.emoji, user)
+                    else:
+                        await user.add_roles(
+                            mod_role,
+                            reason=f"Member approval by {react_member.name}.",
+                            atomic=True)
                     return await message.delete()
 
     @commands.Cog.listener()

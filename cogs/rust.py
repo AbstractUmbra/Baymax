@@ -1,10 +1,12 @@
 """ Rust Updates Cog. """
 from datetime import datetime
 import time
+import functools
 
 import aiohttp
 import discord
 from discord.ext import commands, tasks
+import valve.source.a2s as a2s
 
 from utils.rust_checks import load_rust_config, save_rust_config
 
@@ -37,6 +39,32 @@ class Rust(commands.Cog):
                                  value=f"{value}",
                                  inline=True)
         await ctx.send(embed=dict_embed)
+
+    def terminus_steam(self):
+        """ Blocky - queries steam api. """
+        term_address = ("51.89.25.157", 28015)
+        player_list = []
+        with a2s.ServerQuerier(address=term_address, timeout=20.0) as server:
+            for player in server.players()["players"]:
+                player_list.append(player["name"])
+        return player_list
+
+    @commands.command()
+    async def terminus(self, ctx):
+        """ Asyncy - posts embed about steam stats. """
+        actual_func = functools.partial(self.terminus_steam)
+        player_list = await self.bot.loop.run_in_executor(None, actual_func)
+        player_embed = discord.Embed(title="**Current Terminus Playerlist**",
+                                     color=0x00ff00)
+        player_embed.set_author(name=ctx.author.name)
+        player_embed.set_thumbnail(url=ctx.author.avatar_url)
+        player_embed.timestamp = datetime.now()
+        player_list_string = "\n".join(player for player in player_list)
+        player_embed.add_field(name="Current Terminus Players",
+                               value=f"{player_list_string}", inline=True)
+        player_embed.add_field(name="Player count total",
+                               value=len(player_list))
+        await ctx.send(embed=player_embed, delete_after=10)
 
     @commands.command(hidden=True)
     async def manual_client_check(self, ctx):

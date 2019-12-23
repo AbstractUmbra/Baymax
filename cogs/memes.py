@@ -11,7 +11,8 @@ from unidecode import unidecode
 import discord
 from discord.ext import commands
 
-from utils.checks import admin_check, check_bound_text
+from utils.settings import SETTINGS
+from utils.decorators import with_roles, in_channel
 from utils.members import all_voice_members_guild
 
 
@@ -21,8 +22,8 @@ class Memes(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @admin_check()
-    @check_bound_text()
+    @with_roles(*SETTINGS['admins'])
+    @in_channel(*SETTINGS['whitelisted_channels'])
     @commands.command()
     async def twist(self, ctx):
         """ Moves all voice members to a random VC. """
@@ -33,8 +34,8 @@ class Memes(commands.Cog):
                 choice(ctx.message.guild.voice_channels), reason="Was too weak."
             )
 
-    @admin_check()
-    @check_bound_text()
+    @with_roles(*SETTINGS['admins'])
+    @in_channel(*SETTINGS['whitelisted_channels'])
     @commands.command()
     async def snap(self, ctx):
         """ Snaps all the members. ;) """
@@ -60,8 +61,8 @@ class Memes(commands.Cog):
                 print(f"Snapped {member.name}.")
                 await member.move_to(snapped_channel, reason="was snapped.")
 
-    @admin_check()
-    @check_bound_text()
+    @with_roles(*SETTINGS['admins'])
+    @in_channel(*SETTINGS['whitelisted_channels'])
     @commands.command()
     async def spelling(self, ctx):
         """ Time to mess with some vowels. >:D """
@@ -87,7 +88,7 @@ class Memes(commands.Cog):
                     new_name += char
             await member.edit(nick=new_name.capitalize(), reason="Cannot spell.")
 
-    @check_bound_text()
+    @in_channel(*SETTINGS['whitelisted_channels'])
     @commands.command()
     async def dumbass(self, ctx):
         """ Generates a LMGTFY link of the passed text. """
