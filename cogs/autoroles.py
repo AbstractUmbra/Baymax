@@ -217,7 +217,7 @@ class AutoRoles(commands.Cog):
     async def on_member_join(self, member):
         """ When a new member joins. """
         new_user_role = discord.utils.get(
-            member.guild.roles, id=SETTINGS[str(member.guild.id)]['base_role']
+            member.guild.roles, id=SETTINGS['base_role']
         )
 
         def check(reaction, user):
