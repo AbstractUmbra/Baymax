@@ -19,7 +19,8 @@ INVITE_LINK = "https://discordapp.com/api/oauth2/authorize?client_id=^ID^&permis
 
 
 BOT = commands.Bot(
-    command_prefix=SETTINGS["bot_prefix"], description=SETTINGS["bot_description"]
+    command_prefix=commands.when_mentioned_or(SETTINGS["bot_prefix"]),
+    description=SETTINGS["bot_description"]
 )
 
 
@@ -90,9 +91,10 @@ async def ping(ctx):
 
 # Load these two, make the others extra.
 BOT.load_extension("cogs.admin")
-# BOT.load_extension("cogs.cleanup")
-# BOT.load_extension("cogs.automod")
-# BOT.load_extension("cogs.autoroles")
-# BOT.load_extension("cogs.rust")
+BOT.load_extension("cogs.cleanup")
+BOT.load_extension("cogs.automod")
+BOT.load_extension("cogs.autoroles")
+BOT.load_extension("cogs.rust")
+BOT.load_extension("cogs.tags")
 
 BOT.run(SETTINGS["bot_token"])
