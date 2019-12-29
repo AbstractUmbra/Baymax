@@ -1,0 +1,3 @@
+discord.py[voice]>=1.2.5
+aiosqlite>=0.10.0
+aiofile>=1.5.2
