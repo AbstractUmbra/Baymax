@@ -14,14 +14,7 @@
         590638531400040448
     ],
     "base_role": 174703372631277569,
-    "disabled_cogs": [
-        "admin",
-        "automod",
-        "autoroles",
-        "cleanup",
-        "memes",
-        "rust"
-    ],
+    "disabled_cogs": [],
     "disabled_commands": [],
     "game": "r!help for help, fuckers.",
     "debug": false,
