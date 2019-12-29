@@ -61,7 +61,7 @@ class Rust(commands.Cog):
         player_embed.timestamp = datetime.now()
         player_list_string = "\n".join(player for player in player_list)
         player_embed.add_field(name="Current Terminus Players",
-                               value=f"{player_list_string}", inline=True)
+                               value=f"{player_list_string}", inline=False)
         player_embed.add_field(name="Player count total",
                                value=len(player_list))
         await ctx.send(embed=player_embed, delete_after=10)
@@ -111,7 +111,7 @@ class Rust(commands.Cog):
             update_embed.timestamp = datetime.fromtimestamp(int(epoch))
             update_embed.add_field(name=f"Build ID",
                                    value=f"`{build_id}`",
-                                   inline=True)
+                                   inline=False)
             await rust_channel.send("@here")
             await rust_channel.send(embed=update_embed)
         save_rust_config(RUST_CONFIG)
@@ -141,7 +141,7 @@ class Rust(commands.Cog):
             update_embed.timestamp = datetime.fromtimestamp(int(epoch))
             update_embed.add_field(name=f"Server Build ID",
                                    value=f"`{srv_build_id}`",
-                                   inline=True)
+                                   inline=False)
             await rust_channel.send("@here")
             await rust_channel.send(embed=update_embed)
         save_rust_config(RUST_CONFIG)
