@@ -3,8 +3,7 @@ import discord
 from discord.ext import commands
 
 from utils.settings import SETTINGS, save_settings
-from utils.decorators import with_roles, in_channel
-
+from utils.decorators import with_roles
 
 class Admin(commands.Cog):
     """ Admin only commands. """
@@ -42,10 +41,9 @@ class Admin(commands.Cog):
     @commands.command()
     async def adminlist(self, ctx):
         """ Prints the admin list. """
-        for admin in SETTINGS[str(ctx.guild.id)]["admins"]:
+        for admin in self.bot.settings.admins:
             await ctx.send(ctx.guild.get_member(admin), delete_after=20)
 
-    @with_roles(*SETTINGS['admins'])
     @commands.command()
     async def perms(self, ctx, role: discord.Member = None):
         """ Print the passed user perms to the console. """
@@ -95,6 +93,7 @@ class Admin(commands.Cog):
             await ctx.send(f"{role} was removed from admin list.",
                            delete_after=5)
 
+    @with_roles(*SETTINGS["admins"])
     @commands.command()
     async def add_bound_channel(self, ctx, channel: discord.TextChannel):
         """ Add a text channel to be bound. """
@@ -115,6 +114,7 @@ class Admin(commands.Cog):
                            delete_after=5)
 
     @commands.command(hidden=True)
+    @commands.is_owner()
     async def summon(self, ctx, role: discord.Member):
         """ Summon a voice role to current executors voice channel. """
         if role is None:
@@ -130,6 +130,7 @@ class Admin(commands.Cog):
             await role.move_to(ctx.message.author.voice.channel)
 
     @commands.command(hidden=True, name="load")
+    @commands.is_owner()
     async def load_cog(self, ctx, *, cog: str):
         """ Load a cog module. """
         cog_full = f"cogs.{cog}"
@@ -142,6 +143,7 @@ class Admin(commands.Cog):
             await ctx.send(f"Loaded Cog: {cog}.", delete_after=5)
 
     @commands.command(hidden=True, name="unload")
+    @commands.is_owner()
     async def unload_cog(self, ctx, *, cog: str):
         """ Unload a cog module. """
         cog_full = f"cogs.{cog}"
@@ -154,6 +156,7 @@ class Admin(commands.Cog):
             await ctx.send(f"Unloaded Cog: {cog}.", delete_after=5)
 
     @commands.command(hidden=True, name="reload")
+    @commands.is_owner()
     async def reload_cog(self, ctx, *, cog: str):
         """ Reload a cog module. """
         cog_full = f"cogs.{cog}"
