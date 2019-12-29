@@ -106,4 +106,7 @@ venv.bak/
 # VSCode
 .vscode/
 
+##personal
 *.mp3
+*.bak
+data/
