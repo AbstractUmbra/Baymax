@@ -134,7 +134,7 @@ class Tags(commands.Cog):
             await ctx.send(f"Tag: {name} has been created.", delete_after=5)
             save_tags(TAGS)
         for item in messages:
-            await item.delete(delay=20)
+            await item.delete(delay=60)
 
     @tag.command()
     async def list(self, ctx):
