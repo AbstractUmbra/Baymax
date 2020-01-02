@@ -9,7 +9,8 @@ from functools import (
 from json import (
     dump,
     dumps,
-    load
+    load,
+    loads
 )
 from os import (
     path
@@ -70,7 +71,8 @@ class Settings(dict):
         await self._lock.acquire()
         if path.getmtime(self._fname) > self._mtime:
             async with AIOFile(self._filename) as file_path:
-                data = await self._loop.run_in_executor(None, load, file_path)
+                t = await self._loop.run_in_executor(None, load, file_path)
+            data = await self._loop.run_in_executor(None, loads, t)
             await self._loop.run_in_executor(None, self.update, data)
             self._mtime = path.getmtime(self._fname)
         return self

@@ -37,7 +37,8 @@ from utils.version import version
 
 
 __all__ = ('RoboHz',)
-
+__dir__ = path.dirname(__file__) or "."
+__version__ = version
 
 async def _command_prefix(bot, message):
     if message.guild is None:

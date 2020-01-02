@@ -2,7 +2,6 @@
 import discord
 from discord.ext import commands
 
-from utils.settings import SETTINGS, save_settings
 from utils.decorators import with_roles
 
 class Admin(commands.Cog):

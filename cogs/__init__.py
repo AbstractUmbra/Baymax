@@ -19,6 +19,7 @@ class BaseCog(LoggingMixin, commands.Cog):
     Base class for all cog files.  Inherits :class:LoggingMixin
     __init__ params:
         bot: RoboHz - The instance of the bot.
+
     Attributes:
         config_attrs: tuple - Names of attributes to fetch from the bot's
         settings.  When subclassing BaseCog, define this at the class level.
