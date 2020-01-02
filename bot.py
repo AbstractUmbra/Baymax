@@ -101,6 +101,9 @@ class RoboHz(LoggingMixin, commands.Bot):
         # Reboot handler
         self.reboot_after = True
 
+        # Alive
+        self._alive_since = None
+
     @property
     def sql(self):
         """ Init my SQL pls. """
@@ -109,7 +112,7 @@ class RoboHz(LoggingMixin, commands.Bot):
     def run(self):
         """ Run the bot boy. """
         self.logger.info('Starting bot')
-        token = self.settings.bot_token
+        token = self.settings.token
         super().run(token)
 
     async def logout(self):

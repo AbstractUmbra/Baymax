@@ -9,15 +9,16 @@ from discord.ext import commands, tasks
 import valve.source.a2s as a2s
 
 from utils.rust_checks import load_rust_config, save_rust_config
+from . import BaseCog
 
 RUST_CONFIG = load_rust_config("../config/rust-updates.json")
 
 
-class Rust(commands.Cog):
+class Rust(BaseCog):
     """ This class will return the update details for Rust as an embed. """
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
         self.client_update.start()
         self.server_update.start()
         self.rust_cs = aiohttp.ClientSession()

@@ -1,12 +1,8 @@
 """ Utils addon - decorators. """
-from asyncio import Lock
-from functools import wraps
 from typing import Callable, Container
-from weakref import WeakValueDictionary
 
-from discord import Colour, Embed
 from discord.ext import commands
-from discord.ext.commands import CheckFailure, Cog, Context
+from discord.ext.commands import CheckFailure, Context
 
 from utils.checks import with_role_check, without_role_check
 
@@ -21,11 +17,10 @@ class InChannelCheckFailure(CheckFailure):
             f"Sorry, but you may only use this command within {channels_str}")
 
 
-def in_channel(
-        *channels: int,
-        hidden_channels: Container[int] = None,
-        bypass_roles: Container[int] = None
-) -> Callable:
+def in_channel(*channels: int,
+               hidden_channels: Container[int] = None,
+               bypass_roles: Container[int] = None
+               ) -> Callable:
     """
     Checks the message is in a whitelisted channel or optionally has a bypass role.
     Hidden channels are channels which will not be displayed in the error message.

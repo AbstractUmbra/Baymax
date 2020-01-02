@@ -6,6 +6,8 @@ from json import load, dump
 from discord import Embed
 from discord.ext import commands
 
+from . import BaseCog
+
 PATH = fpath.join(fpath.dirname(__file__))
 TAGS_PATH = fpath.join(PATH, "../config/tags.json")
 
@@ -53,11 +55,11 @@ class TagName(commands.clean_content):
         return converted if not self.lower else lower
 
 
-class Tags(commands.Cog):
+class Tags(BaseCog):
     """ Tags! Text only though. """
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
     @commands.group(invoke_without_command=True)
     async def tag(self, ctx, *, name):

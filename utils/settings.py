@@ -24,7 +24,7 @@ __all__ = ('Settings',)
 
 
 _DEFAULTS = {
-    "bot_token": None,
+    "token": None,
     "bot_id": 565095015874035742,
     "bot_prefix": "r!",
     "bot_description": "Robo-Hz.",
@@ -71,8 +71,8 @@ class Settings(dict):
         await self._lock.acquire()
         if path.getmtime(self._fname) > self._mtime:
             async with AIOFile(self._filename) as file_path:
-                t = await self._loop.run_in_executor(None, load, file_path)
-            data = await self._loop.run_in_executor(None, loads, t)
+                tmp = await self._loop.run_in_executor(None, load, file_path)
+            data = await self._loop.run_in_executor(None, loads, tmp)
             await self._loop.run_in_executor(None, self.update, data)
             self._mtime = path.getmtime(self._fname)
         return self
