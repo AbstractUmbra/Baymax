@@ -3,8 +3,7 @@
 import discord
 from discord.ext import commands
 
-from utils.settings import SETTINGS
-from utils.decorators import with_roles
+from . import BaseCog
 
 
 def is_groovy_command(msg):
@@ -21,11 +20,22 @@ def is_pinned(msg):
     return True
 
 
-class Cleanup(commands.Cog):
+def robo_self(msg):
+    """ Is the author RoboHz? """
+    if msg.author.id == 565095015874035742:
+        if not msg.pinned:
+            return True
+    elif msg.content.startswith("r!"):
+        if not msg.pinned:
+            return True
+    return False
+
+
+class Cleanup(BaseCog):
     """ Cleanup """
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
     @commands.Cog.listener()
     async def on_message(self, msg):
@@ -33,7 +43,18 @@ class Cleanup(commands.Cog):
         if msg.content.startswith("-") or msg.author.id == 234395307759108106:
             await msg.delete(delay=3)
 
-    @with_roles(*SETTINGS['admins'])
+    @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
+    @commands.command()
+    async def roboclean(self, ctx, count: int = 100, channel: discord.TextChannel = None):
+        """ Cleans RoboHz commands if they get stuck. """
+        if channel is None:
+            channel = ctx.channel
+        deleted = await channel.purge(limit=(count + 1), check=robo_self)
+        await channel.send(
+            f"Deleted {len(deleted) - 1} Robo-Hz messages from {channel.mention}", delete_after=5
+        )
+
+    @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
     @commands.command(aliases=["purge"])
     async def prune(self, ctx, count: int = 100, channel: discord.TextChannel = None):
         """ Prune a channel. """

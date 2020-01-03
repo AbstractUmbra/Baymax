@@ -5,6 +5,7 @@ from heapq import nlargest
 import discord
 from discord.ext import commands
 
+from . import BaseCog
 
 def to_emoji(char):
     """ Convers char to emoji. """
@@ -12,11 +13,11 @@ def to_emoji(char):
     return chr(base + char)
 
 
-class Voting(commands.Cog):
+class Voting(BaseCog):
     """ Voting cog. """
 
     def __init__(self, bot):
-        self.bot = bot
+        super().__init__(bot)
 
     @commands.command()
     async def votecount(self, ctx, channel: discord.TextChannel = None):
