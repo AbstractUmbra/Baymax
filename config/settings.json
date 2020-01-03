@@ -2,7 +2,7 @@
     "token": "NTY1MDk1MDE1ODc0MDM1NzQy.XYOW7A.OGSIagj3b_p1fGbvX_bZKam_7x0",
     "bot_id": 565095015874035742,
     "prefix": "r!",
-    "bot_description": "Robo-Hz.",
+    "description": "Robo-Hz.",
     "backup_link": "https://discord.gg/De5VbBN",
     "admins": [
         262403103054102528,
@@ -14,12 +14,15 @@
         590638531400040448
     ],
     "base_role": 174703372631277569,
-    "disabled_cogs": [
-        "help"
-    ],
+    "disabled_cogs": [],
     "disabled_commands": [],
     "game": "r!help for help, fuckers.",
     "debug": false,
     "exc_channel": 262395276898205706,
-    "error_emoji": "fry"
+    "error_emoji": "fry",
+    "help_name": "help",
+    "watches": {},
+    "roles": {},
+    "banlist": [],
+    "voice_chans": {}
 }

@@ -1,3 +1,4 @@
+""" Errors util. """
 from discord.ext.commands import (
     BadArgument,
     CheckFailure
@@ -23,56 +24,56 @@ __all__ = (
 
 
 class BadGameArgument(BadArgument):
-    pass
+    """ Bad game argument. """
 
 
 class CommandBannedInGuild(CheckFailure):
-    pass
+    """ Banned guild issued a command. """
 
 
 class NotEnoughOptions(ValueError):
-    pass
+    """ Not enough options. """
 
 
 class TooManyOptions(ValueError):
-    pass
+    """ Too many options. """
 
 
 class ReactionIntegrityError(ValueError):
-    pass
+    """ Reaction integrity error. """
 
 
 class NotPollOwner(ValueError):
-    pass
+    """ Not a poll owner. """
 
 
 class NoPollFound(KeyError):
-    pass
+    """ No poll found. """
 
 
 class NotInitialized(Exception):
-    pass
+    """ Not yet initialized. """
 
 
 class AlreadyInitialized(Exception):
-    pass
+    """ Already initialized. """
 
 
 class InitializationInvalid(Exception):
-    pass
+    """ Initialization invalid. """
 
 
 class ReactionAlreadyRegistered(Exception):
-    pass
+    """ Reactions already registered. """
 
 
 class RoleOrEmojiNotFound(Exception):
-    pass
+    """ Role or Emoji not found. """
 
 
 class NotReady(CheckFailure):
-    pass
+    """ Not ready yet. """
 
 
 class BotIsIgnoringUser(CheckFailure):
-    pass
+    """ Bot is ignoring you. """

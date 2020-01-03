@@ -12,6 +12,7 @@ __all__ = ('human_timedelta',)
 
 
 def human_timedelta(dati: datetime):
+    """ Return a human readable time delta. """
     prefix = ''
     suffix = ''
     now = datetime.utcnow()

@@ -1,12 +1,15 @@
-import discord
+""" Overwrites the default help command. """
 import itertools
+
+import discord
 from discord.ext import commands
 
-from . import BaseCog
 from utils.paginator import HelpPaginator
+from . import BaseCog
 
 
 class PaginatedHelpCommand(commands.HelpCommand):
+    """ Creates a paginated help command. """
     def __init__(self, **options):
         command_attrs = options.pop('command_attrs', {})
         command_attrs.update(
@@ -22,7 +25,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
     def get_command_signature(self, command):
         parent = command.full_parent_name
-        if len(command.aliases) > 0:
+        if command.aliases:
             aliases = '|'.join(command.aliases)
             fmt = f'[{command.name}|{aliases}]'
             if parent:
@@ -33,8 +36,8 @@ class PaginatedHelpCommand(commands.HelpCommand):
         return f'{alias} {command.signature}'
 
     async def send_bot_help(self, mapping):
-        def key(c):
-            return c.cog_name or '\u200bNo Category'
+        def key(cog):
+            return cog.cog_name or '\u200bNo Category'
 
         bot = self.context.bot
         entries = await self.filter_commands(bot.commands, sort=True, key=key)
@@ -44,7 +47,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
         for cog, cmds in itertools.groupby(entries, key=key):
             cmds = sorted(cmds, key=lambda c: c.name)
-            if len(cmds) == 0:
+            if not cmds:
                 continue
 
             total += len(cmds)
@@ -72,6 +75,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         await pages.paginate()
 
     def common_command_formatting(self, page_or_embed, command):
+        """ Applies common formatting. """
         page_or_embed.title = self.get_command_signature(command)
         if command.description:
             page_or_embed.description = f'{command.description}\n\n{command.help}'
@@ -86,7 +90,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
     async def send_group_help(self, group):
         subcommands = group.commands
-        if len(subcommands) == 0:
+        if not subcommands:
             return await self.send_command_help(group)
 
         entries = await self.filter_commands(subcommands, sort=True)
@@ -97,6 +101,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
 
 class Help(BaseCog):
+    """ Help cog! """
     def __init__(self, bot):
         super().__init__(bot)
         self._original_help_command = bot.help_command
@@ -108,4 +113,5 @@ class Help(BaseCog):
 
 
 def setup(bot):
+    """ Cog entrypoint. """
     bot.add_cog(Help(bot))

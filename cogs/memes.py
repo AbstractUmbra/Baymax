@@ -11,7 +11,6 @@ from unidecode import unidecode
 import discord
 from discord.ext import commands
 
-from utils.decorators import with_roles, in_channel
 from utils.members import all_voice_members_guild
 from . import BaseCog
 

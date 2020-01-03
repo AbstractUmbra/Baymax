@@ -3,7 +3,6 @@
 import discord
 from discord.ext import commands
 
-from utils.decorators import with_roles, in_channel
 from utils.automod_checks import save_bans, save_mute, BANNED_USERS, MUTED_USERS
 from . import BaseCog
 

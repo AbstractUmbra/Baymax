@@ -26,8 +26,8 @@ __all__ = ('Settings',)
 _DEFAULTS = {
     "token": None,
     "bot_id": 565095015874035742,
-    "bot_prefix": "r!",
-    "bot_description": "Robo-Hz.",
+    "prefix": "r!",
+    "description": "Robo-Hz.",
     "backup_link": "https://discord.gg/De5VbBN",
     "admins": [
         262403103054102528,
@@ -44,7 +44,12 @@ _DEFAULTS = {
     "game": "r!help for help, fuckers.",
     "debug": False,
     "exc_channel": 262395276898205706,
-    "error_emoji": "fry"
+    "error_emoji": "fry",
+    "help_name": "help",
+    "watches": {},
+    "roles": {},
+    "banlist": [],
+    "voice_chans": {}
 }
 
 

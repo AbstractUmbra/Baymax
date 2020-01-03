@@ -3,7 +3,6 @@
 import discord
 from discord.ext import commands
 
-from utils.decorators import with_roles
 from . import BaseCog
 
 

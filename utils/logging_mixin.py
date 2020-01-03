@@ -7,6 +7,7 @@ __all__ = ('LoggingMixin',)
 
 
 class LoggingMixin:
+    """ Logging mixer. """
     def __init__(self, *args, **kwargs):
         # Set up logger
         self.logger = logging.getLogger('discord')

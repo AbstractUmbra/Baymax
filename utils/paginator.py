@@ -1,11 +1,13 @@
+""" Paginator utility. """
 import asyncio
+import re
+
 import discord
 from discord.ext import commands
-import re
 
 
 class CannotPaginate(Exception):
-    pass
+    """ Paginator exception. """
 
 
 class Pages:
@@ -83,23 +85,28 @@ class Pages:
 
     @property
     def has_manage_messages(self):
+        """ Check the bot has manage messages. """
         return self.channel.permissions_for(self.channel.guild.me).manage_messages
 
     def get_page(self, page):
+        """ Get the paginator page. """
         base = (page - 1) * self.per_page
         return self.entries[base:base + self.per_page]
 
     def get_content(self, entries, page, *, first=False):
+        """ Get page content. """
         return None
 
     def get_embed(self, entries, page, *, first=False):
+        """ Get default embed. """
         self.prepare_embed(entries, page, first=first)
         return self.embed
 
     def prepare_embed(self, entries, page, *, first=False):
-        p = []
+        """ Prepare default embed. """
+        pages = []
         for index, entry in enumerate(entries, 1 + ((page - 1) * self.per_page)):
-            p.append(f'{index}. {entry}')
+            pages.append(f'{index}. {entry}')
 
         if self.maximum_pages > 1:
             if self.show_entry_count:
@@ -110,13 +117,14 @@ class Pages:
             self.embed.set_footer(text=text)
 
         if self.paginating and first:
-            p.append('')
-            p.append(
+            pages.append('')
+            pages.append(
                 'Confused? React with \N{INFORMATION SOURCE} for more info.')
 
-        self.embed.description = '\n'.join(p)
+        self.embed.description = '\n'.join(pages)
 
     async def show_page(self, page, *, first=False):
+        """ Show paginated page. """
         self.current_page = page
         entries = self.get_page(page)
         content = self.get_content(entries, page, first=first)
@@ -140,37 +148,40 @@ class Pages:
             await self.message.add_reaction(reaction)
 
     async def checked_show_page(self, page):
+        """ Show the page, now that we've checked it. """
         if page != 0 and page <= self.maximum_pages:
             await self.show_page(page)
 
     async def first_page(self):
-        """goes to the first page"""
+        """ Goes to the first page. """
         await self.show_page(1)
 
     async def last_page(self):
-        """goes to the last page"""
+        """ Goes to the last page. """
         await self.show_page(self.maximum_pages)
 
     async def next_page(self):
-        """goes to the next page"""
+        """ Goes to the next page. """
         await self.checked_show_page(self.current_page + 1)
 
     async def previous_page(self):
-        """goes to the previous page"""
+        """ Goes to the previous page. """
         await self.checked_show_page(self.current_page - 1)
 
     async def show_current_page(self):
+        """ Shows current page. """
         if self.paginating:
             await self.show_page(self.current_page)
 
     async def numbered_page(self):
-        """lets you type a page number to go to"""
+        """ Allows you type a page number to go to. """
         to_delete = [await self.channel.send('What page do you want to go to?')]
 
-        def message_check(m):
-            return m.author == self.author and \
-                self.channel == m.channel and \
-                m.content.isdigit()
+        def message_check(msg):
+            """ Message check. """
+            return msg.author == self.author and \
+                self.channel == msg.channel and \
+                msg.content.isdigit()
 
         try:
             msg = await self.bot.wait_for('message', check=message_check, timeout=30.0)
@@ -183,7 +194,9 @@ class Pages:
             if page != 0 and page <= self.maximum_pages:
                 await self.show_page(page)
             else:
-                to_delete.append(await self.channel.send(f'Invalid page given. ({page}/{self.maximum_pages})'))
+                to_delete.append(
+                    await self.channel.send(f'Invalid page given. ({page}/{self.maximum_pages})')
+                )
                 await asyncio.sleep(5)
 
         try:
@@ -219,6 +232,7 @@ class Pages:
         self.paginating = False
 
     def react_check(self, payload):
+        """ Reaction check. """
         if payload.user_id != self.author.id:
             return False
 
@@ -245,7 +259,8 @@ class Pages:
             try:
                 tasks = [self.bot.wait_for(
                     f'raw_reaction_{event}', check=self.react_check) for event in ('add', 'remove')]
-                done, left = await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED, timeout=120.0)
+                done, left = await asyncio.wait(
+                    tasks, return_when=asyncio.FIRST_COMPLETED, timeout=120.0)
                 [task.cancel() for task in left]
                 payload: discord.RawReactionActionEvent = done.pop().result()
             except (asyncio.TimeoutError, IndexError, KeyError):
@@ -255,7 +270,8 @@ class Pages:
             else:
                 if self.has_manage_messages:
                     try:
-                        await self.bot.http.remove_reaction(payload.channel_id, payload.message_id, payload.emoji, payload.user_id)
+                        await self.bot.http.remove_reaction(
+                            payload.channel_id, payload.message_id, payload.emoji, payload.user_id)
                     except:
                         pass
 
@@ -288,11 +304,12 @@ class FieldPages(Pages):
 #   -> could be a subcommand
 
 
-_mention = re.compile(r'<@!?([0-9]{1,19})>')
+_MENTION = re.compile(r'<@!?([0-9]{1,19})>')
 
 
 def cleanup_prefix(bot, prefix):
-    m = _mention.match(prefix)
+    """ Removes the prefix from call. """
+    m = _MENTION.match(prefix)
     if m:
         user = bot.get_user(int(m.group(1)))
         if user:
@@ -301,6 +318,7 @@ def cleanup_prefix(bot, prefix):
 
 
 async def _can_run(cmd, ctx: commands.Context):
+    """ Can the command actually run? """
     try:
         return await cmd.can_run(ctx)
     except Exception:

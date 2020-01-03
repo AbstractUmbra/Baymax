@@ -1,6 +1,9 @@
+""" Converters utils. """
+import re
+
 import discord
 from discord.ext import commands
-import re
+
 from .errors import BadGameArgument
 
 
@@ -9,11 +12,11 @@ __all__ = (
     'DiceRollConverter',
     'AliasedRoleConverter',
     'BoardCoords',
-    'EspeakParamsConverter'
 )
 
 
 class CommandConverter(commands.Converter):
+    """ Create a quick command converter. """
     async def convert(self, ctx: commands.Context, argument):
         cmd = ctx.bot.get_command(argument)
         if cmd is None:
@@ -22,6 +25,7 @@ class CommandConverter(commands.Converter):
 
 
 class DiceRollConverter(commands.Converter):
+    """ Create a quick dice roll converter. """
     _pattern = re.compile(r'(?P<count>\d+)?(d(?P<sides>\d+))?')
 
     async def convert(self, ctx, argument):
@@ -35,6 +39,7 @@ class DiceRollConverter(commands.Converter):
 
 
 class AliasedRoleConverter(commands.Converter):
+    """ Create a quick aliased role converter. """
     async def convert(self, ctx, argument):
         role_id = ctx.cog.roles.get(
             str(ctx.guild.id), {}).get(argument.lower())
@@ -45,6 +50,7 @@ class AliasedRoleConverter(commands.Converter):
 
 
 class BoardCoords(commands.Converter):
+    """ Create a quick board converter. """
     def __init__(self, minx=1, maxx=5, miny=1, maxy=5):
         super().__init__()
         self.minx = minx
@@ -58,11 +64,11 @@ class BoardCoords(commands.Converter):
         try:
             argument = argument.lower()
             if argument.startswith(tuple('abcde')):
-                y = ord(argument[0]) - 0x60
-                x = int(argument[1])
+                yaxis = ord(argument[0]) - 0x60
+                xaxis = int(argument[1])
             else:
-                y, x = map(int, argument.split())
-            assert self.minx <= x <= self.maxx and self.miny <= y <= self.maxy
-            return x - 1, y - 1
-        except (ValueError, AssertionError) as e:
-            raise BadGameArgument from e
+                yaxis, xaxis = map(int, argument.split())
+            assert self.minx <= xaxis <= self.maxx and self.miny <= yaxis <= self.maxy
+            return xaxis - 1, yaxis - 1
+        except (ValueError, AssertionError) as err:
+            raise BadGameArgument from err

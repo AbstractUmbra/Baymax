@@ -1,24 +1,23 @@
-from discord.ext import commands
+""" Eval cog. """
+import asyncio
+from asyncio.subprocess import PIPE
+from contextlib import redirect_stdout
 import io
 import textwrap
 import traceback
-from asyncio.subprocess import PIPE
-from contextlib import redirect_stdout
-from utils.mystbin import mystbin
 
-import aiohttp
 
 # To expose to eval
-import asyncio
+import aiohttp
 import discord
-import re
-import datetime
-from collections import Counter
+from discord.ext import commands
 
+from utils.mystbin import mystbin
 from . import BaseCog
 
 
 class Eval(BaseCog):
+    """ Eval cog. """
     _last_result = None
 
     def __init__(self, bot):
@@ -42,10 +41,12 @@ class Eval(BaseCog):
         return content.strip('` \n')
 
     def mask_token(self, value):
+        """ Mask the bot's token. """
         return value.replace(self.bot.http.token, '{TOKEN}')
 
     @staticmethod
     async def try_add_reaction(message, emoji):
+        """ Add a reaction as a try. """
         try:
             await message.add_reaction(emoji)
         except discord.HTTPException:
@@ -53,11 +54,13 @@ class Eval(BaseCog):
 
     @staticmethod
     def format_tb(exc):
+        """ Forward to the traceback channel. """
         if exc:
             return ''.join(traceback.format_exception(exc.__class__, exc, exc.__traceback__))
         return ''
 
     async def format_embed_value(self, embed, name, content):
+        """ Format the embed. """
         if content not in ('', None):
             content = format(content)
             content = self.mask_token(content)
@@ -71,11 +74,14 @@ class Eval(BaseCog):
             embed.add_field(name=name, value=value)
 
     async def send_eval_result(self, ctx, exc, title_ok, title_failed, **values):
+        """ Send eval's result. """
         errored = exc is not None
         title = title_failed if errored else title_ok
         color = discord.Color.red() if errored else discord.Color.green()
         embed = discord.Embed(title=title, color=color)
-        files = [await self.format_embed_value(embed, name, content) for name, content in values.items()]
+        files = [
+            await self.format_embed_value(embed, name, content) for name, content in values.items()
+        ]
         await self.try_add_reaction(ctx.message, '❌' if errored else '✅')
         await ctx.send(embed=embed)
         for file in files:
@@ -105,8 +111,8 @@ class Eval(BaseCog):
         try:
             to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
             exec(to_compile, env)
-        except Exception as e:
-            return await ctx.send(f'```py\n{e.__class__.__name__}: {e}\n```')
+        except Exception as err:
+            return await ctx.send(f'```py\n{err.__class__.__name__}: {err}\n```')
 
         func = env['func']
         exc = None
@@ -119,8 +125,8 @@ class Eval(BaseCog):
                         asyncio.wait_for(fut, 60, loop=self.bot.loop))
                     self._running_evals[ctx.channel.id] = wait
                     ret = await wait
-            except Exception as e:
-                exc = e
+            except Exception as err:
+                exc = err
             finally:
                 self._running_evals.pop(ctx.channel.id, None)
             await self.send_eval_result(
@@ -136,6 +142,7 @@ class Eval(BaseCog):
 
     @eval_cmd.command(name='cancel')
     async def eval_cancel(self, ctx):
+        """ Cancel a running eval. """
         fut = self._running_evals.get(ctx.channel.id)
         if fut is None:
             await ctx.send(f'No running eval {self.bot.command_error_emoji}', delete_after=10)
@@ -150,7 +157,11 @@ class Eval(BaseCog):
         stdout = b''
         stderr = b''
 
-        process = await asyncio.create_subprocess_shell(body, stdout=PIPE, stderr=PIPE, loop=self.bot.loop)
+        process = await asyncio.create_subprocess_shell(
+            body,
+            stdout=PIPE,
+            stderr=PIPE,
+            loop=self.bot.loop)
         exc = None
         async with ctx.typing():
             try:
@@ -159,8 +170,8 @@ class Eval(BaseCog):
                     asyncio.wait_for(fut, 60, loop=self.bot.loop))
                 self._running_shells[ctx.channel.id] = wait
                 stdout, stderr = await wait
-            except Exception as e:
-                exc = e
+            except Exception as err:
+                exc = err
             finally:
                 self._running_shells.pop(ctx.channel.id, None)
 
@@ -182,6 +193,7 @@ class Eval(BaseCog):
 
     @shell_cmd.command(name='cancel')
     async def shell_cancel(self, ctx):
+        """ Cancel running shell eval. """
         fut = self._running_shells.get(ctx.channel.id)
         if fut is None:
             await ctx.send(f'No running shell {self.bot.command_error_emoji}', delete_after=10)
@@ -190,4 +202,5 @@ class Eval(BaseCog):
 
 
 def setup(bot):
+    """ Cog entrypoint. """
     bot.add_cog(Eval(bot))

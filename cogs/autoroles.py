@@ -106,7 +106,8 @@ class AutoRoles(BaseCog):
                     if reaction.emoji == "👎":
                         await self.dnd_channel.send(
                             f"Approval for {user.name} has been rejected.", delete_after=5)  #
-                        request_message = await self.request_channel.fetch_message(656140119643783178)
+                        request_message = await self.request_channel.fetch_message(
+                            656140119643783178)
                         await request_message.remove_reaction(payload.emoji, user)
                     else:
                         await user.add_roles(
@@ -134,7 +135,8 @@ class AutoRoles(BaseCog):
                     if reaction.emoji == "👎":
                         await self.mod_channel.send(
                             f"Approval for {user.name} has been rejected.", delete_after=5)
-                        request_message = await self.request_channel.fetch_message(656140119643783178)
+                        request_message = await self.request_channel.fetch_message(
+                            656140119643783178)
                         await request_message.remove_reaction(payload.emoji, user)
                     else:
                         await user.add_roles(
