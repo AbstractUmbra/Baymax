@@ -40,6 +40,7 @@ __all__ = ('RoboHz',)
 __dir__ = path.dirname(__file__) or "."
 __version__ = version
 
+
 async def _command_prefix(bot, message):
     if message.guild is None:
         return ''
@@ -155,7 +156,10 @@ def main():
 
     @bot.event
     async def on_ready():
-        print(f'Logged in as {bot.user}')
+        INVITE_URL = "https://discordapp.com/api/oauth2/authorize?client_id=^ID^&permissions=0&scope=bot".replace("^ID^", str(bot.user.id))
+        print(f'Logged in as {bot.user}: {bot.user.id}')
+        print(f"Use this URL to invite your bot to guilds:-\n"
+              f"\t{INVITE_URL}")
 
     async def send_tb(traceb):
         channel = bot.exc_channel
@@ -167,9 +171,16 @@ def main():
             try:
                 url = await mystbin(traceb)
             except ClientResponseError:
-                await channel.send('An error has occurred', file=discord.File(StringIO(traceb)))
+                await channel.send('An error has occurred',
+                                   file=discord.File(StringIO(traceb)),
+                                   delete_after=60)
             else:
-                await channel.send(f'An error has occurred: {url}')
+                await channel.send(f'An error has occurred: {url}', delete_after=60)
+
+    @bot.event
+    async def on_command_completion(ctx):
+        """ When a command successfully completes. """
+        await ctx.message.delete(delay=5)
 
     @bot.event
     async def on_error(event, *args, **kwargs):
