@@ -22,6 +22,7 @@ class Rust(BaseCog):
         self.client_update.start()
         self.server_update.start()
         self.rust_cs = aiohttp.ClientSession()
+        self.terminus_address = ("51.89.25.157", 28015)
 
     def cog_unload(self):
         self.client_update.cancel()
@@ -43,9 +44,8 @@ class Rust(BaseCog):
 
     def terminus_steam(self):
         """ Blocky - queries steam api. """
-        term_address = ("51.89.25.157", 28015)
         player_list = []
-        with a2s.ServerQuerier(address=term_address, timeout=20.0) as server:
+        with a2s.ServerQuerier(address=self.terminus_address, timeout=20.0) as server:
             for player in server.players()["players"]:
                 player_list.append(player["name"])
         return player_list

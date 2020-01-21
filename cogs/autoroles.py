@@ -36,57 +36,88 @@ def dnd_approval_check(reaction, user, dnd_role):
 class AutoRoles(BaseCog):
     """ AutoRoles Cog. """
 
+    def cog_check(self, ctx):
+        if not ctx.guild:
+            return False
+        return True
+
     def __init__(self, bot):
         super().__init__(bot)
-        self.guild = self.bot.get_guild(174702278673039360)
-        self.ark_role = self.guild.get_role(558417863694614537)
-        self.conan_role = self.guild.get_role(638376237575831553)
-        self.dnd_role = self.guild.get_role(460536832635961374)
-        self.league_role = self.guild.get_role(563098367329173509)
-        self.mod_role = self.guild.get_role(315825729373732867)
-        self.new_user_role = self.guild.get_role(174703372631277569)
-        self.plex_role = self.guild.get_role(456897532128395265)
-        self.rust_role = self.guild.get_role(656148297957900288)
+        self.ark_role = None
+        self.conan_role = None
+        self.dnd_role = None
+        self.league_role = None
+        self.mod_role = None
+        self.new_user_role = None
+        self.plex_role = None
+        self.rust_role = None
+        self.drg_role = None
+        self.mhw_role = None
 
-        self.dnd_channel = self.bot.get_channel(460536968565227550)
-        self.mod_channel = self.bot.get_channel(656204288271319064)
+        self.dnd_channel = None
+        self.mod_channel = None
+        self.request_channel = None
+
+    @commands.Cog.listener()
+    async def on_ready(self):
+        self.guild = self.bot.get_guild(self.bot.guilds[0].id)
         self.request_channel = self.bot.get_channel(656139436651839488)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         """ On reaction_add for live data. """
         guild = self.bot.get_guild(payload.guild_id)
-        owner = self.bot.owner_id
+        owner = guild.get_member(155863164544614402)
         user = discord.utils.get(guild.members, id=payload.user_id)
         if payload.message_id == 656140119643783178:
             if payload.emoji.id == 534488771614474250:
+                self.league_role = guild.get_role(563098367329173509)
                 await user.add_roles(
                     self.league_role,
                     reason="AutoRole",
                     atomic=True
                 )
             elif payload.emoji.id == 656150077831774218:
+                self.rust_role = guild.get_role(656148297957900288)
                 await user.add_roles(
                     self.rust_role,
                     reason="AutoRole",
                     atomic=True
                 )
             elif payload.emoji.id == 656163950475608076:
+                self.ark_role = guild.get_role(558417863694614537)
                 await user.add_roles(
                     self.ark_role,
                     reason="AutoRole",
                     atomic=True
                 )
             elif payload.emoji.id == 656164554597728315:
+                self.conan_role = guild.get_role(638376237575831553)
                 await user.add_roles(
                     self.conan_role,
                     reason="AutoRole",
+                    atomic=True
+                )
+            elif payload.emoji.id == 665263107022782484:
+                self.drg_role = guild.get_role(665263294763761684)
+                await user.add_roles(
+                    self.drg_role,
+                    reason="Autorole",
+                    atomic=True
+                )
+            elif payload.emoji.id == 667049791305547801:
+                self.mhw_role = guild.get_role(667050135263641614)
+                await user.add_roles(
+                    self.mhw_role,
+                    reason="Autorole",
                     atomic=True
                 )
             elif payload.emoji.id == 656166040149164032:
                 await owner.send(f"{user.name} from {guild.name} has requested Plex access. "
                                  "Please manually approve this for them.")
             elif payload.emoji.id == 656178696385986560:
+                self.dnd_role = guild.get_role(460536832635961374)
+                self.dnd_channel = self.bot.get_channel(460536968565227550)
                 message = await self.dnd_channel.send(
                     f"{user.name} has requested to join the Bear Trap. "
                     "Reaction approval is required.")
@@ -116,6 +147,8 @@ class AutoRoles(BaseCog):
                             atomic=True)
                     return await message.delete()
             elif payload.emoji.id == 656203981655375887:
+                self.mod_role = guild.get_role(315825729373732867)
+                self.mod_channel = self.bot.get_channel(656204288271319064)
                 message = await self.mod_channel.send(
                     f"{user.name} has requested to become an Moderator. "
                     "Reaction approval is required.")
@@ -175,6 +208,18 @@ class AutoRoles(BaseCog):
                     reason="AutoRole remove",
                     atomic=True
                 )
+            elif payload.emoji.id == 665263107022782484:
+                await user.remove_roles(
+                    self.drg_role,
+                    reason="Autorole",
+                    atomic=True
+                )
+            elif payload.emoji.id == 667049791305547801:
+                await user.remove_roles(
+                    self.mhw_role,
+                    reason="Autorole",
+                    atomic=True
+                )
             elif payload.emoji.id == 656166040149164032:
                 await user.remove_roles(
                     self.plex_role,
@@ -200,6 +245,7 @@ class AutoRoles(BaseCog):
         def check(reaction, user):
             return user == member and str(reaction.emoji) == "👍"
 
+        self.new_user_role = member.guild.get_role(174703372631277569)
         message = await member.send(
             f"Add '👍' reaction to solemly swear you'll be up to no good in {member.guild.name}."
         )

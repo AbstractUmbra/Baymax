@@ -31,6 +31,11 @@ def save_tags(tags: dict, tags_path=TAGS_PATH):
 TAGS = load_tags()
 
 
+class UnavailableTagCommand(commands.CheckFailure):
+    def __str__(self):
+        return 'Sorry. This command is unavailable in private messages.'
+
+
 class TagName(commands.clean_content):
     """ Tag Names. """
 
@@ -60,15 +65,31 @@ class Tags(BaseCog):
 
     def __init__(self, bot):
         super().__init__(bot)
+        self.tags = TAGS
+
+    async def cog_command_error(self, ctx, error):
+        if isinstance(error, UnavailableTagCommand):
+            await ctx.send(error)
+        elif isinstance(error, (commands.BadArgument, commands.MissingRequiredArgument)):
+            if ctx.command.qualified_name == 'tag':
+                await ctx.send_help(ctx.command)
+            else:
+                await ctx.send(error)
+
+    def cog_unload(self):
+        """ When the cog unloads. """
+        return save_tags(self.tags)
 
     @commands.group(invoke_without_command=True)
-    async def tag(self, ctx, *, name):
+    async def tag(self, ctx, *, name=None):
         """ Tags text for later retrieval. """
+        if name is None:
+            return await ctx.invoke(self.tag_list)
 
         try:
-            tag = TAGS[str(name)]
+            tag = self.tags[str(name)]
         except KeyError:
-            return await ctx.send(f"This tag: {name} does not exist.")
+            return await ctx.send(f"The tag `{name}` does not exist.")
 
         return await ctx.send(tag)
 
@@ -76,11 +97,11 @@ class Tags(BaseCog):
     async def create(self, ctx, name, *, content: commands.clean_content):
         """ Creates a new tag! """
         try:
-            TAGS[name] = content
+            self.tags[name] = content
         except Exception as err:
-            await ctx.send(err)
+            await self.log_tb(ctx, err)
         finally:
-            save_tags(TAGS)
+            save_tags(self.tags)
         return await ctx.send(f"Tag {name} has been created!")
 
     @tag.command(ignore_extra=False)
@@ -112,7 +133,7 @@ class Tags(BaseCog):
 
         await ctx.send(f"Awesome. Now what about `{name}`'s content? \n"
                        f"**{ctx.prefix}abort will cancel this process.**",
-                       delete_after=10)
+                       delete_after=30)
 
         try:
             msg = await self.bot.wait_for("message", check=check, timeout=30.0)
@@ -131,26 +152,74 @@ class Tags(BaseCog):
             clean_content = f"{clean_content}\n{msg.attachments[0].url}"
 
         try:
-            TAGS[name] = clean_content
+            self.tags[name] = clean_content
         finally:
             await ctx.send(f"Tag: {name} has been created.", delete_after=5)
-            save_tags(TAGS)
+            save_tags(self.tags)
         for item in messages:
             await item.delete(delay=60)
 
     @tag.command()
-    async def list(self, ctx):
+    async def edit(self, ctx, *, name):
+        """ Edit a tag. """
+        if name not in self.tags.keys():
+            return await ctx.send(f"The tag {name} is not actually within the database.",
+                                  delete_after=10)
+
+        to_delete = []
+
+        def check(msg):
+            return msg.author.id == ctx.author.id and msg.channel.id == ctx.channel.id
+
+        msg = await ctx.send(f"Okay, editing {name}. Here is what it is currently:-\n\n"
+                             f" {self.tags[str(name)]}\n\n"
+                             f" **Please use {ctx.prefix}abort to cancel this process.**")
+        to_delete.append(msg)
+        try:
+            new_content = await self.bot.wait_for(
+                "message", check=check, timeout=30.0)
+        except AsynTOut:
+            return await ctx.send("You took too long.", delete_after=3)
+
+        if new_content.content == f"{ctx.prefix}abort":
+            return await ctx.send("Aborting.", delete_after=3)
+        elif new_content.content:
+            clean_content = await commands.clean_content().convert(ctx, new_content.content)
+        else:
+            clean_content = new_content.content
+
+        if msg.attachments:
+            clean_content = f"{clean_content}\n{new_content.attachments[0].url}"
+
+        try:
+            self.tags[name] = clean_content
+        finally:
+            await ctx.send(f"Tag: {name} has been edited.", delete_after=5)
+            save_tags(self.tags)
+
+        for message in to_delete:
+            await message.delete(delay=10)
+
+    @tag.command()
+    async def reload(self, ctx):
+        """ Reload tags from database. """
+        self.tags = load_tags()
+        return await ctx.message.add_reaction("✔")
+
+    @tag.command(name="list")
+    async def tag_list(self, ctx):
         """ list all tags! """
         tags_l = []
         tag_embed = Embed(
             title="**Tag List**",
             colour=0x00ff00)
-        for name in TAGS.keys():
+        for name in self.tags.keys():
             tags_l.append(name)
         tags_str = "\n".join(tag for tag in tags_l)
         tag_embed.add_field(name="Current tags!",
                             value=tags_str, inline=False)
-        tag_embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
+        tag_embed.set_author(name=ctx.author.name,
+                             icon_url=ctx.author.avatar_url)
         await ctx.send(embed=tag_embed, delete_after=10)
 
 

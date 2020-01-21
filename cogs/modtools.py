@@ -37,8 +37,8 @@ async def filter_history(channel, **kwargs):
 
 class ModTools(BaseCog):
     """ ModTools cog. """
-    prefix = 'p!'
-    game = 'p!help'
+    prefix = 'r!'
+    game = 'r!help'
     disabled_commands = set()
     disabled_cogs = set()
     debug = False
@@ -107,7 +107,7 @@ class ModTools(BaseCog):
         with tempfile.TemporaryFile() as tmp:
             await ctx.message.attachments[0].save(tmp)
             await self.bot.user.edit(avatar=tmp.read())
-        await ctx.send('OwO')
+        await ctx.message.add_reaction('✔')
 
     @admin.command(name="id")
     async def get_channel_id(self, ctx, channel: discord.TextChannel = None):

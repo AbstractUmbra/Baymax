@@ -1,3 +1,4 @@
+
 """ Memes Cog. """
 
 import os

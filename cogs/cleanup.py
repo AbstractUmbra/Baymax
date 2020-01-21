@@ -1,3 +1,4 @@
+
 """ Cleanup Cog. """
 
 import discord

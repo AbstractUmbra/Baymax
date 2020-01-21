@@ -1,9 +1,13 @@
+
 """ Define bot here. """
 from argparse import (
     ArgumentParser
 )
 from asyncio import (
     get_event_loop
+)
+from collections import (
+    Counter
 )
 from io import (
     StringIO
@@ -22,9 +26,9 @@ from traceback import (
     format_exc,
     format_exception
 )
-
 from aiohttp import (
-    ClientResponseError
+    ClientResponseError,
+    ClientSession
 )
 import discord
 from discord.ext import commands
@@ -64,6 +68,9 @@ class RoboHz(LoggingMixin, commands.Bot):
                          loop=loop, activity=discord.Game(self.settings.game))
         self.guild_prefixes = {}
         self._sql = sqlfile
+        self.session = ClientSession(loop=self.loop)
+        self.spam_control = commands.CooldownMapping.from_cooldown(
+            10, 12.0, commands.BucketType.user)
 
         # Set up logger
         self.logger.setLevel(
@@ -156,10 +163,11 @@ def main():
 
     @bot.event
     async def on_ready():
-        INVITE_URL = "https://discordapp.com/api/oauth2/authorize?client_id=^ID^&permissions=0&scope=bot".replace("^ID^", str(bot.user.id))
+        invite_url = "https://discordapp.com/api/oauth2/authorize?client_id=^ID^&permissions=0&scope=bot".replace(
+            "^ID^", str(bot.user.id))
         print(f'Logged in as {bot.user}: {bot.user.id}')
         print(f"Use this URL to invite your bot to guilds:-\n"
-              f"\t{INVITE_URL}")
+              f"\t{invite_url}")
 
     async def send_tb(traceb):
         channel = bot.exc_channel
@@ -180,7 +188,8 @@ def main():
     @bot.event
     async def on_command_completion(ctx):
         """ When a command successfully completes. """
-        await ctx.message.delete(delay=5)
+        if ctx.author.id != bot.owner_id:
+            await ctx.message.delete(delay=5)
 
     @bot.event
     async def on_error(event, *args, **kwargs):

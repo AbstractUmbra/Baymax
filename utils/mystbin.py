@@ -9,7 +9,7 @@ __all__ = ('mystbin',)
 
 
 async def mystbin(content: str) -> str:
-    """Upload the content to hastebin and return the url.
+    """Upload the content to mystbin and return the url.
     :param content: str: Raw content to upload
     :return: str: URL to the uploaded content
     :raises aiohttp.ClientException: on failure to upload

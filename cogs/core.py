@@ -3,6 +3,7 @@ from datetime import datetime
 from inspect import getsourcelines
 from os import path
 from typing import Optional
+import unicodedata
 
 import discord
 from discord.ext import commands
@@ -21,6 +22,9 @@ class Core(BaseCog):
     banlist = set()
     game = "r!help for help, fuckers."
     config_attrs = "banlist", "game"
+
+    def __init__(self, bot):
+        super().__init__(bot)
 
     async def bot_check(self, ctx: commands.Context):
         """ Check for bot readiness. """
@@ -41,6 +45,19 @@ class Core(BaseCog):
         self.bot.reboot_after = ctx.invoked_with == "reboot"
         await ctx.send("Reboot to apply updates.")
         await self.bot.logout()
+
+    @commands.command()
+    async def charinfo(self, ctx, *, characters: str):
+        """ Shows charinfo. """
+        def to_string(char):
+            digit = f"{ord(char):x}"
+            name = unicodedata.name(char, "Name not found.")
+            return f"`\\U{digit:>08}`: {name} - {char} " \
+                "\N{EM DASH} <http://www.fileformat.info/info/unicode/char/{digit}>"
+        msg = "\n".join(map(to_string, characters))
+        if len(msg) > 2000:
+            return await ctx.send("Output too long to display.")
+        await ctx.send(msg)
 
     @commands.command()
     @commands.is_owner()
@@ -88,7 +105,7 @@ class Core(BaseCog):
     async def source(self, ctx, *, command: Optional[CommandConverter]):
         """Links the source of the command. If command source cannot be retrieved,
         links the root of the bot's source tree."""
-        url = 'https://github.com/64Hz/RoboHz'
+        url = 'https://github.com/64Hz/Robo-Hz'
         if command is not None:
             src = command.callback.__code__.co_filename
             module = command.callback.__module__.replace('.', path.sep)
