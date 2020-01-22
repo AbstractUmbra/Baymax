@@ -1,0 +1,51 @@
+{
+    "name": "rtfm",
+    "__meta__": "cogs.api.RTFM",
+    "columns": [
+        {
+            "column_type": {
+                "big": false,
+                "small": false,
+                "auto_increment": true,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": true,
+            "nullable": true,
+            "default": null,
+            "unique": false,
+            "name": "id",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "big": true,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": true,
+            "primary_key": false,
+            "nullable": true,
+            "default": null,
+            "unique": true,
+            "name": "user_id",
+            "index_name": "rtfm_user_id_idx"
+        },
+        {
+            "column_type": {
+                "big": false,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": false,
+            "nullable": true,
+            "default": 1,
+            "unique": false,
+            "name": "count",
+            "index_name": null
+        }
+    ]
+}

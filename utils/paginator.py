@@ -1,21 +1,21 @@
-""" Paginator utility. """
 import asyncio
-import re
-
 import discord
-from discord.ext import commands
+from discord.ext.commands import Paginator as CommandPaginator
 
 
 class CannotPaginate(Exception):
-    """ Paginator exception. """
+    pass
 
 
 class Pages:
     """Implements a paginator that queries the user for the
     pagination interface.
+
     Pages are 1-index based, not 0-index based.
+
     If the user does not reply within 2 minutes then the pagination
     interface exits automatically.
+
     Parameters
     ------------
     ctx: Context
@@ -26,6 +26,7 @@ class Pages:
         How many entries show up per page.
     show_entry_count: bool
         Whether to show an entry count in the footer.
+
     Attributes
     -----------
     embed: discord.Embed
@@ -36,8 +37,8 @@ class Pages:
         Our permissions for the channel.
     """
 
-    def __init__(self, ctx: commands.Context, *, entries, per_page=12, show_entry_count=True):
-        self.bot: commands.Bot = ctx.bot
+    def __init__(self, ctx, *, entries, per_page=12, show_entry_count=True):
+        self.bot = ctx.bot
         self.entries = entries
         self.message = ctx.message
         self.channel = ctx.channel
@@ -83,30 +84,21 @@ class Pages:
                 raise CannotPaginate(
                     'Bot does not have Read Message History permission.')
 
-    @property
-    def has_manage_messages(self):
-        """ Check the bot has manage messages. """
-        return self.channel.permissions_for(self.channel.guild.me).manage_messages
-
     def get_page(self, page):
-        """ Get the paginator page. """
         base = (page - 1) * self.per_page
         return self.entries[base:base + self.per_page]
 
     def get_content(self, entries, page, *, first=False):
-        """ Get page content. """
         return None
 
     def get_embed(self, entries, page, *, first=False):
-        """ Get default embed. """
         self.prepare_embed(entries, page, first=first)
         return self.embed
 
     def prepare_embed(self, entries, page, *, first=False):
-        """ Prepare default embed. """
-        pages = []
+        p = []
         for index, entry in enumerate(entries, 1 + ((page - 1) * self.per_page)):
-            pages.append(f'{index}. {entry}')
+            p.append(f'{index}. {entry}')
 
         if self.maximum_pages > 1:
             if self.show_entry_count:
@@ -117,14 +109,13 @@ class Pages:
             self.embed.set_footer(text=text)
 
         if self.paginating and first:
-            pages.append('')
-            pages.append(
+            p.append('')
+            p.append(
                 'Confused? React with \N{INFORMATION SOURCE} for more info.')
 
-        self.embed.description = '\n'.join(pages)
+        self.embed.description = '\n'.join(p)
 
     async def show_page(self, page, *, first=False):
-        """ Show paginated page. """
         self.current_page = page
         entries = self.get_page(page)
         content = self.get_content(entries, page, first=first)
@@ -148,40 +139,38 @@ class Pages:
             await self.message.add_reaction(reaction)
 
     async def checked_show_page(self, page):
-        """ Show the page, now that we've checked it. """
         if page != 0 and page <= self.maximum_pages:
             await self.show_page(page)
 
     async def first_page(self):
-        """ Goes to the first page. """
+        """goes to the first page"""
         await self.show_page(1)
 
     async def last_page(self):
-        """ Goes to the last page. """
+        """goes to the last page"""
         await self.show_page(self.maximum_pages)
 
     async def next_page(self):
-        """ Goes to the next page. """
+        """goes to the next page"""
         await self.checked_show_page(self.current_page + 1)
 
     async def previous_page(self):
-        """ Goes to the previous page. """
+        """goes to the previous page"""
         await self.checked_show_page(self.current_page - 1)
 
     async def show_current_page(self):
-        """ Shows current page. """
         if self.paginating:
             await self.show_page(self.current_page)
 
     async def numbered_page(self):
-        """ Allows you type a page number to go to. """
-        to_delete = [await self.channel.send('What page do you want to go to?')]
+        """lets you type a page number to go to"""
+        to_delete = []
+        to_delete.append(await self.channel.send('What page do you want to go to?'))
 
-        def message_check(msg):
-            """ Message check. """
-            return msg.author == self.author and \
-                self.channel == msg.channel and \
-                msg.content.isdigit()
+        def message_check(m):
+            return m.author == self.author and \
+                self.channel == m.channel and \
+                m.content.isdigit()
 
         try:
             msg = await self.bot.wait_for('message', check=message_check, timeout=30.0)
@@ -194,9 +183,7 @@ class Pages:
             if page != 0 and page <= self.maximum_pages:
                 await self.show_page(page)
             else:
-                to_delete.append(
-                    await self.channel.send(f'Invalid page given. ({page}/{self.maximum_pages})')
-                )
+                to_delete.append(await self.channel.send(f'Invalid page given. ({page}/{self.maximum_pages})'))
                 await asyncio.sleep(5)
 
         try:
@@ -206,9 +193,9 @@ class Pages:
 
     async def show_help(self):
         """shows this message"""
-        messages = ['Welcome to the interactive paginator!\n',
-                    'This interactively allows you to see pages of text by navigating with '
-                    'reactions. They are as follows:\n']
+        messages = ['Welcome to the interactive paginator!\n']
+        messages.append('This interactively allows you to see pages of text by navigating with '
+                        'reactions. They are as follows:\n')
 
         for (emoji, func) in self.reaction_emojis:
             messages.append(f'{emoji} {func.__doc__}')
@@ -232,7 +219,6 @@ class Pages:
         self.paginating = False
 
     def react_check(self, payload):
-        """ Reaction check. """
         if payload.user_id != self.author.id:
             return False
 
@@ -257,25 +243,22 @@ class Pages:
 
         while self.paginating:
             try:
-                tasks = [self.bot.wait_for(
-                    f'raw_reaction_{event}', check=self.react_check) for event in ('add', 'remove')]
-                done, left = await asyncio.wait(
-                    tasks, return_when=asyncio.FIRST_COMPLETED, timeout=120.0)
-                [task.cancel() for task in left]
-                payload: discord.RawReactionActionEvent = done.pop().result()
-            except (asyncio.TimeoutError, IndexError, KeyError):
+                payload = await self.bot.wait_for('raw_reaction_add', check=self.react_check, timeout=120.0)
+            except asyncio.TimeoutError:
                 self.paginating = False
-                if self.has_manage_messages:
+                try:
                     await self.message.clear_reactions()
-            else:
-                if self.has_manage_messages:
-                    try:
-                        await self.bot.http.remove_reaction(
-                            payload.channel_id, payload.message_id, payload.emoji, payload.user_id)
-                    except:
-                        pass
+                except:
+                    pass
+                finally:
+                    break
 
-                await self.match()
+            try:
+                await self.message.remove_reaction(payload.emoji, discord.Object(id=payload.user_id))
+            except:
+                pass  # can't remove it so don't bother doing so
+
+            await self.match()
 
 
 class FieldPages(Pages):
@@ -298,146 +281,25 @@ class FieldPages(Pages):
 
             self.embed.set_footer(text=text)
 
-# ?help
-# ?help BaseCog
-# ?help command
-#   -> could be a subcommand
 
+class TextPages(Pages):
+    """Uses a commands.Paginator internally to paginate some text."""
 
-_MENTION = re.compile(r'<@!?([0-9]{1,19})>')
+    def __init__(self, ctx, text, *, prefix='```', suffix='```', max_size=2000):
+        paginator = CommandPaginator(
+            prefix=prefix, suffix=suffix, max_size=max_size - 200)
+        for line in text.split('\n'):
+            paginator.add_line(line)
 
+        super().__init__(ctx, entries=paginator.pages, per_page=1, show_entry_count=False)
 
-def cleanup_prefix(bot, prefix):
-    """ Removes the prefix from call. """
-    m = _MENTION.match(prefix)
-    if m:
-        user = bot.get_user(int(m.group(1)))
-        if user:
-            return f'@{user.name} '
-    return prefix
+    def get_page(self, page):
+        return self.entries[page - 1]
 
+    def get_embed(self, entries, page, *, first=False):
+        return None
 
-async def _can_run(cmd, ctx: commands.Context):
-    """ Can the command actually run? """
-    try:
-        return await cmd.can_run(ctx)
-    except Exception:
-        return False
-
-
-def _command_signature(cmd):
-    # this is modified from discord.py source
-    # which I wrote myself lmao
-
-    result = [cmd.qualified_name]
-    if cmd.usage:
-        result.append(cmd.usage)
-        return ' '.join(result)
-
-    params = cmd.clean_params
-    if not params:
-        return ' '.join(result)
-
-    for name, param in params.items():
-        if param.default is not param.empty:
-            # We don't want None or '' to trigger the [name=value] case and instead it should
-            # do [name] since [name=None] or [name=] are not exactly useful for the user.
-            should_print = param.default if isinstance(
-                param.default, str) else param.default is not None
-            if should_print:
-                result.append(f'[{name}={param.default!r}]')
-            else:
-                result.append(f'[{name}]')
-        elif param.kind == param.VAR_POSITIONAL:
-            result.append(f'[{name}...]')
-        else:
-            result.append(f'<{name}>')
-
-    return ' '.join(result)
-
-
-class HelpPaginator(Pages):
-    def __init__(self, help_command, ctx, entries, *, per_page=4):
-        super().__init__(ctx, entries=entries, per_page=per_page)
-        self.reaction_emojis.append(
-            ('\N{WHITE QUESTION MARK ORNAMENT}', self.show_bot_help))
-        self.total = len(entries)
-        self.help_command = help_command
-        self.prefix = help_command.clean_prefix
-
-    def get_bot_page(self, page):
-        cog, description, cmds = self.entries[page - 1]
-        self.title = f'{cog} Commands'
-        self.description = description
-        return cmds
-
-    def prepare_embed(self, entries, page, *, first=False):
-        self.embed.clear_fields()
-        self.embed.description = self.description
-        self.embed.title = self.title
-
-        self.embed.set_footer(
-            text=f'Use "{self.prefix}help command" for more info on a command.')
-
-        for entry in entries:
-            signature = f'{entry.qualified_name} {entry.signature}'
-            self.embed.add_field(
-                name=signature, value=entry.short_doc or "No help given", inline=False)
-
-        if self.maximum_pages:
-            self.embed.set_author(
-                name=f'Page {page}/{self.maximum_pages} ({self.total} commands)')
-
-    async def show_help(self):
-        """shows this message"""
-
-        self.embed.title = 'Paginator help'
-        self.embed.description = 'Hello! Welcome to the help page.'
-
-        messages = [f'{emoji} {func.__doc__}' for emoji,
-                    func in self.reaction_emojis]
-        self.embed.clear_fields()
-        self.embed.add_field(name='What are these reactions for?',
-                             value='\n'.join(messages), inline=False)
-
-        self.embed.set_footer(
-            text=f'We were on page {self.current_page} before this message.')
-        await self.message.edit(embed=self.embed)
-
-        async def go_back_to_current_page():
-            await asyncio.sleep(30.0)
-            await self.show_current_page()
-
-        self.bot.loop.create_task(go_back_to_current_page())
-
-    async def show_bot_help(self):
-        """shows how to use the bot"""
-
-        self.embed.title = 'Using the bot'
-        self.embed.description = 'Hello! Welcome to the help page.'
-        self.embed.clear_fields()
-
-        entries = (
-            ('<argument>', 'This means the argument is __**required**__.'),
-            ('[argument]', 'This means the argument is __**optional**__.'),
-            ('[A|B]', 'This means the it can be __**either A or B**__.'),
-            ('[argument...]', 'This means you can have multiple arguments.\n'
-                              'Now that you know the basics, it should be noted that...\n'
-                              '__**You do not type in the brackets!**__')
-        )
-
-        self.embed.add_field(name='How do I use this bot?',
-                             value='Reading the bot signature is pretty simple.')
-
-        for name, value in entries:
-            self.embed.add_field(name=name, value=value, inline=False)
-
-        self.embed.set_footer(
-            text=f'We were on page {self.current_page} before this message.')
-        await self.message.edit(embed=self.embed)
-
-        async def go_back_to_current_page():
-            await asyncio.sleep(30.0)
-            await self.show_current_page()
-
-        self.bot.loop.create_task(go_back_to_current_page())
+    def get_content(self, entry, page, *, first=False):
+        if self.maximum_pages > 1:
+            return f'{entry}\nPage {page}/{self.maximum_pages}'
+        return entry

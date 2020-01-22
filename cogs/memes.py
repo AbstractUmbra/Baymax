@@ -13,12 +13,13 @@ import discord
 from discord.ext import commands
 
 from utils.members import all_voice_members_guild
-from . import BaseCog
 
-class Memes(BaseCog):
+
+class Memes(commands.Cog):
     """ Meme cog, fun shit goes here. """
+
     def __init__(self, bot):
-        super().__init__(bot)
+        self.bot = bot
 
     @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
     @commands.command()

@@ -1,0 +1,68 @@
+{
+    "table": {
+        "name": "feeds",
+        "__meta__": "cogs.api.Feeds",
+        "columns": [
+            {
+                "column_type": {
+                    "big": false,
+                    "small": false,
+                    "auto_increment": true,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": false,
+                "primary_key": true,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "id",
+                "index_name": null
+            },
+            {
+                "column_type": {
+                    "big": true,
+                    "small": false,
+                    "auto_increment": false,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": false,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "channel_id",
+                "index_name": null
+            },
+            {
+                "column_type": {
+                    "big": true,
+                    "small": false,
+                    "auto_increment": false,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": false,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "role_id",
+                "index_name": null
+            },
+            {
+                "column_type": {
+                    "length": null,
+                    "fixed": false,
+                    "__meta__": "utils.db.String"
+                },
+                "index": false,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "name",
+                "index_name": null
+            }
+        ]
+    },
+    "migrations": []
+}

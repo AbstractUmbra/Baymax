@@ -4,8 +4,6 @@
 import discord
 from discord.ext import commands
 
-from . import BaseCog
-
 
 def is_groovy_command(msg):
     """ Is it a Groovy command? """
@@ -26,17 +24,17 @@ def robo_self(msg):
     if msg.author.id == 565095015874035742:
         if not msg.pinned:
             return True
-    elif msg.content.startswith("r!"):
+    elif msg.content.startswith("r!") or msg.content.startswith("?"):
         if not msg.pinned:
             return True
     return False
 
 
-class Cleanup(BaseCog):
-    """ Cleanup """
+class Cleanup(commands.Cog):
+    """ Cleanup. """
 
     def __init__(self, bot):
-        super().__init__(bot)
+        self.bot = bot
 
     @commands.Cog.listener()
     async def on_message(self, msg):

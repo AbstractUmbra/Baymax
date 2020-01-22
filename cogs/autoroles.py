@@ -4,8 +4,6 @@ from asyncio import TimeoutError as AsynTimeOut
 import discord
 from discord.ext import commands
 
-from . import BaseCog
-
 
 def mod_approval_check(reaction, user, mod_role):
     """ Approval for moderator status. """
@@ -33,7 +31,7 @@ def dnd_approval_check(reaction, user, dnd_role):
     return False
 
 
-class AutoRoles(BaseCog):
+class AutoRoles(commands.Cog):
     """ AutoRoles Cog. """
 
     def cog_check(self, ctx):
@@ -42,7 +40,7 @@ class AutoRoles(BaseCog):
         return True
 
     def __init__(self, bot):
-        super().__init__(bot)
+        self.bot = bot
         self.ark_role = None
         self.conan_role = None
         self.dnd_role = None
