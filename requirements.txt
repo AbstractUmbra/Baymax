@@ -1,3 +1,9 @@
-discord.py[voice]>=1.2.5
-aiosqlite>=0.10.0
-aiofile>=1.5.2
+git+https://github.com/Rapptz/discord.py@master
+git+https://github.com/Rapptz/discord-ext-menus@master
+psutil
+asyncpg>=0.12.0
+click
+parsedatetime
+lru_dict
+python-dateutil
+lxml

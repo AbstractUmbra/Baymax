@@ -37,10 +37,10 @@ class Cleanup(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
-    async def on_message(self, msg):
-        """ If Groovy messages, bin it. """
-        if msg.content.startswith("-") or msg.author.id == 234395307759108106:
-            await msg.delete(delay=3)
+    async def on_message(self, message):
+        # Cleanup Server-Suggestions.
+        if message.content.startswith("-") or message.author.id == 234395307759108106:
+            await message.delete()
 
     @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
     @commands.command()
