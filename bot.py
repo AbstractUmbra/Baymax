@@ -29,11 +29,15 @@ COGS = (
     'cogs.buttons',
     'cogs.cleanup',
     'cogs.config',
+    'cogs.funhouse',
     'cogs.memes',
     'cogs.meta',
     'cogs.mod',
     'cogs.profile',
     'cogs.reminders',
+    'cogs.rng',
+    'cogs.stars',
+    'cogs.stats',
     'cogs.tags',
     'cogs.votes',
 )
@@ -62,7 +66,6 @@ class RoboHz(commands.Bot):
 
         self.client_id = config.client_id
         self.session = aiohttp.ClientSession(loop=self.loop)
-        self.uptime = None
 
         self._prev_events = deque(maxlen=10)
 
@@ -145,7 +148,7 @@ class RoboHz(commands.Bot):
 
     async def on_ready(self):
         """ When the websocket reports ready. """
-        if not hasattr(self, 'uptime'):
+        if not hasattr(self, "uptime"):
             self.uptime = datetime.datetime.utcnow()
 
         print(f'Ready: {self.user} (ID: {self.user.id})')

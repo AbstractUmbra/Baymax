@@ -222,6 +222,21 @@ class Reminder(commands.Cog):
         delta = time.human_timedelta(when.dt, source=timer.created_at)
         await ctx.send(f"Alright {ctx.author.mention}, in {delta}: {when.arg}")
 
+    @commands.group(name="broadcast", usage="<when>", invoke_without_command=True)
+    @checks.has_guild_permissions(manage_messages=True)
+    async def broadcast(self, ctx, channel: discord.TextChannel = None, *, dt: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
+        """ Broadcast a message to a channel after it's done. """
+        if channel is None:
+            channel = ctx.channel
+        broadcast = await self.create_timer(dt.dt, 'broadcast', ctx.author.id,
+                                            channel.id,
+                                            dt.arg,
+                                            connection=ctx.db,
+                                            created=ctx.message.created_at,
+                                            message_id=ctx.message.id)
+        delta = time.human_timedelta(dt.dt, source=broadcast.created_at)
+        await ctx.send(f"Alright {ctx.author.mention}, broadcasting to {channel.mention} in {delta}: {dt.arg}")
+
     @reminder.command(name='list')
     async def reminder_list(self, ctx):
         """Shows the 10 latest currently running reminders."""
@@ -245,6 +260,37 @@ class Reminder(commands.Cog):
         else:
             e.set_footer(
                 text=f'{len(records)} reminder{"s" if len(records) > 1 else ""}')
+
+        for _id, expires, message in records:
+            shorten = textwrap.shorten(message, width=512)
+            e.add_field(
+                name=f'{_id}: In {time.human_timedelta(expires)}', value=shorten, inline=False)
+
+        await ctx.send(embed=e)
+
+    @broadcast.command(name='list')
+    async def broadcast_list(self, ctx):
+        """Shows the 10 latest currently running reminders."""
+        query = """SELECT id, expires, extra #>> '{args,2}'
+                   FROM reminders
+                   WHERE event = 'broadcast'
+                   AND extra #>> '{args,0}' = $1
+                   ORDER BY expires
+                   LIMIT 10;
+                """
+
+        records = await ctx.db.fetch(query, str(ctx.author.id))
+
+        if not records:
+            return await ctx.send('No currently running broadcasts.')
+
+        e = discord.Embed(colour=discord.Colour.blurple(), title='Broadcasts')
+
+        if len(records) == 10:
+            e.set_footer(text='Only showing up to 10 broadcasts.')
+        else:
+            e.set_footer(
+                text=f'{len(records)} broadcast{"s" if len(records) > 1 else ""}')
 
         for _id, expires, message in records:
             shorten = textwrap.shorten(message, width=512)
@@ -280,6 +326,33 @@ class Reminder(commands.Cog):
 
         await ctx.send('Successfully deleted reminder.')
 
+    @broadcast.command(name='delete', aliases=['remove', 'cancel'])
+    async def broadcast_delete(self, ctx, *, id: int):
+        """Deletes a broadcast by its ID.
+
+        To get a broadcast ID, use the broadcast list command.
+
+        You must own the broadcast to delete it, obviously.
+        """
+
+        query = """DELETE FROM reminders
+                   WHERE id=$1
+                   AND event = 'broadcast'
+                   AND extra #>> '{args,0}' = $2;
+                """
+
+        status = await ctx.db.execute(query, id, str(ctx.author.id))
+        if status == 'DELETE 0':
+            return await ctx.send('Could not delete any broadcasts with that ID.')
+
+        # if the current timer is being deleted
+        if self._current_timer and self._current_timer.id == id:
+            # cancel the task and re-run it
+            self._task.cancel()
+            self._task = self.bot.loop.create_task(self.dispatch_timers())
+
+        await ctx.send('Successfully deleted broadcast.')
+
     @reminder.command(name='clear')
     async def reminder_clear(self, ctx):
         """Clears all reminders you have set."""
@@ -306,6 +379,32 @@ class Reminder(commands.Cog):
         await ctx.db.execute(query, author_id)
         await ctx.send(f'Successfully deleted {formats.plural(total):reminder}.')
 
+    @broadcast.command(name='clear')
+    async def broadcast_clear(self, ctx):
+        """Clears all broadcasts you have set."""
+
+        # For UX purposes this has to be two queries.
+
+        query = """SELECT COUNT(*)
+                   FROM reminders
+                   WHERE event = 'broadcast'
+                   AND extra #>> '{args,0}' = $1;
+                """
+
+        author_id = str(ctx.author.id)
+        total = await ctx.db.fetchrow(query, author_id)
+        total = total[0]
+        if total == 0:
+            return await ctx.send('You do not have any broadcasts to delete.')
+
+        confirm = await ctx.prompt(f'Are you sure you want to delete {formats.plural(total):broadcast}?')
+        if not confirm:
+            return await ctx.send('Aborting')
+
+        query = """DELETE FROM reminders WHERE event = 'broadcast' AND extra #>> '{args,0}' = $1;"""
+        await ctx.db.execute(query, author_id)
+        await ctx.send(f'Successfully deleted {formats.plural(total):broadcast}.')
+
     @commands.Cog.listener()
     async def on_reminder_timer_complete(self, timer):
         author_id, channel_id, message = timer.args
@@ -322,6 +421,25 @@ class Reminder(commands.Cog):
 
         if message_id:
             msg = f'{msg}\n\n<https://discordapp.com/channels/{guild_id}/{channel.id}/{message_id}>'
+
+        try:
+            await channel.send(msg)
+        except discord.HTTPException:
+            return
+
+    @commands.Cog.listener()
+    async def on_broadcast_timer_complete(self, timer):
+        author_id, channel_id, message = timer.args
+
+        try:
+            channel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
+        except discord.HTTPException:
+            return
+
+        message_id = timer.kwargs.get('message_id')
+
+        if message_id:
+            msg = f'@everyone - <@{author_id}> wants to broadcast the following:\n\n{message}'
 
         try:
             await channel.send(msg)
