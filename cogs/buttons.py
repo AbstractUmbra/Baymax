@@ -104,7 +104,7 @@ class RedditMediaURL:
             raise commands.BadArgument('Not a valid URL.')
 
         headers = {
-            'User-Agent': 'Discord:RoboDanny:v4.0 (by /u/Rapptz)'
+            'User-Agent': 'Discord:RoboHz:v4.0 (by /u/N0rvar)'
         }
         await ctx.trigger_typing()
         if url.host == 'v.redd.it':

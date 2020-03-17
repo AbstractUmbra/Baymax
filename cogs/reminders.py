@@ -223,7 +223,7 @@ class Reminder(commands.Cog):
         await ctx.send(f"Alright {ctx.author.mention}, in {delta}: {when.arg}")
 
     @commands.group(name="broadcast", usage="<when>", invoke_without_command=True)
-    @checks.has_guild_permissions(manage_messages=True)
+    @checks.has_guild_permissions(administrator=True)
     async def broadcast(self, ctx, channel: discord.TextChannel = None, *, dt: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
         """ Broadcast a message to a channel after it's done. """
         if channel is None:

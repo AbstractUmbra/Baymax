@@ -38,22 +38,12 @@ class Cleanup(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        # Cleanup Server-Suggestions.
-        if message.content.startswith("-") or message.author.id == 234395307759108106:
-            await message.delete()
+        # Cleanup Groovy.
+        if message.channel.id != 655198285975519253:
+            if message.content.startswith("-") or message.author.id == 234395307759108106:
+                await message.delete()
 
-    @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
-    @commands.command()
-    async def roboclean(self, ctx, count: int = 100, channel: discord.TextChannel = None):
-        """ Cleans RoboHz commands if they get stuck. """
-        if channel is None:
-            channel = ctx.channel
-        deleted = await channel.purge(limit=(count + 1), check=robo_self)
-        await channel.send(
-            f"Deleted {len(deleted) - 1} Robo-Hz messages from {channel.mention}", delete_after=5
-        )
-
-    @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
+    @commands.has_permissions(manage_messages=True)
     @commands.command(aliases=["purge"])
     async def prune(self, ctx, count: int = 100, channel: discord.TextChannel = None):
         """ Prune a channel. """

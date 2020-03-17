@@ -240,7 +240,7 @@ class Stats(commands.Cog):
         # [`hash`](url) message (offset)
         offset = time.human_timedelta(commit_time.astimezone(
             datetime.timezone.utc).replace(tzinfo=None), accuracy=1)
-        return f'[`{short_sha2}`](https://github.com/Rapptz/RoboDanny/commit/{commit.hex}) {short} ({offset})'
+        return f'[`{short_sha2}`](https://github.com/64Hz/RoboHz/commit/{commit.hex}) {short} ({offset})'
 
     def get_last_commits(self, count=3):
         repo = pygit2.Repository('.git')
@@ -1123,10 +1123,10 @@ def setup(bot):
     bot.add_cog(cog)
     bot._stats_cog_gateway_handler = handler = GatewayHandler(cog)
     logging.getLogger().addHandler(handler)
-    commands.AutoShardedBot.on_error = on_error
+    commands.Bot.on_error = on_error
 
 
 def teardown(bot):
-    commands.AutoShardedBot.on_error = old_on_error
+    commands.Bot.on_error = old_on_error
     logging.getLogger().removeHandler(bot._stats_cog_gateway_handler)
     del bot._stats_cog_gateway_handler

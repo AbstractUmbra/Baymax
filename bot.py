@@ -29,11 +29,11 @@ COGS = (
     'cogs.buttons',
     'cogs.cleanup',
     'cogs.config',
+    'cogs.dnd',
     'cogs.funhouse',
     'cogs.memes',
     'cogs.meta',
     'cogs.mod',
-    'cogs.profile',
     'cogs.reminders',
     'cogs.rng',
     'cogs.stars',
@@ -158,11 +158,12 @@ class RoboHz(commands.Bot):
         print('Resumed...')
 
     @property
-    def stats_webhook(self):
+    def stat_webhook(self):
         """ Get webhook stats. """
         wh_id, wh_token = self.config.stat_webhook
         hook = discord.Webhook.partial(
             id=wh_id, token=wh_token, adapter=discord.AsyncWebhookAdapter(self.session))
+        print(hook)
         return hook
 
     def log_spammer(self, ctx, message, retry_after, *, autoblock=False):

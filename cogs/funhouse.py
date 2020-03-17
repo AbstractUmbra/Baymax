@@ -5,33 +5,10 @@ from discord.ext import commands
 
 from utils import checks
 
-GUILD_ID = 174702278673039360
-VOICE_ROOM_ID = 633466718035116052
-GENERAL_VOICE_ID = 634138468045553674
-
 
 class Funhouse(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-
-    def is_outside_voice(self, state):
-        return state.channel is None or state.channel.id != GENERAL_VOICE_ID
-
-    def is_inside_voice(self, state):
-        return state.channel is not None and state.channel.id == GENERAL_VOICE_ID
-
-    @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
-        if member.guild.id != GUILD_ID:
-            return
-
-        voice_room = member.guild.get_channel(VOICE_ROOM_ID)
-        if self.is_outside_voice(before) and self.is_inside_voice(after):
-            # joined a channel
-            await voice_room.set_permissions(member, read_messages=True)
-        elif self.is_outside_voice(after) and self.is_inside_voice(before):
-            # left the channel
-            await voice_room.set_permissions(member, read_messages=None)
 
     @commands.command(hidden=True)
     async def cat(self, ctx):

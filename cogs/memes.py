@@ -2,13 +2,12 @@
 """ Memes Cog. """
 
 import os
-from random import choice, sample
+from random import choice, sample, getrandbits
 from math import ceil
 from time import sleep
 from urllib.parse import quote
 
 from unidecode import unidecode
-
 import discord
 from discord.ext import commands
 
@@ -98,6 +97,21 @@ class Memes(commands.Cog):
         lmgtfy_url = base_url.replace(
             "^QUERY^", url_encode(str(msg_body)))
         await ctx.send(lmgtfy_url)
+
+    @commands.command()
+    async def bobme(self, ctx, *, sentence):
+        sentence = sentence.lower()
+        new_sentence = ""
+        i = True
+        for char in sentence:
+            if i:
+                new_sentence += char.upper()
+            else:
+                new_sentence += char.lower()
+            if char != " ":
+                i = not i
+        await ctx.send(new_sentence)
+        return await ctx.message.delete(delay=3)
 
     @commands.command()
     async def emojipls(self, ctx, emoji):
