@@ -1,16 +1,16 @@
+""" A helper for RoboHz. """
 import asyncio
 import contextlib
 import importlib
 import logging
-from pathlib import Path
 import sys
 import traceback
 
 import asyncpg
 import click
-import discord
+from discord.ext import commands
 
-from bot import RoboHz, initial_extensions
+from bot import RoboHz, COGS
 from utils.db import Table
 
 import config
@@ -25,6 +25,7 @@ else:
 
 @contextlib.contextmanager
 def setup_logging():
+    """ Handles logging for my big roboboy. """
     try:
         # __enter__
         logging.getLogger('discord').setLevel(logging.INFO)
@@ -50,18 +51,19 @@ def setup_logging():
 
 
 def run_bot():
+    """ Time to run the bot. """
     loop = asyncio.get_event_loop()
     log = logging.getLogger()
 
     try:
         pool = loop.run_until_complete(Table.create_pool(
             config.postgresql, command_timeout=60))
-    except Exception as e:
+    except Exception:
         click.echo('Could not set up PostgreSQL. Exiting.', file=sys.stderr)
         log.exception('Could not set up PostgreSQL. Exiting.')
         return
 
-    bot = TerminusBot()
+    bot = RoboHz()
     bot.pool = pool
     bot.run()
 
@@ -77,11 +79,12 @@ def main(ctx):
 
 
 @main.group(short_help='database stuff', options_metavar='[options]')
-def db():
+def database():
+    """ Database stuff. """
     pass
 
 
-@db.command(short_help='initialises the databases for the bot', options_metavar='[options]')
+@database.command(short_help='initialises the databases for the bot', options_metavar='[options]')
 @click.argument('cogs', nargs=-1, metavar='[cogs]')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 def init(cogs, quiet):
@@ -96,7 +99,7 @@ def init(cogs, quiet):
         return
 
     if not cogs:
-        cogs = initial_extensions
+        cogs = COGS
     else:
         cogs = [f'cogs.{e}' if not e.startswith('cogs.') else e for e in cogs]
 
@@ -124,7 +127,7 @@ def init(cogs, quiet):
                     f'[{table.__module__}] No work needed for {table.__tablename__}.')
 
 
-@db.command(short_help='migrates the databases')
+@database.command(short_help='migrates the databases')
 @click.argument('cog', nargs=1, metavar='[cog]')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 @click.pass_context
@@ -138,15 +141,16 @@ def migrate(ctx, cog, quiet):
         importlib.import_module(cog)
     except Exception:
         click.echo(
-            f'Could not load {ext}.\n{traceback.format_exc()}', err=True)
+            f'Could not load {cog}.\n{traceback.format_exc()}', err=True)
         return
 
     def work(table, *, invoked=False):
+        """ Does a little migration work. """
         try:
             actually_migrated = table.write_migration()
-        except RuntimeError as e:
+        except RuntimeError as err:
             click.echo(
-                f'Could not migrate {table.__tablename__}: {e}', err=True)
+                f'Could not migrate {table.__tablename__}: {err}', err=True)
             if not invoked:
                 click.confirm('do you want to create the table?', abort=True)
                 ctx.invoke(init, cogs=[cog], quiet=quiet)
@@ -166,6 +170,7 @@ def migrate(ctx, cog, quiet):
 
 
 async def apply_migration(cog, quiet, index, *, downgrade=False):
+    """ Apply the migrations. """
     try:
         pool = await Table.create_pool(config.postgresql)
     except Exception:
@@ -184,21 +189,24 @@ async def apply_migration(cog, quiet, index, *, downgrade=False):
         return
 
     async with pool.acquire() as con:
-        tr = con.transaction()
-        await tr.start()
+        transaction = con.transaction()
+        await transaction.start()
         for table in Table.all_tables():
             try:
-                await table.migrate(index=index, downgrade=downgrade, verbose=not quiet, connection=con)
-            except RuntimeError as e:
+                await table.migrate(index=index,
+                                    downgrade=downgrade,
+                                    verbose=not quiet,
+                                    connection=con)
+            except RuntimeError as err:
                 click.echo(
-                    f'Could not migrate {table.__tablename__}: {e}', err=True)
-                await tr.rollback()
+                    f'Could not migrate {table.__tablename__}: {err}', err=True)
+                await transaction.rollback()
                 break
         else:
-            await tr.commit()
+            await transaction.commit()
 
 
-@db.command(short_help='upgrades from a migration')
+@database.command(short_help='upgrades from a migration')
 @click.argument('cog', nargs=1, metavar='[cog]')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 @click.option('--index', help='the index to use', default=-1)
@@ -208,7 +216,7 @@ def upgrade(cog, quiet, index):
     run(apply_migration(cog, quiet, index))
 
 
-@db.command(short_help='downgrades from a migration')
+@database.command(short_help='downgrades from a migration')
 @click.argument('cog', nargs=1, metavar='[cog]')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 @click.option('--index', help='the index to use', default=-1)
@@ -219,26 +227,27 @@ def downgrade(cog, quiet, index):
 
 
 async def remove_databases(pool, cog, quiet):
+    """ Removes a database. """
     async with pool.acquire() as con:
-        tr = con.transaction()
-        await tr.start()
+        transaction = con.transaction()
+        await transaction.start()
         for table in Table.all_tables():
             try:
                 await table.drop(verbose=not quiet, connection=con)
-            except RuntimeError as e:
+            except RuntimeError as err:
                 click.echo(
-                    f'Could not drop {table.__tablename__}: {e}', err=True)
-                await tr.rollback()
+                    f'Could not drop {table.__tablename__}: {err}', err=True)
+                await transaction.rollback()
                 break
             else:
                 click.echo(f'Dropped {table.__tablename__}.')
         else:
-            await tr.commit()
+            await transaction.commit()
             click.echo(f'successfully removed {cog} tables.')
 
 
-@db.command(short_help="removes a cog's table", options_metavar='[options]')
-@click.argument('cog',  metavar='<cog>')
+@database.command(short_help="removes a cog's table", options_metavar='[options]')
+@click.argument('cog', metavar='<cog>')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 def drop(cog, quiet):
     """This removes a database and all its migrations.
@@ -319,17 +328,18 @@ def convertjson(ctx, cogs):
             f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
         return
 
-    client = discord.AutoShardedClient()
+    bot = commands.Bot()
 
-    @client.event
+    @bot.event
     async def on_ready():
+        """ When the bot recieves the ready event. """
         click.echo(
-            f'successfully booted up bot {client.user} (ID: {client.user.id})')
-        await client.logout()
+            f'successfully booted up bot {bot.user} (ID: {bot.user.id})')
+        await bot.logout()
 
     try:
-        run(client.login(config.token))
-        run(client.connect(reconnect=False))
+        run(bot.login(config.token))
+        run(bot.connect(reconnect=False))
     except:
         pass
 
@@ -338,10 +348,11 @@ def convertjson(ctx, cogs):
 
     for migrator, _ in to_run:
         try:
-            run(migrator(pool, client))
+            run(migrator(pool, bot))
         except Exception:
             click.echo(
-                f'[error] {migrator.__name__} has failed, terminating\n{traceback.format_exc()}', err=True)
+                f'[error] {migrator.__name__} has failed,'
+                f' terminating\n{traceback.format_exc()}', err=True)
             return
         else:
             click.echo(f'[{migrator.__name__}] completed successfully')

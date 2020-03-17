@@ -2,23 +2,23 @@
 """ Memes Cog. """
 
 import os
-from random import choice, sample
+from random import choice, sample, getrandbits
 from math import ceil
 from time import sleep
 from urllib.parse import quote
 
 from unidecode import unidecode
-
 import discord
 from discord.ext import commands
 
 from utils.members import all_voice_members_guild
-from . import BaseCog
 
-class Memes(BaseCog):
+
+class Memes(commands.Cog):
     """ Meme cog, fun shit goes here. """
+
     def __init__(self, bot):
-        super().__init__(bot)
+        self.bot = bot
 
     @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
     @commands.command()
@@ -97,6 +97,21 @@ class Memes(BaseCog):
         lmgtfy_url = base_url.replace(
             "^QUERY^", url_encode(str(msg_body)))
         await ctx.send(lmgtfy_url)
+
+    @commands.command()
+    async def bobme(self, ctx, *, sentence):
+        sentence = sentence.lower()
+        new_sentence = ""
+        i = True
+        for char in sentence:
+            if i:
+                new_sentence += char.upper()
+            else:
+                new_sentence += char.lower()
+            if char != " ":
+                i = not i
+        await ctx.send(new_sentence)
+        return await ctx.message.delete(delay=3)
 
     @commands.command()
     async def emojipls(self, ctx, emoji):

@@ -1,12 +1,15 @@
-from discord.ext import commands
+""" Utils addon - checks. """
+import datetime
+from typing import Callable, Iterable
 
-# The permission system of the bot is based on a "just works" basis
-# You have permissions and the bot has permissions. If you meet the permissions
-# required to execute the command (and the bot does as well) then it goes through
-# and you can execute the command.
-# Certain permissions signify if the person is a moderator (Manage Server) or an
-# admin (Administrator). Having these signify certain bypasses.
-# Of course, the owner will always be able to execute commands.
+from discord.ext import commands
+from discord.ext.commands import (BucketType, Cog, Command,
+                                  CommandOnCooldown, Context, Cooldown, CooldownMapping)
+
+
+def in_channel_check(ctx: Context, *channel_ids: int) -> bool:
+    """ Checks if the command was executed in a specific list of channels. """
+    return ctx.channel.id in channel_ids
 
 
 async def check_permissions(ctx, perms, *, check=all):
@@ -69,4 +72,13 @@ def admin_or_permissions(**perms):
 
     async def predicate(ctx):
         return await check_guild_permissions(ctx, perms, check=any)
+    return commands.check(predicate)
+
+
+def is_in_guilds(*guild_ids):
+    def predicate(ctx):
+        guild = ctx.guild
+        if guild is None:
+            return False
+        return guild.id in guild_ids
     return commands.check(predicate)

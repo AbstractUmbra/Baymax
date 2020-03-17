@@ -110,3 +110,6 @@ venv.bak/
 *.mp3
 *.bak
 data/
+*.log
+bot_bak.py
+migrations/

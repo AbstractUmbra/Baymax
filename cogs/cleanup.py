@@ -4,8 +4,6 @@
 import discord
 from discord.ext import commands
 
-from . import BaseCog
-
 
 def is_groovy_command(msg):
     """ Is it a Groovy command? """
@@ -26,36 +24,26 @@ def robo_self(msg):
     if msg.author.id == 565095015874035742:
         if not msg.pinned:
             return True
-    elif msg.content.startswith("r!"):
+    elif msg.content.startswith("r!") or msg.content.startswith("?"):
         if not msg.pinned:
             return True
     return False
 
 
-class Cleanup(BaseCog):
-    """ Cleanup """
+class Cleanup(commands.Cog):
+    """ Cleanup. """
 
     def __init__(self, bot):
-        super().__init__(bot)
+        self.bot = bot
 
     @commands.Cog.listener()
-    async def on_message(self, msg):
-        """ If Groovy messages, bin it. """
-        if msg.content.startswith("-") or msg.author.id == 234395307759108106:
-            await msg.delete(delay=3)
+    async def on_message(self, message):
+        # Cleanup Groovy.
+        if message.channel.id != 655198285975519253:
+            if message.content.startswith("-") or message.author.id == 234395307759108106:
+                await message.delete()
 
-    @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
-    @commands.command()
-    async def roboclean(self, ctx, count: int = 100, channel: discord.TextChannel = None):
-        """ Cleans RoboHz commands if they get stuck. """
-        if channel is None:
-            channel = ctx.channel
-        deleted = await channel.purge(limit=(count + 1), check=robo_self)
-        await channel.send(
-            f"Deleted {len(deleted) - 1} Robo-Hz messages from {channel.mention}", delete_after=5
-        )
-
-    @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
+    @commands.has_permissions(manage_messages=True)
     @commands.command(aliases=["purge"])
     async def prune(self, ctx, count: int = 100, channel: discord.TextChannel = None):
         """ Prune a channel. """
