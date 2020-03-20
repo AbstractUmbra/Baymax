@@ -1,8 +1,67 @@
 """ Automod cog file. """
 from asyncio import TimeoutError as AsynTimeOut
+import typing
 
+import asyncpg
 import discord
 from discord.ext import commands
+
+from utils import db, cache
+
+
+class AutoRoleError(commands.CheckFailure):
+    pass
+
+
+def requires_autoroles():
+    async def pred(ctx):
+        if not ctx.guild:
+            return False
+
+        cog = ctx.bot.get_cog("AutoRoles")
+
+        ctx.autoroles = await cog.get_autoroles_config(ctx.guild.id)
+        if ctx.autoroles.channel is None:
+            raise AutoRoleError(
+                "\N{WARNING SIGN} Autoroles have not been set up for this guild.")
+
+        return True
+    return commands.check(pred)
+
+
+class AutoRolesConfig:
+    __slots__ = ("bot", "id", "channel_id", "message_id")
+
+    def __init__(self, *, guild_id, bot, record=None):
+        self.id = guild_id
+        self.bot = bot
+
+        if record:
+            self.channel_id = record['channel_id']
+            self.message_id = record['message_id']
+
+    @property
+    def channel(self):
+        guild = self.bot.get_guild(self.id)
+        return guild and guild.get_channel(self.channel_id)
+
+
+class AutoRolesConfigTable(db.Table, table_name="autoroles_config"):
+    id = db.PrimaryKeyColumn()
+
+    guild_id = db.Column(db.Integer(big=True), index=True)
+    channel_id = db.Column(db.Integer(big=True))
+    message_id = db.Column(db.Integer(big=True))
+
+
+class AutoRolesTable(db.Table, table_name="autoroles"):
+    id = db.PrimaryKeyColumn()
+
+    guild_id = db.Column(db.Integer(big=True), index=True)
+    role_id = db.Column(db.Integer(big=True))
+    role_emoji = db.Column(db.String)
+    approval_req = db.Column(db.Boolean)
+    approval_channel_id = db.Column(db.Integer(big=True))
 
 
 class AutoRoles(commands.Cog):
@@ -16,219 +75,175 @@ class AutoRoles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def mod_approval_check(self, reaction, user):
-        """ Approval for moderator status. """
-        guild = self.bot.get_guild(174702278673039360)
-        mod_role = guild.get_role(315825729373732867)
-        if str(reaction.emoji) == "👍":
-            return ((mod_role in user.roles or
-                     user.id == 155863164544614402)
-                    and reaction.message.channel.id == 656204288271319064)
-        elif str(reaction.emoji) == "👎":
-            if (reaction.message.channel.id == 656204288271319064
-                    and mod_role in user.roles):
-                return True
-        return False
+    @cache.cache()
+    async def get_autoroles_config(self, guild_id: int, *, connection=None) -> AutoRolesConfig:
+        """ Gets the guild config from postgres. """
+        connection = connection or self.bot.pool
+        query = """SELECT *
+                   FROM autoroles_config
+                   WHERE guild_id = $1
+                """
+        results = await connection.fetchrow(query, guild_id)
+        print(results)
+        return AutoRolesConfig(guild_id=guild_id, bot=self.bot, record=results)
 
-    def dnd_approval_check(self, reaction, user):
-        """ Approval for DnD chat. """
-        guild = self.bot.get_guild(174702278673039360)
-        dnd_role = guild.get_role(460536832635961374)
-        if str(reaction.emoji) == "👍":
-            return ((dnd_role in user.roles or
-                     user.id == 155863164544614402)
-                    and reaction.message.channel.id == 460536968565227550)
-        elif str(reaction.emoji) == "👎":
-            if (reaction.message.channel.id == 460536968565227550
-                    and dnd_role in user.roles):
-                return True
-        return False
+    async def get_autoroles(self, guild_id: int, *, connection=None) -> asyncpg.Record:
+        """ Gets the autoroles for the current guild. """
+        connection = connection or self.bot.pool
+        query = """SELECT *
+                   FROM autoroles
+                   WHERE guild_id = $1
+                """
+        return await connection.fetch(query, guild_id)
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload):
         """ On reaction_add for live data. """
+        rrole_record = None  # placeholder
+        if not payload.guild_id:
+            return
         guild = self.bot.get_guild(payload.guild_id)
-        owner = guild.get_member(155863164544614402)
-        user = discord.utils.get(guild.members, id=payload.user_id)
-        if payload.message_id == 656140119643783178:
-            if payload.emoji.id == 534488771614474250:
-                league_role = guild.get_role(563098367329173509)
-                await user.add_roles(
-                    league_role,
-                    reason="AutoRole",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656150077831774218:
-                rust_role = guild.get_role(656148297957900288)
-                await user.add_roles(
-                    rust_role,
-                    reason="AutoRole",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656163950475608076:
-                ark_role = guild.get_role(558417863694614537)
-                await user.add_roles(
-                    ark_role,
-                    reason="AutoRole",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656164554597728315:
-                conan_role = guild.get_role(638376237575831553)
-                await user.add_roles(
-                    conan_role,
-                    reason="AutoRole",
-                    atomic=True
-                )
-            elif payload.emoji.id == 665263107022782484:
-                drg_role = guild.get_role(665263294763761684)
-                await user.add_roles(
-                    drg_role,
-                    reason="Autorole",
-                    atomic=True
-                )
-            elif payload.emoji.id == 667049791305547801:
-                mhw_role = guild.get_role(667050135263641614)
-                await user.add_roles(
-                    mhw_role,
-                    reason="Autorole",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656166040149164032:
-                await owner.send(f"{user.name} from {guild.name} has requested Plex access. "
-                                 "Please manually approve this for them.")
-            elif payload.emoji.id == 656178696385986560:
-                dnd_role = guild.get_role(460536832635961374)
-                dnd_channel = self.bot.get_channel(460536968565227550)
-                request_channel = self.bot.get_channel(656139436651839488)
-                message = await dnd_channel.send(
-                    f"{user.name} has requested to join the Bear Trap. "
-                    "Reaction approval is required.")
-                await message.add_reaction("👍")
-                await message.add_reaction("👎")
+        autorole_deets = await self.get_autoroles(payload.guild_id)
+        if not autorole_deets:
+            return
+        autorole_config = await self.get_autoroles_config(payload.guild_id)
+        if not autorole_config:
+            return
+        if payload.channel_id != autorole_config.channel.id:
+            return
+        reaction_message = await autorole_config.channel.fetch_message(autorole_config.message_id)
+        member = guild.get_member(payload.user_id)
+        if hasattr(payload.emoji, "id"):
+            for record in autorole_deets:
+                if int(record['role_emoji']) == payload.emoji.id:
+                    rrole_record = record
+        else:
+            for record in autorole_deets:
+                if str(record['role_emoji']) == str(payload.emoji):
+                    rrole_record = record
+        requested_role = guild.get_role(rrole_record['role_id'])
+        if rrole_record['approval_req']:
+            approval_channel = guild.get_channel(
+                rrole_record['approval_channel_id'])
+            message = await approval_channel.send(f"{member.name} has requested access to the {requested_role.mention} role. Do you accept?")
+            await message.add_reaction("👍")
+            await message.add_reaction("👎")
 
-                try:
-                    reaction, react_member = await self.bot.wait_for(
-                        "reaction_add", timeout=28800.0, check=self.dnd_approval_check)
-                except AsynTimeOut:
-                    await dnd_channel.send(
-                        f"Approval for {user} not gained within 24 hours. "
-                        f"Cancelling request.", delete_after=10
-                    )
-                    return await message.delete()
-                else:
-                    if reaction.emoji == "👎":
-                        await dnd_channel.send(
-                            f"Approval for {user.name} has been rejected.", delete_after=5)  #
-                        request_message = await request_channel.fetch_message(
-                            656140119643783178)
-                        await request_message.remove_reaction(payload.emoji, user)
-                    else:
-                        await user.add_roles(
-                            dnd_role,
-                            reason=f"Member approval by {react_member.name}.",
-                            atomic=True)
-                    return await message.delete()
-            elif payload.emoji.id == 656203981655375887:
-                mod_role = guild.get_role(315825729373732867)
-                mod_channel = self.bot.get_channel(656204288271319064)
-                message = await mod_channel.send(
-                    f"{user.name} has requested to become an Moderator. "
-                    "Reaction approval is required.")
-                await message.add_reaction("👍")
-                await message.add_reaction("👎")
+            def check(reaction, user):
+                """ Approval check. """
+                return reaction.message.channel.id == approval_channel.id and requested_role in user.roles
 
-                try:
-                    reaction, react_member = await self.bot.wait_for(
-                        "reaction_add", timeout=28800.0, check=self.mod_approval_check)
-                except AsynTimeOut:
-                    await mod_channel.send(
-                        f"Approval for {user} not gained within 24 hours. "
-                        "Cancelling request.", delete_after=10
-                    )
-                    return await message.delete()
-                else:
-                    if reaction.emoji == "👎":
-                        await mod_channel.send(
-                            f"Approval for {user.name} has been rejected.", delete_after=5)
-                        request_message = await request_channel.fetch_message(
-                            656140119643783178)
-                        await request_message.remove_reaction(payload.emoji, user)
-                    else:
-                        await user.add_roles(
-                            mod_role,
-                            reason=f"Member approval by {react_member.name}.",
-                            atomic=True)
-                    return await message.delete()
+            print("hitting try")
+            try:
+                reaction, react_member = await self.bot.wait_for(
+                    "reaction_add", timeout=28800.0, check=check)
+            except AsynTimeOut:
+                await approval_channel.send(
+                    f"Approval for {member.name} not gained within 24 hours. "
+                    f"Cancelling request.", delete_after=10)
+                return await message.delete()
+            else:
+                if str(reaction.emoji) == "👎":
+                    print("neet")
+                    await approval_channel.send(f"Approval for {member.name} has been rejected by {react_member.name}.", delete_after=5)
+                    return await reaction_message.remove_reaction(payload.emoji, member)
+                elif str(reaction.emoji) == "👍":
+                    print("yeet")
+                    await member.add_roles(requested_role, reason=f"Autorole - approved by {member.name}", atomic=True)
+                    return await message.delete(delay=5)
+        else:
+            return await member.add_roles(requested_role, reason="Autorole", atomic=True)
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         """ On reaction_remove for live data. """
-        guild = self.bot.get_guild(payload.guild_id)
-        user = discord.utils.get(guild.members, id=payload.user_id)
-        if payload.message_id == 656140119643783178:
-            if payload.emoji.id == 534488771614474250:
-                league_role = guild.get_role(563098367329173509)
-                await user.remove_roles(
-                    league_role,
-                    reason="AutoRole remove",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656150077831774218:
-                rust_role = guild.get_role(656148297957900288)
-                await user.remove_roles(
-                    rust_role,
-                    reason="AutoRole remove",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656163950475608076:
-                ark_role = guild.get_role(558417863694614537)
-                await user.remove_roles(
-                    ark_role,
-                    reason="AutoRole remove",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656164554597728315:
-                conan_role = guild.get_role(638376237575831553)
-                await user.remove_roles(
-                    conan_role,
-                    reason="AutoRole remove",
-                    atomic=True
-                )
-            elif payload.emoji.id == 665263107022782484:
-                drg_role = guild.get_role(665263294763761684)
-                await user.remove_roles(
-                    drg_role,
-                    reason="Autorole",
-                    atomic=True
-                )
-            elif payload.emoji.id == 667049791305547801:
-                mhw_role = guild.get_role(667050135263641614)
-                await user.remove_roles(
-                    mhw_role,
-                    reason="Autorole",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656166040149164032:
-                plex_role = guild.get_role(456897532128395265)
-                await user.remove_roles(
-                    plex_role,
-                    reason="AutoRole remove",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656178696385986560:
-                dnd_role = guild.get_role(460536832635961374)
-                await user.remove_roles(
-                    dnd_role,
-                    reason="AutoRole remove",
-                    atomic=True
-                )
-            elif payload.emoji.id == 656203981655375887:
-                mod_role = guild.get_role(315825729373732867)
-                await user.remove_roles(
-                    mod_role,
-                    reason="AutoRole remove",
-                    atomic=True
-                )
+
+    @commands.group(invoke_without_command=True, aliases=["rr"])
+    async def reactrole(self, ctx):
+        """ Time for some react roles! """
+        if not ctx.invoked_subcommand:
+            return await self.rrole_list(ctx)
+
+    @reactrole.command(name="config")
+    async def rrole_config(self, ctx, message: discord.Message):
+        """ Configure this guilds reaction roles. """
+        query = """INSERT INTO autoroles_config (guild_id, channel_id, message_id)
+                   VALUES ($1, $2, $3)
+                """
+        await ctx.db.execute(query, ctx.guild.id, message.channel.id, message.id)
+        await ctx.message.add_reaction("\N{OK HAND SIGN}")
+
+    @requires_autoroles()
+    @commands.has_guild_permissions(manage_roles=True)
+    @reactrole.command(name="add")
+    async def rrole_add(self,
+                        ctx,
+                        role: discord.Role,
+                        emoji: typing.Union[discord.Emoji, discord.PartialEmoji, str],
+                        approval_channel: typing.Optional[discord.TextChannel]):
+        """ Add a reaction role for this guild. """
+        current_autoroles = await self.get_autoroles(ctx.guild.id)
+        roles = [record['role_id'] for record in current_autoroles]
+        emojis = [record['role_emoji'] for record in current_autoroles]
+        if role.id in roles:
+            return await ctx.send("\N{CROSS MARK} This role is already set up for autoroles.")
+        if isinstance(emoji, str):
+            if emoji in emojis:
+                return await ctx.send("\N{CROSS MARK} This emoji is already set up for autoroles.")
+        elif isinstance(emoji, (discord.Emoji, discord.PartialEmoji)):
+            if not hasattr(emoji, "guild_id"):
+                return await ctx.send("You must use an emoji that belongs to this guild, if custom.")
+            if str(emoji.id) in emojis:
+                return await ctx.send("\N{CROSS MARK} This emoji is already set up for autoroles.")
+        if approval_channel:
+            query = """INSERT INTO autoroles (guild_id, role_id, role_emoji, approval_req, approval_channel_id)
+                    VALUES ($1, $2, $3, $4, $5)
+                    """
+            if isinstance(emoji, str):
+                await ctx.db.execute(query, ctx.guild.id, role.id, emoji, True, approval_channel.id)
+            elif isinstance(emoji, discord.Emoji):
+                await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), True, approval_channel.id)
+            elif isinstance(emoji, discord.PartialEmoji):
+                await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), True, approval_channel.id)
+        else:
+            query = """INSERT INTO autoroles(guild_id, role_id, role_emoji, approval_req)
+                    VALUES($1, $2, $3, $4)
+                    """
+            if isinstance(emoji, str):
+                await ctx.db.execute(query, ctx.guild.id, role.id, emoji, False)
+            elif isinstance(emoji, discord.Emoji):
+                if not emoji.guild_id == ctx.guild.id:
+                    return await ctx.send("You must use an emoji that belongs to this guild, if custom.")
+                await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), False)
+            elif isinstance(emoji, discord.PartialEmoji):
+                await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), False)
+        return await ctx.send("\N{OK HAND SIGN}")
+
+    @requires_autoroles()
+    @reactrole.command(name="remove")
+    async def rrole_remove(self, ctx, record_id=None):
+        """ Remove a reaction role configuration. """
+        if not record_id:
+            await ctx.send("You have not provided a record id to delete.")
+            self.rrole_list(ctx)
+
+    @requires_autoroles()
+    @commands.has_guild_permissions(manage_roles=True)
+    @reactrole.command(name="list")
+    async def rrole_list(self, ctx):
+        """ List the reactions roles for this guild. """
+        query = "SELECT * FROM autoroles WHERE guild_id = $1;"
+        rrole_stuff = await ctx.db.fetch(query, ctx.guild.id)
+        if not rrole_stuff:
+            return await ctx.send("This guild has no reaction roles set up.")
+        embed = discord.Embed(title="Guild ReactRoles",
+                              colour=discord.Colour.blurple())
+        for _id, _, role_id, role_emoji, _, _ in rrole_stuff:
+            role = ctx.guild.get_role(role_id)
+            emoji = self.bot.get_emoji(role_emoji)
+            embed.add_field(name=f"{_id} - {role.name}",
+                            value=f"{emoji}", inline=False)
+        return await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
