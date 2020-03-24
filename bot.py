@@ -36,9 +36,11 @@ COGS = (
     'cogs.mod',
     'cogs.reminders',
     'cogs.rng',
+    'cogs.specialisttv',
     'cogs.stars',
     'cogs.stats',
     'cogs.tags',
+    'cogs.twitch',
     'cogs.votes',
 )
 
