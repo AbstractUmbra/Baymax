@@ -2,7 +2,7 @@
 """ Memes Cog. """
 
 import os
-from random import choice, sample, getrandbits
+from random import choice, sample
 from math import ceil
 from time import sleep
 from urllib.parse import quote

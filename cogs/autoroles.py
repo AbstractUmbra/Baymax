@@ -84,7 +84,6 @@ class AutoRoles(commands.Cog):
                    WHERE guild_id = $1
                 """
         results = await connection.fetchrow(query, guild_id)
-        print(results)
         return AutoRolesConfig(guild_id=guild_id, bot=self.bot, record=results)
 
     async def get_autoroles(self, guild_id: int, *, connection=None) -> asyncpg.Record:
@@ -133,7 +132,6 @@ class AutoRoles(commands.Cog):
                 """ Approval check. """
                 return reaction.message.channel.id == approval_channel.id and requested_role in user.roles
 
-            print("hitting try")
             try:
                 reaction, react_member = await self.bot.wait_for(
                     "reaction_add", timeout=28800.0, check=check)
@@ -144,11 +142,9 @@ class AutoRoles(commands.Cog):
                 return await message.delete()
             else:
                 if str(reaction.emoji) == "👎":
-                    print("neet")
                     await approval_channel.send(f"Approval for {member.name} has been rejected by {react_member.name}.", delete_after=5)
                     return await reaction_message.remove_reaction(payload.emoji, member)
                 elif str(reaction.emoji) == "👍":
-                    print("yeet")
                     await member.add_roles(requested_role, reason=f"Autorole - approved by {member.name}", atomic=True)
                     return await message.delete(delay=5)
         else:
@@ -221,11 +217,15 @@ class AutoRoles(commands.Cog):
 
     @requires_autoroles()
     @reactrole.command(name="remove")
-    async def rrole_remove(self, ctx, record_id=None):
+    async def rrole_remove(self, ctx, record_id: int = None):
         """ Remove a reaction role configuration. """
         if not record_id:
             await ctx.send("You have not provided a record id to delete.")
-            self.rrole_list(ctx)
+            return await self.rrole_list(ctx)
+        query = """DELETE FROM autoroles WHERE id = $1 RETURNING id, role_id;"""
+        deletion = await ctx.db.execute(query, record_id)
+        role = ctx.guild.get_role(int(deletion['role_id']))
+        return await ctx.send(f"Deleted the entry {record_id} for role: {role.name}.")
 
     @requires_autoroles()
     @commands.has_guild_permissions(manage_roles=True)
@@ -238,11 +238,21 @@ class AutoRoles(commands.Cog):
             return await ctx.send("This guild has no reaction roles set up.")
         embed = discord.Embed(title="Guild ReactRoles",
                               colour=discord.Colour.blurple())
-        for _id, _, role_id, role_emoji, _, _ in rrole_stuff:
+        for _id, _, role_id, role_emoji, approval, approval_channel in rrole_stuff:
             role = ctx.guild.get_role(role_id)
+            try:
+                role_emoji = int(role_emoji)
+            except ValueError:
+                pass
             emoji = self.bot.get_emoji(role_emoji)
-            embed.add_field(name=f"{_id} - {role.name}",
-                            value=f"{emoji}", inline=False)
+            if approval:
+                channel = ctx.guild.get_channel(approval_channel)
+                embed.add_field(name=f"{_id} - {role.name}",
+                                value=f"{emoji} | approval in: {channel.mention}", inline=False)
+            else:
+                embed.add_field(name=f"{_id} - {role.name}",
+                                value=f"{emoji}", inline=False)
+
         return await ctx.send(embed=embed)
 
     @commands.Cog.listener()
