@@ -10,8 +10,6 @@ class Twitch(commands.Cog):
         self.bot = bot
         self._last_game = None
         self._last_td = datetime.datetime.utcnow()
-        self.headers = {"Client-ID": "4la4i9nltujg0bv86mgr6zt6p8vvfj",
-                        "Authorization": "Bearer zpnybut3hdx6b9bx5j0jti11wjaiee"}
         self.get_streamers.start()
 
     @commands.command()
@@ -25,11 +23,11 @@ class Twitch(commands.Cog):
             jsony = await resp.json()
         await ctx.send(f"```json\n{jsony}```")
 
-    @tasks.loop(minutes=1.0)
+    @tasks.loop(minutes=5.0)
     async def get_streamers(self):
         """ [PROD] - Actual task. Runs nicely. """
         channel = self.bot.get_channel(690571015134380043)
-        async with self.bot.session.get("https://api.twitch.tv/helix/streams", params={"user_login": "speciaiisttv"}, headers=self.headers) as resp:
+        async with self.bot.session.get("https://api.twitch.tv/helix/streams", params={"user_login": "speciaiisttv"}, headers=self.bot.config.twitch_headers) as resp:
             stream_json = await resp.json()
         if stream_json['data'] != []:
             current_stream = datetime.datetime.utcnow() - self._last_td
@@ -40,9 +38,9 @@ class Twitch(commands.Cog):
             embed = discord.Embed(
                 title=f"Specialist is live with: {stream_json['data'][0]['title']}", colour=discord.Colour.blurple(), url="https://twitch.tv/speciaiisttv")
             async with self.bot.session.get("https://api.twitch.tv/helix/games", params={
-                    "id": f"{stream_json['data'][0]['game_id']}"}, headers=self.headers) as game_resp:
+                    "id": f"{stream_json['data'][0]['game_id']}"}, headers=self.bot.config.twitch_headers) as game_resp:
                 game_json = await game_resp.json()
-            async with self.bot.session.get("https://api.twitch.tv/helix/users", params={"id": stream_json['data'][0]['user_id']}, headers=self.headers) as user_resp:
+            async with self.bot.session.get("https://api.twitch.tv/helix/users", params={"id": stream_json['data'][0]['user_id']}, headers=self.bot.config.twitch_headers) as user_resp:
                 user_json = await user_resp.json()
             embed.set_author(name=stream_json['data'][0]['user_name'],
                              icon_url=f"{user_json['data'][0]['profile_image_url']}")
