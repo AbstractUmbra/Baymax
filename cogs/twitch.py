@@ -32,7 +32,13 @@ class Twitch(commands.Cog):
         query = """ SELECT * FROM twitchtable WHERE streamer_name = $1; """
         return await self.bot.pool.fetch(query, name)
 
-    @commands.command(hidden=True)
+    @commands.group(invoke_without_command=True)
+    async def twitch(self, ctx):
+        """ Twitch main command. """
+        if not ctx.invoked_subcommand:
+            return await ctx.send("You require more arguments for this command.")
+
+    @twitch.command(hidden=True)
     @commands.is_owner()
     async def getdata(self, ctx, name: str):
         """ [DEBUG] - get debug data. """
@@ -62,7 +68,7 @@ class Twitch(commands.Cog):
                         value=f"{datetime.datetime.utcnow() - self._last_td}", inline=False)
         await ctx.send(embed=embed)
 
-    @commands.command(hidden=True)
+    @twitch.command(hidden=True)
     @commands.is_owner()
     async def streamdb(self, ctx):
         query = """SELECT * FROM twitchtable;"""
@@ -70,7 +76,8 @@ class Twitch(commands.Cog):
         for item in results:
             await ctx.send(f"{item['guild_id']} -> {item['channel_id']} -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}")
 
-    @commands.command(name="add-streamer")
+    @twitch.command(name="add")
+    @commands.has_guild_permissions(manage_channels=True)
     async def add_streamer(self, ctx, name: str, channel: discord.TextChannel = None):
         """ Add a streamer to the database for polling. """
         channel = channel or ctx.channel
