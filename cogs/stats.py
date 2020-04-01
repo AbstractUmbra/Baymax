@@ -811,22 +811,22 @@ class Stats(commands.Cog):
         # RESUME/IDENTIFY data
         yesterday = datetime.datetime.utcnow() - datetime.timedelta(days=1)
         total_resumes = sum(1 for dt in self._resumes if dt > yesterday)
-        identifies = {
-            shard_id: sum(1 for dt in dates if dt > yesterday)
-            for shard_id, dates in self._identifies.items()
-        }
-        absolute_total_identifies = sum(identifies.values())
+        # identifies = {
+        #     shard_id: sum(1 for dt in dates if dt > yesterday)
+        #     for shard_id, dates in self._identifies.items()
+        # }
+        # absolute_total_identifies = sum(identifies.values())
         resume_info_builder = [
             f'Total RESUMEs: {total_resumes}',
-            f'Total IDENTIFYs: {absolute_total_identifies}'
+            # f'Total IDENTIFYs: {absolute_total_identifies}'
         ]
-        for shard_id, total in identifies.items():
-            resume_info_builder.append(
-                f'Shard ID {shard_id} IDENTIFYs: {total}')
+        # for shard_id, total in identifies.items():
+        #     resume_info_builder.append(
+        #         f'Shard ID {shard_id} IDENTIFYs: {total}')
 
-        if absolute_total_identifies >= (len(self.bot.shards) * 5):
-            total_warnings += 1
-            embed.colour = WARNING
+        # if absolute_total_identifies >= (len(self.bot.shards) * 5):
+        #     total_warnings += 1
+        #     embed.colour = WARNING
 
         embed.add_field(name='Gateway (last 24 hours)',
                         value='\n'.join(resume_info_builder), inline=False)
@@ -1091,7 +1091,7 @@ class Stats(commands.Cog):
         await ctx.safe_send(f'```\n{render}\n```')
 
 
-old_on_error = commands.AutoShardedBot.on_error
+old_on_error = commands.Bot.on_error
 
 
 async def on_error(self, event, *args, **kwargs):
