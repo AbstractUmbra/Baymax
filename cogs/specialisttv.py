@@ -16,7 +16,7 @@ class Specialist(commands.Cog):
             await member.guild.system_channel.send(
                 f"Hey {member.mention} 👋. Welcome to **Specialist's Discord Server**."
                 " Please take the time to read the <#690570977381318736> channel and"
-                " feel free to chat to us and introduce yourself in <#691724873210527814>."
+                " feel free to chat to us and introduce yourself in <#690566308269391953>."
                 " GL & HF!")
             role = member.guild.get_role(691298204918087691)
             await member.add_roles(role, reason="New member!", atomic=True)

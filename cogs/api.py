@@ -16,11 +16,7 @@ def can_use_block():
     def predicate(ctx):
         if ctx.guild is None:
             return False
-
-        guild_id = ctx.guild.id
-        if guild_id == 174702278673039360:
-            return ctx.channel.permissions_for(ctx.author).manage_roles
-        return False
+        return ctx.channel.permissions_for(ctx.author).manage_roles
     return commands.check(predicate)
 
 
@@ -315,7 +311,7 @@ class API(commands.Cog):
         return [channel]
 
     @commands.command()
-    @can_use_block()
+    @commands.has_guild_permissions(manage_roles=True)
     async def block(self, ctx, *, member: discord.Member):
         """Blocks a user from your channel."""
 
@@ -336,7 +332,7 @@ class API(commands.Cog):
             await ctx.send('\N{THUMBS UP SIGN}')
 
     @commands.command()
-    @can_use_block()
+    @commands.has_guild_permissions(manage_roles=True)
     async def tempblock(self, ctx, duration: time.FutureTime, *, member: discord.Member):
         """Temporarily blocks a user from your channel.
 

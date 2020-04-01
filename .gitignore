@@ -113,3 +113,4 @@ data/
 *.log
 bot_bak.py
 migrations/
+config.py
