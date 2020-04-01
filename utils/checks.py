@@ -7,11 +7,6 @@ from discord.ext.commands import (BucketType, Cog, Command,
                                   CommandOnCooldown, Context, Cooldown, CooldownMapping)
 
 
-def in_channel_check(ctx: Context, *channel_ids: int) -> bool:
-    """ Checks if the command was executed in a specific list of channels. """
-    return ctx.channel.id in channel_ids
-
-
 async def check_permissions(ctx, perms, *, check=all):
     is_owner = await ctx.bot.is_owner(ctx.author)
     if is_owner:
