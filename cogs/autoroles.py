@@ -10,11 +10,13 @@ from utils import db, cache
 
 
 class AutoRoleError(commands.CheckFailure):
-    pass
+    """ Autorole error class. """
 
 
 def requires_autoroles():
+    """ Autorole decorator check. """
     async def pred(ctx):
+        """ Quick predicate, returns boolean. """
         if not ctx.guild:
             return False
 
@@ -30,6 +32,7 @@ def requires_autoroles():
 
 
 class AutoRolesConfig:
+    """ Generic config object - dataclass. """
     __slots__ = ("bot", "id", "channel_id", "message_id")
 
     def __init__(self, *, guild_id, bot, record=None):
@@ -47,6 +50,7 @@ class AutoRolesConfig:
 
 
 class AutoRolesConfigTable(db.Table, table_name="autoroles_config"):
+    """ Creates the config table. """
     id = db.PrimaryKeyColumn()
 
     guild_id = db.Column(db.Integer(big=True), index=True)
@@ -55,6 +59,7 @@ class AutoRolesConfigTable(db.Table, table_name="autoroles_config"):
 
 
 class AutoRolesTable(db.Table, table_name="autoroles"):
+    """ Creates the autoroles table. """
     id = db.PrimaryKeyColumn()
 
     guild_id = db.Column(db.Integer(big=True), index=True)
@@ -102,6 +107,9 @@ class AutoRoles(commands.Cog):
         if not payload.guild_id:
             return
         guild = self.bot.get_guild(payload.guild_id)
+        member = guild.get_member(payload.user_id)
+        if not member or member.bot:
+            return
         autorole_deets = await self.get_autoroles(payload.guild_id)
         if not autorole_deets:
             return
@@ -110,16 +118,25 @@ class AutoRoles(commands.Cog):
             return
         if payload.channel_id != autorole_config.channel.id:
             return
+        if member.guild.owner_id == member.id:
+            # guild owner
+            return await autorole_config.channel.send("Can't edit the guild owner lmao.", delete_after=3)
         reaction_message = await autorole_config.channel.fetch_message(autorole_config.message_id)
-        member = guild.get_member(payload.user_id)
-        if hasattr(payload.emoji, "id"):
+        if getattr(payload.emoji, "id") is not None:
             for record in autorole_deets:
-                if int(record['role_emoji']) == payload.emoji.id:
-                    rrole_record = record
+                try:
+                    int(record['role_emoji'])
+                except ValueError:
+                    continue
+                else:
+                    if int(record['role_emoji']) == payload.emoji.id:
+                        rrole_record = record
+                        break
         else:
             for record in autorole_deets:
                 if str(record['role_emoji']) == str(payload.emoji):
                     rrole_record = record
+                    break
         requested_role = guild.get_role(rrole_record['role_id'])
         if rrole_record['approval_req']:
             approval_channel = guild.get_channel(
@@ -153,6 +170,40 @@ class AutoRoles(commands.Cog):
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload):
         """ On reaction_remove for live data. """
+        if not payload.guild_id:
+            return
+        guild = self.bot.get_guild(payload.guild_id)
+        member = guild.get_member(payload.user_id)
+        if not member or member.bot:
+            return
+        autorole_deets = await self.get_autoroles(payload.guild_id)
+        if not autorole_deets:
+            return
+        autorole_config = await self.get_autoroles_config(payload.guild_id)
+        if payload.channel_id != autorole_config.channel.id:
+            return
+        if member.guild.owner_id == member.id:
+            # guild owner
+            return await autorole_config.channel.send("Can't edit the guild owner lmao.", delete_after=3)
+        reaction_message = await autorole_config.channel.fetch_message(autorole_config.message_id)
+        if getattr(payload.emoji, "id") is not None:
+            for record in autorole_deets:
+                try:
+                    int(record['role_emoji'])
+                except ValueError:
+                    continue
+                else:
+                    if int(record['role_emoji']) == payload.emoji.id:
+                        rrole_record = record
+                        break
+        else:
+            for record in autorole_deets:
+                if str(record['role_emoji']) == str(payload.emoji):
+                    rrole_record = record
+                    break
+        deleting_role = guild.get_role(rrole_record['role_id'])
+        await member.remove_roles(deleting_role)
+        return await reaction_message.remove_reaction(payload.emoji, member)
 
     @commands.group(invoke_without_command=True, aliases=["rr"])
     async def reactrole(self, ctx):
@@ -179,6 +230,9 @@ class AutoRoles(commands.Cog):
                         approval_channel: typing.Optional[discord.TextChannel]):
         """ Add a reaction role for this guild. """
         current_autoroles = await self.get_autoroles(ctx.guild.id)
+        current_config = await self.get_autoroles_config(ctx.guild.id)
+        message_channel = current_config.channel
+        message = await message_channel.fetch_message(current_config.message_id)
         roles = [record['role_id'] for record in current_autoroles]
         emojis = [record['role_emoji'] for record in current_autoroles]
         if role.id in roles:
@@ -213,6 +267,7 @@ class AutoRoles(commands.Cog):
                 await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), False)
             elif isinstance(emoji, discord.PartialEmoji):
                 await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), False)
+        await message.add_reaction(emoji)
         return await ctx.send("\N{OK HAND SIGN}")
 
     @requires_autoroles()
@@ -222,10 +277,27 @@ class AutoRoles(commands.Cog):
         if not record_id:
             await ctx.send("You have not provided a record id to delete.")
             return await self.rrole_list(ctx)
-        query = """DELETE FROM autoroles WHERE id = $1 RETURNING id, role_id;"""
-        deletion = await ctx.db.execute(query, record_id)
-        role = ctx.guild.get_role(int(deletion['role_id']))
-        return await ctx.send(f"Deleted the entry {record_id} for role: {role.name}.")
+        query = """ SELECT guild_id FROM autoroles WHERE id = $1; """
+        results = await ctx.db.fetchrow(query, record_id)
+        if results['guild_id'] != ctx.guild.id:
+            return await ctx.send("Invalid autoroles ID. It must belong to your ")
+        delete_query = """DELETE FROM autoroles WHERE id = $1 RETURNING role_id, role_emoji;"""
+        deletion = await ctx.db.fetchrow(delete_query, record_id)
+        if deletion:
+            role = ctx.guild.get_role(deletion['role_id'])
+            await ctx.send(f"Deleted the entry {record_id} for role: {role.name}.")
+        else:
+            return await ctx.send("Invalid record ID.")
+        current_config = await self.get_autoroles_config(ctx.guild.id)
+        channel = current_config.channel
+        message = await channel.fetch_message(current_config.message_id)
+        emoji = deletion['role_emoji']
+        try:
+            emoji = await ctx.guild.fetch_emoji(int(emoji))
+        except ValueError:
+            # it's a string...
+            pass
+        return await message.remove_reaction(emoji, ctx.me)
 
     @requires_autoroles()
     @commands.has_guild_permissions(manage_roles=True)
@@ -242,9 +314,9 @@ class AutoRoles(commands.Cog):
             role = ctx.guild.get_role(role_id)
             try:
                 role_emoji = int(role_emoji)
+                emoji = self.bot.get_emoji(role_emoji)
             except ValueError:
-                pass
-            emoji = self.bot.get_emoji(role_emoji)
+                emoji = role_emoji
             if approval:
                 channel = ctx.guild.get_channel(approval_channel)
                 embed.add_field(name=f"{_id} - {role.name}",

@@ -57,11 +57,11 @@ class Twitch(commands.Cog):
 
     @twitch.command(hidden=True)
     @commands.is_owner()
-    async def streamdb(self, ctx: commands.Context) -> discord.Message:
+    async def streamdb(self, ctx: commands.Context) -> None:
         query = """SELECT * FROM twitchtable;"""
         results = await self.bot.pool.fetch(query)
         for item in results:
-            return await ctx.send(f"{item['guild_id']} -> {item['channel_id']} -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}")
+            await ctx.send(f"{item['guild_id']} -> {item['channel_id']} -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}")
 
     @twitch.command(name="add")
     @commands.has_guild_permissions(manage_channels=True)
@@ -76,7 +76,7 @@ class Twitch(commands.Cog):
         return await ctx.message.add_reaction(":TickYes:672157420574736386")
 
     @tasks.loop(minutes=5.0)
-    async def get_streamers(self):
+    async def get_streamers(self) -> None:
         """ Task loop to get the active streamers in the db and post to specified channels. """
         query = """ SELECT * FROM twitchtable; """
         results = await self.bot.pool.fetch(query)
@@ -92,7 +92,7 @@ class Twitch(commands.Cog):
                                             headers=self.bot.config.twitch_headers) as resp:
                 stream_json = await resp.json()
             if stream_json['data'] == []:
-                return
+                continue
             current_stream = datetime.datetime.utcnow() - \
                 item['streamer_last_datetime']
             if ((stream_json['data'][0]['title'] != item['streamer_last_game'])
