@@ -123,6 +123,10 @@ class Admin(commands.Cog):
         return f'```py\n{err.text}{"^":>{err.offset}}\n{err.__class__.__name__}: {err}```'
 
     @commands.command(hidden=True)
+    async def leave(self, ctx):
+        await ctx.guild.leave()
+
+    @commands.command(hidden=True)
     async def load(self, ctx, *, module):
         """Loads a module."""
         try:

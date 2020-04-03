@@ -45,6 +45,7 @@ class AutoRolesConfig:
 
     @property
     def channel(self):
+        """ Returns the discord.TextChannel we use for config. """
         guild = self.bot.get_guild(self.id)
         return guild and guild.get_channel(self.channel_id)
 
@@ -160,7 +161,8 @@ class AutoRoles(commands.Cog):
             else:
                 if str(reaction.emoji) == "👎":
                     await approval_channel.send(f"Approval for {member.name} has been rejected by {react_member.name}.", delete_after=5)
-                    return await reaction_message.remove_reaction(payload.emoji, member)
+                    await reaction_message.remove_reaction(payload.emoji, member)
+                    return await message.delete(delay=5)
                 elif str(reaction.emoji) == "👍":
                     await member.add_roles(requested_role, reason=f"Autorole - approved by {member.name}", atomic=True)
                     return await message.delete(delay=5)
@@ -326,29 +328,6 @@ class AutoRoles(commands.Cog):
                                 value=f"{emoji}", inline=False)
 
         return await ctx.send(embed=embed)
-
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        """ When a new member joins. """
-        def check(reaction, user):
-            return user == member and str(reaction.emoji) == "👍"
-
-        new_user_role = member.guild.get_role(174703372631277569)
-        try:
-            message = await member.send(
-                f"Add '👍' reaction to solemly swear you'll be up to no good in {member.guild.name}."
-            )
-            await message.add_reaction("👍")
-        except discord.Forbidden:
-            return await member.add_roles(new_user_role, reason="Fucker has no DMs", atomic=True)
-
-        try:
-            _, _ = await self.bot.wait_for("reaction_add", timeout=60.0, check=check)
-        except AsynTimeOut:
-            await member.send("Get fucked you didn't promise fast enough.")
-        else:
-            await member.send("Mischief managed.")
-            await member.add_roles(new_user_role, reason="Server welcome.", atomic=True)
 
 
 def setup(bot):

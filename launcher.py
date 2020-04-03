@@ -328,7 +328,7 @@ def convertjson(ctx, cogs):
             f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
         return
 
-    bot = commands.Bot()
+    bot = commands.AutoShardedBot()
 
     @bot.event
     async def on_ready():

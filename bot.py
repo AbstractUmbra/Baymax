@@ -56,7 +56,7 @@ def _prefix_callable(bot, msg):
     return base
 
 
-class RoboHz(commands.Bot):
+class RoboHz(commands.AutoShardedBot):
     """ The actual robot himself! """
 
     def __init__(self):
