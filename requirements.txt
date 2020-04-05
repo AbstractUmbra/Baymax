@@ -1,7 +1,8 @@
 git+https://github.com/Rapptz/discord.py@master
 git+https://github.com/Rapptz/discord-ext-menus@master
+git+https://github.com/XuaTheGrate/Flag-Parsing@master
 psutil
-asyncpg>=0.12.0
+asyncpg
 click
 parsedatetime
 lru_dict
