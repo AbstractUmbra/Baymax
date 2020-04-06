@@ -48,13 +48,11 @@ class Memes(commands.Cog):
             await ctx.send(file=discord.File("content/snap.gif"), delete_after=16)
             sleep(8)
             for member in snapped_users:
-                print(f"Snapped {member.name}.")
                 await member.move_to(snapped_channel, reason="was snapped.")
         else:
             for member in snapped_users:
                 await ctx.send("You should have gone for the head.")
                 await ctx.send("**SNAP!**")
-                print(f"Snapped {member.name}.")
                 await member.move_to(snapped_channel, reason="was snapped.")
 
     @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)

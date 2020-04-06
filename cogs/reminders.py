@@ -129,7 +129,7 @@ class Reminder(commands.Cog):
         self.bot.dispatch(event_name, timer)
 
     async def create_timer(self, *args, **kwargs):
-        """Creates a timer.
+        r"""Creates a timer.
 
         Parameters
         -----------

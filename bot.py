@@ -165,7 +165,6 @@ class RoboHz(commands.AutoShardedBot):
         wh_id, wh_token = self.config.stat_webhook
         hook = discord.Webhook.partial(
             id=wh_id, token=wh_token, adapter=discord.AsyncWebhookAdapter(self.session))
-        print(hook)
         return hook
 
     def log_spammer(self, ctx, message, retry_after, *, autoblock=False):

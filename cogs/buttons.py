@@ -270,7 +270,7 @@ class Buttons(commands.Cog):
         """
 
         embed = discord.Embed(title='Feedback', colour=0x738bd7)
-        channel = self.bot.get_channel(669435198135599104)
+        channel = self.bot.get_channel(695482983272022107)
         if channel is None:
             return
 
@@ -308,7 +308,7 @@ class Buttons(commands.Cog):
     async def redirect_post(self, ctx, title, text):
         """ Redirects a post. """
         storage = self.bot.get_guild(
-            174702278673039360).get_channel(669435198135599104)
+            658130291315048448).get_channel(696757826709880952)
 
         supported_attachments = (
             '.png', '.jpg', '.jpeg', '.webm', '.gif', '.mp4', '.txt')
@@ -374,7 +374,7 @@ class Buttons(commands.Cog):
             pass
 
         storage = self.bot.get_guild(
-            174702278673039360).get_channel(669435198135599104)
+            658130291315048448).get_channel(696757826709880952)
 
         # slow path requires 2 lookups
         # first is looking up the message_id of the original post
@@ -449,7 +449,7 @@ class Buttons(commands.Cog):
 
         spoiler_message = await ctx.send(embed=cache.to_spoiler_embed(ctx, storage_message))
         self._spoiler_cache[spoiler_message.id] = cache
-        await spoiler_message.add_reaction('<:doot:459014535949582357>')
+        await spoiler_message.add_reaction('<:Revan:695483590485737482>')
 
     @commands.command(usage='<url>')
     @commands.cooldown(1, 5.0, commands.BucketType.member)

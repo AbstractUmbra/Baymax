@@ -31,6 +31,9 @@ class Twitch(commands.Cog):
         self.game_endpoint = "https://api.twitch.tv/helix/games"
         self.get_streamers.start()
 
+    def cog_unload(self):
+        self.get_streamers.cancel()
+
     async def _get_streamers(self, name: str) -> asyncpg.Record:
         """ To get all streamers in the db. """
         query = """ SELECT * FROM twitchtable WHERE streamer_name = $1; """
@@ -75,6 +78,17 @@ class Twitch(commands.Cog):
         await self.bot.pool.execute(query, ctx.guild.id, channel.id, name, (datetime.datetime.utcnow() - datetime.timedelta(hours=3)))
         return await ctx.message.add_reaction(":TickYes:672157420574736386")
 
+    @twitch.command(name="remove")
+    @commands.has_guild_permissions(manage_channels=True)
+    async def remove_streamer(self, ctx, name: str) -> typing.Union[discord.Reaction, discord.Message]:
+        """ Add a streamer to the database for polling. """
+        results = await self._get_streamers(name)
+        if not results:
+            return await ctx.send("This streamer is not in the monitored list.")
+        query = """ DELETE FROM twitchtable WHERE streamer_name = $1; """
+        await self.bot.pool.execute(query, name)
+        return await ctx.message.add_reaction(":TickYes:672157420574736386")
+
     @tasks.loop(minutes=5.0)
     async def get_streamers(self) -> None:
         """ Task loop to get the active streamers in the db and post to specified channels. """
@@ -97,6 +111,8 @@ class Twitch(commands.Cog):
                 item['streamer_last_datetime']
             if ((stream_json['data'][0]['title'] != item['streamer_last_game'])
                     or (current_stream.seconds >= 7200)):
+                cur_time = datetime.datetime.strptime(
+                    f"{stream_json['data'][0]['started_at']}", "%Y-%m-%dT%H:%M:%SZ")
                 embed = discord.Embed(
                     title=f"{item['streamer_name']} is live with: {stream_json['data'][0]['title']}",
                     colour=discord.Colour.blurple(),
@@ -111,14 +127,22 @@ class Twitch(commands.Cog):
                                                     "id": stream_json['data'][0]['user_id']},
                                                 headers=self.bot.config.twitch_headers) as user_resp:
                     user_json = await user_resp.json()
-                embed.set_author(name=stream_json['data'][0]['user_name'],
-                                 icon_url=f"{user_json['data'][0]['profile_image_url']}")
+                embed.set_author(name=stream_json['data'][0]['user_name'])
+                embed.set_thumbnail(
+                    url=f"{user_json['data'][0]['profile_image_url']}")
                 embed.add_field(
-                    name="Game", value=f"{game_json['data'][0]['name']}", inline=True)
+                    name="Game/Category", value=f"{game_json['data'][0]['name']}", inline=True)
                 embed.add_field(name="Viewers",
                                 value=f"{stream_json['data'][0]['viewer_count']}", inline=True)
+                uptime = datetime.datetime.utcnow() - cur_time
+                up_hours = f"{uptime.seconds:.0f}"
+                up_mins = f"{uptime.seconds:.0f}"
+                embed.add_field(name="Stream uptime",
+                                value=f"{up_hours} hour{'s' if up_hours >= 1 else ''} & {up_mins} minutes", inline=False)
                 embed.set_image(url=stream_json['data'][0]['thumbnail_url'].replace(
                     "{width}", "600").replace("{height}", "400"))
+                embed.set_footer(
+                    text=f"Stream started at: {cur_time.strftime('%b %d %Y - %H:%M')} | Currently: {datetime.datetime.now().strftime('%b %d %Y - %H:%M')}")
                 message = await channel.send(f"{item['streamer_name']} is now live!", embed=embed)
                 insert_query = """ UPDATE twitchtable SET streamer_last_game = $1, streamer_last_datetime = $2 WHERE streamer_name = $3; """
                 await self.bot.pool.execute(insert_query, stream_json['data'][0]['title'], message.created_at, item['streamer_name'])

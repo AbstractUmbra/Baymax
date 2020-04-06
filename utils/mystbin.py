@@ -5,8 +5,6 @@ from aiohttp import (
     ClientTimeout
 )
 
-__all__ = ('mystbin',)
-
 
 async def mystbin(content: str) -> str:
     """Upload the content to mystbin and return the url.

@@ -271,10 +271,10 @@ class Admin(commands.Cog):
 
             if ret is None:
                 if value:
-                        await ctx.send(f'```py\n{value}\n```')
+                    await ctx.send(f'```py\n{value}\n```')
             else:
                 self._last_result = ret
-                    await ctx.send(f'```py\n{value}{ret}\n```')
+                await ctx.send(f'```py\n{value}{ret}\n```')
 
     @commands.command(hidden=True)
     async def repl(self, ctx):
