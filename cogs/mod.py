@@ -166,11 +166,6 @@ def safe_reason_append(base, to_append):
         return base
     return appended
 
-# Spam detector
-
-# TODO: add this to d.py maybe
-
-
 class CooldownByContent(commands.CooldownMapping):
     def _bucket_key(self, message):
         return (message.channel.id, message.content)

@@ -77,14 +77,19 @@ class Specialist(commands.Cog):
         if isinstance(error, commands.CommandOnCooldown):
             return await ctx.send(f"Sorry this command is currently on cooldown for you. Try again in {error.seconds} seconds.")
 
-    @commands.group(aliases=['event', 'Event'])
+    @commands.group(aliases=['Event'])
     @checks.mod_or_permissions(manage_message=True)
-    async def events(self, ctx):
+    async def event(self, ctx):
         """ Primary command for events. """
         if not ctx.invoked_subcommand:
             return await ctx.send("This command requires a subcommand.")
 
-    @events.command(aliases=['bfme', 'BFME', 'BFME2'], usage="<when>", invoke_without_command=True)
+    @commands.command(name="events")
+    async def event_list(self, ctx):
+        """ Shortcut to event list. """
+        return await self.events_list(ctx)
+
+    @event.command(aliases=['bfme', 'BFME', 'BFME2'], usage="<when>", invoke_without_command=True)
     async def bfme2(self, ctx, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
         """ Create a BFME2 event. """
         reminder = self.bot.get_cog("Reminder")
@@ -124,7 +129,7 @@ class Specialist(commands.Cog):
         await message.edit(content="", embed=embed)
         return await ctx.message.delete()
 
-    @events.command(aliases=['aoe', 'AOE', 'AOE2'], usage="<when>", invoke_without_command=True)
+    @event.command(aliases=['aoe', 'AOE', 'AOE2'], usage="<when>", invoke_without_command=True)
     async def aoe2(self, ctx, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
         """ Create an AOE2 event. """
         reminder = self.bot.get_cog("Reminder")
@@ -156,7 +161,7 @@ class Specialist(commands.Cog):
         await message.edit(content="", embed=embed)
         return await ctx.message.delete()
 
-    @events.command(name="list")
+    @event.command(name="list")
     async def events_list(self, ctx):
         """ Send a list of events. """
         query = """SELECT id, expires, event, extra #>> '{args,2}'
@@ -186,7 +191,7 @@ class Specialist(commands.Cog):
                 name=f"{_id}: In {time.human_timedelta(expires)}", value=f"`{event.upper()}`: {shorten}", inline=False)
         await ctx.send(embed=embed)
 
-    @events.command(name="delete")
+    @event.command(name="delete")
     async def events_delete(self, ctx, record_id: int):
         """ Delete a specific event that the author owns. """
         query = """DELETE FROM reminders
