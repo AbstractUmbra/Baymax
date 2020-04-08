@@ -60,8 +60,11 @@ class RoboHz(commands.AutoShardedBot):
     """ The actual robot himself! """
 
     def __init__(self):
-        super().__init__(command_prefix=_prefix_callable, description=DESCRIPTION,
-                         pm_help=None, help_attrs=dict(hidden=True),
+        super().__init__(command_prefix=_prefix_callable,
+                         description=DESCRIPTION,
+                         pm_help=None,
+                         help_attrs=dict(hidden=True),
+                         heartbeat_timeout=150.0,
                          activity=discord.Game(
                              name="r!help for help, fuckers."),
                          status=discord.Status.online)
