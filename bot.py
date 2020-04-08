@@ -27,13 +27,14 @@ COGS = (
     'cogs.api',
     'cogs.autoroles',
     'cogs.buttons',
-    'cogs.cleanup',
     'cogs.config',
     'cogs.dnd',
+    'cogs.emoji',
     'cogs.funhouse',
     'cogs.memes',
     'cogs.meta',
     'cogs.mod',
+    'cogs.profile',
     'cogs.reminders',
     'cogs.rng',
     'cogs.specialisttv',
@@ -41,7 +42,6 @@ COGS = (
     'cogs.stats',
     'cogs.tags',
     'cogs.twitch',
-    'cogs.votes',
 )
 
 

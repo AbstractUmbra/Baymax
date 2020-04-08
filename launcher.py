@@ -1,19 +1,19 @@
-""" A helper for RoboHz. """
-import asyncio
-import contextlib
-import importlib
-import logging
 import sys
-import traceback
-
-import asyncpg
 import click
-from discord.ext import commands
+import logging
+import asyncio
+import asyncpg
+import discord
+import importlib
+import contextlib
 
 from bot import RoboHz, COGS
 from utils.db import Table
 
+from pathlib import Path
+
 import config
+import traceback
 
 try:
     import uvloop
@@ -22,10 +22,8 @@ except ImportError:
 else:
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-
 @contextlib.contextmanager
 def setup_logging():
-    """ Handles logging for my big roboboy. """
     try:
         # __enter__
         logging.getLogger('discord').setLevel(logging.INFO)
@@ -33,11 +31,9 @@ def setup_logging():
 
         log = logging.getLogger()
         log.setLevel(logging.INFO)
-        handler = logging.FileHandler(
-            filename='robohz.log', encoding='utf-8', mode='w')
+        handler = logging.FileHandler(filename='robohz.log', encoding='utf-8', mode='w')
         dt_fmt = '%Y-%m-%d %H:%M:%S'
-        fmt = logging.Formatter(
-            '[{asctime}] [{levelname:<7}] {name}: {message}', dt_fmt, style='{')
+        fmt = logging.Formatter('[{asctime}] [{levelname:<7}] {name}: {message}', dt_fmt, style='{')
         handler.setFormatter(fmt)
         log.addHandler(handler)
 
@@ -49,16 +45,13 @@ def setup_logging():
             hdlr.close()
             log.removeHandler(hdlr)
 
-
 def run_bot():
-    """ Time to run the bot. """
     loop = asyncio.get_event_loop()
     log = logging.getLogger()
 
     try:
-        pool = loop.run_until_complete(Table.create_pool(
-            config.postgresql, command_timeout=60))
-    except Exception:
+        pool = loop.run_until_complete(Table.create_pool(config.postgresql, command_timeout=60))
+    except Exception as e:
         click.echo('Could not set up PostgreSQL. Exiting.', file=sys.stderr)
         log.exception('Could not set up PostgreSQL. Exiting.')
         return
@@ -66,7 +59,6 @@ def run_bot():
     bot = RoboHz()
     bot.pool = pool
     bot.run()
-
 
 @click.group(invoke_without_command=True, options_metavar='[options]')
 @click.pass_context
@@ -77,14 +69,11 @@ def main(ctx):
         with setup_logging():
             run_bot()
 
-
 @main.group(short_help='database stuff', options_metavar='[options]')
-def database():
-    """ Database stuff. """
+def db():
     pass
 
-
-@database.command(short_help='initialises the databases for the bot', options_metavar='[options]')
+@db.command(short_help='initialises the databases for the bot', options_metavar='[options]')
 @click.argument('cogs', nargs=-1, metavar='[cogs]')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 def init(cogs, quiet):
@@ -94,8 +83,7 @@ def init(cogs, quiet):
     try:
         run(Table.create_pool(config.postgresql))
     except Exception:
-        click.echo(
-            f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
+        click.echo(f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
         return
 
     if not cogs:
@@ -107,27 +95,21 @@ def init(cogs, quiet):
         try:
             importlib.import_module(ext)
         except Exception:
-            click.echo(
-                f'Could not load {ext}.\n{traceback.format_exc()}', err=True)
+            click.echo(f'Could not load {ext}.\n{traceback.format_exc()}', err=True)
             return
 
     for table in Table.all_tables():
         try:
-            created = run(table.create(
-                verbose=not quiet, run_migrations=False))
+            created = run(table.create(verbose=not quiet, run_migrations=False))
         except Exception:
-            click.echo(
-                f'Could not create {table.__tablename__}.\n{traceback.format_exc()}', err=True)
+            click.echo(f'Could not create {table.__tablename__}.\n{traceback.format_exc()}', err=True)
         else:
             if created:
-                click.echo(
-                    f'[{table.__module__}] Created {table.__tablename__}.')
+                click.echo(f'[{table.__module__}] Created {table.__tablename__}.')
             else:
-                click.echo(
-                    f'[{table.__module__}] No work needed for {table.__tablename__}.')
+                click.echo(f'[{table.__module__}] No work needed for {table.__tablename__}.')
 
-
-@database.command(short_help='migrates the databases')
+@db.command(short_help='migrates the databases')
 @click.argument('cog', nargs=1, metavar='[cog]')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 @click.pass_context
@@ -140,17 +122,14 @@ def migrate(ctx, cog, quiet):
     try:
         importlib.import_module(cog)
     except Exception:
-        click.echo(
-            f'Could not load {cog}.\n{traceback.format_exc()}', err=True)
+        click.echo(f'Could not load {ext}.\n{traceback.format_exc()}', err=True)
         return
 
     def work(table, *, invoked=False):
-        """ Does a little migration work. """
         try:
             actually_migrated = table.write_migration()
-        except RuntimeError as err:
-            click.echo(
-                f'Could not migrate {table.__tablename__}: {err}', err=True)
+        except RuntimeError as e:
+            click.echo(f'Could not migrate {table.__tablename__}: {e}', err=True)
             if not invoked:
                 click.confirm('do you want to create the table?', abort=True)
                 ctx.invoke(init, cogs=[cog], quiet=quiet)
@@ -158,8 +137,7 @@ def migrate(ctx, cog, quiet):
             sys.exit(-1)
         else:
             if actually_migrated:
-                click.echo(
-                    f'Successfully updated migrations for {table.__tablename__}.')
+                click.echo(f'Successfully updated migrations for {table.__tablename__}.')
             else:
                 click.echo(f'Found no changes for {table.__tablename__}.')
 
@@ -168,14 +146,11 @@ def migrate(ctx, cog, quiet):
 
     click.echo(f'Done migrating {cog}.')
 
-
 async def apply_migration(cog, quiet, index, *, downgrade=False):
-    """ Apply the migrations. """
     try:
         pool = await Table.create_pool(config.postgresql)
     except Exception:
-        click.echo(
-            f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
+        click.echo(f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
         return
 
     if not cog.startswith('cogs.'):
@@ -184,29 +159,23 @@ async def apply_migration(cog, quiet, index, *, downgrade=False):
     try:
         importlib.import_module(cog)
     except Exception:
-        click.echo(
-            f'Could not load {cog}.\n{traceback.format_exc()}', err=True)
+        click.echo(f'Could not load {cog}.\n{traceback.format_exc()}', err=True)
         return
 
     async with pool.acquire() as con:
-        transaction = con.transaction()
-        await transaction.start()
+        tr = con.transaction()
+        await tr.start()
         for table in Table.all_tables():
             try:
-                await table.migrate(index=index,
-                                    downgrade=downgrade,
-                                    verbose=not quiet,
-                                    connection=con)
-            except RuntimeError as err:
-                click.echo(
-                    f'Could not migrate {table.__tablename__}: {err}', err=True)
-                await transaction.rollback()
+                await table.migrate(index=index, downgrade=downgrade, verbose=not quiet, connection=con)
+            except RuntimeError as e:
+                click.echo(f'Could not migrate {table.__tablename__}: {e}', err=True)
+                await tr.rollback()
                 break
         else:
-            await transaction.commit()
+            await tr.commit()
 
-
-@database.command(short_help='upgrades from a migration')
+@db.command(short_help='upgrades from a migration')
 @click.argument('cog', nargs=1, metavar='[cog]')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 @click.option('--index', help='the index to use', default=-1)
@@ -215,8 +184,7 @@ def upgrade(cog, quiet, index):
     run = asyncio.get_event_loop().run_until_complete
     run(apply_migration(cog, quiet, index))
 
-
-@database.command(short_help='downgrades from a migration')
+@db.command(short_help='downgrades from a migration')
 @click.argument('cog', nargs=1, metavar='[cog]')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 @click.option('--index', help='the index to use', default=-1)
@@ -225,29 +193,25 @@ def downgrade(cog, quiet, index):
     run = asyncio.get_event_loop().run_until_complete
     run(apply_migration(cog, quiet, index, downgrade=True))
 
-
 async def remove_databases(pool, cog, quiet):
-    """ Removes a database. """
     async with pool.acquire() as con:
-        transaction = con.transaction()
-        await transaction.start()
+        tr = con.transaction()
+        await tr.start()
         for table in Table.all_tables():
             try:
                 await table.drop(verbose=not quiet, connection=con)
-            except RuntimeError as err:
-                click.echo(
-                    f'Could not drop {table.__tablename__}: {err}', err=True)
-                await transaction.rollback()
+            except RuntimeError as e:
+                click.echo(f'Could not drop {table.__tablename__}: {e}', err=True)
+                await tr.rollback()
                 break
             else:
                 click.echo(f'Dropped {table.__tablename__}.')
         else:
-            await transaction.commit()
+            await tr.commit()
             click.echo(f'successfully removed {cog} tables.')
 
-
-@database.command(short_help="removes a cog's table", options_metavar='[options]')
-@click.argument('cog', metavar='<cog>')
+@db.command(short_help="removes a cog's table", options_metavar='[options]')
+@click.argument('cog',  metavar='<cog>')
 @click.option('-q', '--quiet', help='less verbose output', is_flag=True)
 def drop(cog, quiet):
     """This removes a database and all its migrations.
@@ -265,8 +229,7 @@ def drop(cog, quiet):
     try:
         pool = run(Table.create_pool(config.postgresql))
     except Exception:
-        click.echo(
-            f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
+        click.echo(f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
         return
 
     if not cog.startswith('cogs.'):
@@ -275,12 +238,10 @@ def drop(cog, quiet):
     try:
         importlib.import_module(cog)
     except Exception:
-        click.echo(
-            f'Could not load {cog}.\n{traceback.format_exc()}', err=True)
+        click.echo(f'Could not load {cog}.\n{traceback.format_exc()}', err=True)
         return
 
     run(remove_databases(pool, cog, quiet))
-
 
 @main.command(short_help='migrates from JSON files')
 @click.argument('cogs', nargs=-1)
@@ -324,22 +285,19 @@ def convertjson(ctx, cogs):
     try:
         pool = run(make_pool())
     except Exception:
-        click.echo(
-            f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
+        click.echo(f'Could not create PostgreSQL connection pool.\n{traceback.format_exc()}', err=True)
         return
 
-    bot = commands.AutoShardedBot()
+    client = discord.AutoShardedClient()
 
-    @bot.event
+    @client.event
     async def on_ready():
-        """ When the bot recieves the ready event. """
-        click.echo(
-            f'successfully booted up bot {bot.user} (ID: {bot.user.id})')
-        await bot.logout()
+        click.echo(f'successfully booted up bot {client.user} (ID: {client.user.id})')
+        await client.logout()
 
     try:
-        run(bot.login(config.token))
-        run(bot.connect(reconnect=False))
+        run(client.login(config.token))
+        run(client.connect(reconnect=False))
     except:
         pass
 
@@ -348,15 +306,12 @@ def convertjson(ctx, cogs):
 
     for migrator, _ in to_run:
         try:
-            run(migrator(pool, bot))
+            run(migrator(pool, client))
         except Exception:
-            click.echo(
-                f'[error] {migrator.__name__} has failed,'
-                f' terminating\n{traceback.format_exc()}', err=True)
+            click.echo(f'[error] {migrator.__name__} has failed, terminating\n{traceback.format_exc()}', err=True)
             return
         else:
             click.echo(f'[{migrator.__name__}] completed successfully')
-
 
 if __name__ == '__main__':
     main()

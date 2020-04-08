@@ -1,10 +1,17 @@
 git+https://github.com/Rapptz/discord.py@master
 git+https://github.com/Rapptz/discord-ext-menus@master
 git+https://github.com/XuaTheGrate/Flag-Parsing@master
-psutil
 asyncpg
+jishaku
+psutil
 click
 parsedatetime
 lru_dict
 python-dateutil
 lxml
+unidecode
+pytz
+
+#### Shell
+## python3-libgit2
+##

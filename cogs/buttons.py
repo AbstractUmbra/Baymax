@@ -2,9 +2,7 @@
 import asyncio
 import logging
 import io
-import random
 import re
-import yarl
 
 import discord
 from discord.ext import commands
@@ -32,7 +30,7 @@ def can_use_spoiler():
     return commands.check(predicate)
 
 
-SPOILER_EMOJI_ID = 459014535949582357
+SPOILER_EMOJI_ID = 672157567946063923
 
 
 class UrbanDictionaryPages(Pages):
@@ -85,67 +83,6 @@ class UrbanDictionaryPages(Pages):
             pass
         else:
             embed.timestamp = date
-
-
-class RedditMediaURL:
-    """ Parses Reddit. """
-    VALID_PATH = re.compile(r'/r/[A-Za-z0-9]+/comments/[A-Za-z0-9]+(?:/.+)?')
-
-    def __init__(self, url):
-        self.url = url
-        self.filename = url.parts[1] + '.mp4'
-
-    @classmethod
-    async def convert(cls, ctx, argument):
-        """ Convert Reddit media. """
-        try:
-            url = yarl.URL(argument)
-        except Exception:
-            raise commands.BadArgument('Not a valid URL.')
-
-        headers = {
-            'User-Agent': 'Discord:RoboHz:v4.0 (by /u/N0rvar)'
-        }
-        await ctx.trigger_typing()
-        if url.host == 'v.redd.it':
-            # have to do a request to fetch the 'main' URL.
-            async with ctx.session.get(url, headers=headers) as resp:
-                url = resp.url
-
-        is_valid_path = url.host.endswith(
-            '.reddit.com') and cls.VALID_PATH.match(url.path)
-        if not is_valid_path:
-            raise commands.BadArgument('Not a reddit URL.')
-
-        # Now we go the long way
-        async with ctx.session.get(url / '.json', headers=headers) as resp:
-            if resp.status != 200:
-                raise commands.BadArgument(
-                    f'Reddit API failed with {resp.status}.')
-
-            data = await resp.json()
-            try:
-                submission = data[0]['data']['children'][0]['data']
-            except (KeyError, TypeError, IndexError):
-                raise commands.BadArgument('Could not fetch submission.')
-
-            try:
-                media = submission['media']['reddit_video']
-            except (KeyError, TypeError):
-                try:
-                    # maybe it's a cross post
-                    crosspost = submission['crosspost_parent_list'][0]
-                    media = crosspost['media']['reddit_video']
-                except (KeyError, TypeError, IndexError):
-                    raise commands.BadArgument(
-                        'Could not fetch media information.')
-
-            try:
-                fallback_url = yarl.URL(media['fallback_url'])
-            except KeyError:
-                raise commands.BadArgument('Could not fetch fall back URL.')
-
-            return cls(fallback_url)
 
 
 class SpoilerCache:
@@ -226,34 +163,6 @@ class Buttons(commands.Cog):
         self.bot = bot
         self._spoiler_cache = LRU(128)
         self._spoiler_cooldown = SpoilerCooldown()
-
-    @commands.command(hidden=True)
-    async def feelgood(self, ctx):
-        """press"""
-        await ctx.send('*pressed*')
-
-    @commands.command(hidden=True)
-    async def feelbad(self, ctx):
-        """depress"""
-        await ctx.send('*depressed*')
-
-    @commands.command()
-    async def love(self, ctx):
-        """What is love?"""
-        responses = [
-            'https://www.youtube.com/watch?v=HEXWRTEbj1I',
-            'https://www.youtube.com/watch?v=i0p1bmr0EmE',
-            'an intense feeling of deep affection',
-            'something we don\'t have'
-        ]
-
-        response = random.choice(responses)
-        await ctx.send(response)
-
-    @commands.command(hidden=True)
-    async def bored(self, ctx):
-        """boredom looms"""
-        await ctx.send('http://i.imgur.com/BuTKSzf.png')
 
     @commands.command()
     @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
@@ -450,31 +359,6 @@ class Buttons(commands.Cog):
         spoiler_message = await ctx.send(embed=cache.to_spoiler_embed(ctx, storage_message))
         self._spoiler_cache[spoiler_message.id] = cache
         await spoiler_message.add_reaction('<:Revan:695483590485737482>')
-
-    @commands.command(usage='<url>')
-    @commands.cooldown(1, 5.0, commands.BucketType.member)
-    async def vreddit(self, ctx, *, reddit: RedditMediaURL):
-        """Downloads a v.redd.it submission.
-
-        Regular reddit URLs or v.redd.it URLs are supported.
-        """
-
-        filesize = ctx.guild.filesize_limit if ctx.guild else 8388608
-        async with ctx.session.get(reddit.url) as resp:
-            if resp.status != 200:
-                return await ctx.send('Could not download video.')
-
-            if int(resp.headers['Content-Length']) >= filesize:
-                return await ctx.send('Video is too big to be uploaded.')
-
-            data = await resp.read()
-            await ctx.send(file=discord.File(io.BytesIO(data), filename=reddit.filename))
-
-    @vreddit.error
-    async def on_vreddit_error(self, ctx, error):
-        """ on error of vreddit command. """
-        if isinstance(error, commands.BadArgument):
-            await ctx.send(error)
 
     @commands.command(name='urban')
     async def _urban(self, ctx, *, word):

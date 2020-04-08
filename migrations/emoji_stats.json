@@ -1,0 +1,69 @@
+{
+    "table": {
+        "name": "emoji_stats",
+        "__meta__": "cogs.emoji.EmojiStats",
+        "columns": [
+            {
+                "column_type": {
+                    "big": true,
+                    "small": false,
+                    "auto_increment": true,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": false,
+                "primary_key": true,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "id",
+                "index_name": null
+            },
+            {
+                "column_type": {
+                    "big": true,
+                    "small": false,
+                    "auto_increment": false,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": true,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "guild_id",
+                "index_name": "emoji_stats_guild_id_idx"
+            },
+            {
+                "column_type": {
+                    "big": true,
+                    "small": false,
+                    "auto_increment": false,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": true,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "emoji_id",
+                "index_name": "emoji_stats_emoji_id_idx"
+            },
+            {
+                "column_type": {
+                    "big": false,
+                    "small": false,
+                    "auto_increment": false,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": false,
+                "primary_key": false,
+                "nullable": true,
+                "default": 0,
+                "unique": false,
+                "name": "total",
+                "index_name": null
+            }
+        ]
+    },
+    "migrations": []
+}

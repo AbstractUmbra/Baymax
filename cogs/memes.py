@@ -20,7 +20,6 @@ class Memes(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
     @commands.command()
     async def twist(self, ctx):
         """ Moves all voice members to a random VC. """
@@ -31,7 +30,6 @@ class Memes(commands.Cog):
                 choice(ctx.message.guild.voice_channels), reason="Was too weak."
             )
 
-    @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
     @commands.command()
     async def snap(self, ctx):
         """ Snaps all the members. ;) """
@@ -55,7 +53,6 @@ class Memes(commands.Cog):
                 await ctx.send("**SNAP!**")
                 await member.move_to(snapped_channel, reason="was snapped.")
 
-    @commands.has_any_role(262403103054102528, 337723529837674496, 534447855608266772)
     @commands.command()
     async def spelling(self, ctx):
         """ Time to mess with some vowels. >:D """
@@ -110,13 +107,6 @@ class Memes(commands.Cog):
                 i = not i
         await ctx.send(new_sentence)
         return await ctx.message.delete(delay=3)
-
-    @commands.command()
-    async def emojipls(self, ctx, emoji):
-        """ Returns the char of emoji. """
-        for g_emoji in ctx.guild.emojis:
-            if str(g_emoji) == emoji:
-                await ctx.send(f"{g_emoji} | {g_emoji.id}", delete_after=20)
 
 
 def setup(bot):
