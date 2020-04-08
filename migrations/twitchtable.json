@@ -1,0 +1,95 @@
+{
+    "table": {
+        "name": "twitchtable",
+        "__meta__": "cogs.twitch.TwitchTable",
+        "columns": [
+            {
+                "column_type": {
+                    "big": false,
+                    "small": false,
+                    "auto_increment": true,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": false,
+                "primary_key": true,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "id",
+                "index_name": null
+            },
+            {
+                "column_type": {
+                    "big": true,
+                    "small": false,
+                    "auto_increment": false,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": false,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "guild_id",
+                "index_name": null
+            },
+            {
+                "column_type": {
+                    "big": true,
+                    "small": false,
+                    "auto_increment": false,
+                    "__meta__": "utils.db.Integer"
+                },
+                "index": false,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "channel_id",
+                "index_name": null
+            },
+            {
+                "column_type": {
+                    "length": null,
+                    "fixed": false,
+                    "__meta__": "utils.db.String"
+                },
+                "index": false,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "streamer_name",
+                "index_name": null
+            },
+            {
+                "column_type": {
+                    "length": null,
+                    "fixed": false,
+                    "__meta__": "utils.db.String"
+                },
+                "index": false,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "streamer_last_game",
+                "index_name": null
+            },
+            {
+                "column_type": {
+                    "timezone": false,
+                    "__meta__": "utils.db.Datetime"
+                },
+                "index": false,
+                "primary_key": false,
+                "nullable": true,
+                "default": null,
+                "unique": false,
+                "name": "streamer_last_datetime",
+                "index_name": null
+            }
+        ]
+    },
+    "migrations": []
+}

@@ -1,0 +1,98 @@
+{
+    "name": "starboard_entries",
+    "__meta__": "cogs.stars.StarboardEntry",
+    "columns": [
+        {
+            "column_type": {
+                "big": false,
+                "small": false,
+                "auto_increment": true,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": true,
+            "nullable": true,
+            "default": null,
+            "unique": false,
+            "name": "id",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "big": true,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": true,
+            "primary_key": false,
+            "nullable": true,
+            "default": null,
+            "unique": false,
+            "name": "bot_message_id",
+            "index_name": "starboard_entries_bot_message_id_idx"
+        },
+        {
+            "column_type": {
+                "big": true,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": true,
+            "primary_key": false,
+            "nullable": false,
+            "default": null,
+            "unique": true,
+            "name": "message_id",
+            "index_name": "starboard_entries_message_id_idx"
+        },
+        {
+            "column_type": {
+                "big": true,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": false,
+            "nullable": true,
+            "default": null,
+            "unique": false,
+            "name": "channel_id",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "big": true,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": false,
+            "nullable": true,
+            "default": null,
+            "unique": false,
+            "name": "author_id",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "table": "starboard",
+                "column": "id",
+                "on_update": "NO ACTION",
+                "on_delete": "CASCADE",
+                "sql_type": "BIGINT",
+                "__meta__": "utils.db.ForeignKey"
+            },
+            "index": true,
+            "primary_key": false,
+            "nullable": false,
+            "default": null,
+            "unique": false,
+            "name": "guild_id",
+            "index_name": "starboard_entries_guild_id_idx"
+        }
+    ]
+}

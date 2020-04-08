@@ -1,0 +1,76 @@
+{
+    "name": "starboard",
+    "__meta__": "cogs.stars.Starboard",
+    "columns": [
+        {
+            "column_type": {
+                "big": true,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": true,
+            "nullable": true,
+            "default": null,
+            "unique": false,
+            "name": "id",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "big": true,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": false,
+            "nullable": true,
+            "default": null,
+            "unique": false,
+            "name": "channel_id",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "big": false,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": false,
+            "nullable": false,
+            "default": 1,
+            "unique": false,
+            "name": "threshold",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "__meta__": "utils.db.Boolean"
+            },
+            "index": false,
+            "primary_key": false,
+            "nullable": true,
+            "default": false,
+            "unique": false,
+            "name": "locked",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "field": null,
+                "__meta__": "utils.db.Interval"
+            },
+            "index": false,
+            "primary_key": false,
+            "nullable": false,
+            "default": "'7 days'::interval",
+            "unique": false,
+            "name": "max_age",
+            "index_name": null
+        }
+    ]
+}

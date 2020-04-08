@@ -1,0 +1,53 @@
+{
+    "name": "starrers",
+    "__meta__": "cogs.stars.Starrers",
+    "columns": [
+        {
+            "column_type": {
+                "big": false,
+                "small": false,
+                "auto_increment": true,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": true,
+            "nullable": true,
+            "default": null,
+            "unique": false,
+            "name": "id",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "big": true,
+                "small": false,
+                "auto_increment": false,
+                "__meta__": "utils.db.Integer"
+            },
+            "index": false,
+            "primary_key": false,
+            "nullable": false,
+            "default": null,
+            "unique": false,
+            "name": "author_id",
+            "index_name": null
+        },
+        {
+            "column_type": {
+                "table": "starboard_entries",
+                "column": "id",
+                "on_update": "NO ACTION",
+                "on_delete": "CASCADE",
+                "sql_type": "INTEGER",
+                "__meta__": "utils.db.ForeignKey"
+            },
+            "index": true,
+            "primary_key": false,
+            "nullable": false,
+            "default": null,
+            "unique": false,
+            "name": "entry_id",
+            "index_name": "starrers_entry_id_idx"
+        }
+    ]
+}
