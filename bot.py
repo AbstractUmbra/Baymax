@@ -177,7 +177,7 @@ class RoboHz(commands.AutoShardedBot):
         if not autoblock:
             return
 
-        webhook = self.stats_webhook
+        webhook = self.stat_webhook
         embed = discord.Embed(title='Auto-blocked Member', colour=0xDDA453)
         embed.add_field(
             name='Member', value=f'{message.author} (ID: {message.author.id})', inline=False)

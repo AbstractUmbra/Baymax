@@ -1,10 +1,5 @@
 """ Utils addon - checks. """
-import datetime
-from typing import Callable, Iterable
-
 from discord.ext import commands
-from discord.ext.commands import (BucketType, Cog, Command,
-                                  CommandOnCooldown, Context, Cooldown, CooldownMapping)
 
 
 async def check_permissions(ctx, perms, *, check=all):
