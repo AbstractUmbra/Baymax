@@ -51,7 +51,7 @@ class Config:
         temp = '%s-%s.tmp' % (uuid.uuid4(), self.name)
         with open(temp, 'w', encoding='utf-8') as tmp:
             json.dump(self._db.copy(), tmp, ensure_ascii=True,
-                      cls=self.encoder, separators=(',', ':'))
+                      cls=self.encoder, separators=(',', ':'), indent=4)
 
         # atomically move the file
         os.replace(temp, self.name)
