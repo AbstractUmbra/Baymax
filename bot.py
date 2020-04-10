@@ -37,7 +37,7 @@ COGS = (
     'cogs.profile',
     'cogs.reminders',
     'cogs.rng',
-    'cogs.specialisttv',
+    'cogs.specialist',
     'cogs.stars',
     'cogs.stats',
     'cogs.tags',
