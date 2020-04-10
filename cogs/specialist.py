@@ -24,7 +24,7 @@ class Specialist(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send(error)
 
-    async def get_reactions(self, reaction_list: list) -> list:
+    async def get_reacts(self, reaction_list: list) -> list:
         """ Returns a flattened list of all users who reacted. """
         reacted_list = []
         for reaction in reaction_list:
@@ -34,6 +34,12 @@ class Specialist(commands.Cog):
                     continue
                 reacted_list.append(member)
         return reacted_list
+
+    async def remove_reacts(self, message: discord.Message, role: discord.Role, event_type: str):
+        for reaction in message.reactions:
+            async for user in reaction.users():
+                if not self.member_in_multiple(user, event_type):
+                    await user.remove_roles(role)
 
     async def member_in_multiple(self, member: discord.Member, event_type: str):
         """ Non-generic. Checks if member is in multiple gaming event for same type. """
@@ -46,7 +52,7 @@ class Specialist(commands.Cog):
         for record in records:
             channel = member.guild.get_channel(int(record['extra']['args'][1]))
             event_message = await channel.fetch_message(int(record['extra']['kwargs']['message_id']))
-            reacts = await self.get_reactions(event_message.reactions)
+            reacts = await self.get_reacts(event_message.reactions)
             if member in reacts:
                 count += 1
         if count > 1:
@@ -98,19 +104,18 @@ class Specialist(commands.Cog):
         message = await ctx.send("Placeholder")
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        timer = await reminder.create_timer(event_trigger, 'bfme2', ctx.author.id,
-                                            ctx.channel.id,
-                                            when.arg,
-                                            connection=ctx.db,
-                                            created=ctx.message.created_at,
-                                            message_id=message.id)
+        await reminder.create_timer(event_trigger, 'bfme2', ctx.author.id,
+                                    ctx.channel.id,
+                                    when.arg,
+                                    connection=ctx.db,
+                                    created=ctx.message.created_at,
+                                    message_id=message.id)
         await reminder.create_timer(cancellation_trigger, 'event_check', ctx.author.id,
                                     ctx.channel.id,
                                     when.arg,
                                     connection=ctx.db,
                                     created=ctx.message.created_at,
                                     message_id=message.id)
-        delta = time.human_timedelta(when.dt, source=timer.created_at)
         embed = discord.Embed(title="BFME2 Event Prep!",
                               colour=discord.Colour.gold())
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
@@ -120,7 +125,7 @@ class Specialist(commands.Cog):
         embed.add_field(name="Plan of action",
                         value=f"{when.arg}", inline=False)
         embed.add_field(
-            name="When", value=f"{delta} | {when.dt.strftime('%d-%m-%Y %H:%M')}", inline=True)
+            name="When", value=f"{when.dt.strftime('%d-%m-%Y %H:%M')}", inline=True)
         embed.add_field(name="Game install details:",
                         value="Can be found [here](https://forums.revora.net/topic/105190-bfme1bfme2rotwk-games-download-installation-guide/).", inline=False)
         embed.add_field(name="How to invite to Discord:",
@@ -138,25 +143,24 @@ class Specialist(commands.Cog):
         message = await ctx.send("Placeholder")
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        timer = await reminder.create_timer(event_trigger, 'aoe2', ctx.author.id,
-                                            ctx.channel.id,
-                                            when.arg,
-                                            connection=ctx.db,
-                                            created=ctx.message.created_at,
-                                            message_id=message.id)
+        await reminder.create_timer(event_trigger, 'aoe2', ctx.author.id,
+                                    ctx.channel.id,
+                                    when.arg,
+                                    connection=ctx.db,
+                                    created=ctx.message.created_at,
+                                    message_id=message.id)
         await reminder.create_timer(cancellation_trigger, 'event_check', ctx.author.id,
                                     ctx.channel.id,
                                     when.arg,
                                     connection=ctx.db,
                                     created=ctx.message.created_at,
                                     message_id=message.id)
-        delta = time.human_timedelta(when.dt, source=timer.created_at)
         embed = discord.Embed(title="AOE2 Event Prep!",
                               colour=discord.Colour.red())
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
         embed.add_field(name="Plan of action", value=f"{when.arg}")
         embed.add_field(
-            name="When", value=f"{delta} | {when.dt.strftime('%d-%m-%Y %H:%M')}")
+            name="When", value=f"{when.dt.strftime('%d-%m-%Y %H:%M')}")
         embed.description = "Add a reaction to this post to join this event!"
         await message.edit(content="", embed=embed)
         return await ctx.message.delete()
@@ -197,7 +201,7 @@ class Specialist(commands.Cog):
         query = """DELETE FROM reminders
                    WHERE id = $1
                    AND extra #>> '{args,0}' = $2
-                   RETURNING extra;
+                   RETURNING event, extra;
                 """
         event_check_query = """DELETE FROM reminders
                                WHERE extra #>> '{kwargs,message_id}' = $1
@@ -205,7 +209,20 @@ class Specialist(commands.Cog):
         status = await ctx.db.fetch(query, record_id, str(ctx.author.id))
         if not status:
             return await ctx.send("Could not delete event by that ID. Are you sure it's there and you're it's author?")
-        await ctx.db.execute(event_check_query, status['extra']['kwargs']['message_id'])
+        message_deets = {record['extra']['args'][1]: record['extra']
+                         ['kwargs']['message_id'] for record in status}
+        for chan_id, m_id in message_deets:
+            channel = self.bot.get_channel(chan_id)
+            message = await channel.fetch_message(m_id)
+            await ctx.db.execute(event_check_query, str(message.id))
+            if status['event'] == "event_check":
+                continue
+            if status['event'] == "bfme2":
+                role = ctx.guild.get_role(BFME_ROLE_ID)
+                self.remove_reacts(message, role, "bfme2")
+            elif status['event'] == "aoe2":
+                role = ctx.guild.get_role(AOE_ROLE_ID)
+                self.remove_reacts(message, role, "aoe2")
         return await ctx.send("Deleted event.")
 
     @commands.Cog.listener()
@@ -220,31 +237,25 @@ class Specialist(commands.Cog):
 
         message_id = event.kwargs.get("message_id")
         prev_message = await channel.fetch_message(int(message_id))
-        reacted_list = await self.get_reactions(prev_message.reactions)
+        reacted_list = await self.get_reacts(prev_message.reactions)
         query = """SELECT *
                    FROM reminders
                    WHERE extra #>> '{kwargs,message_id}' = $1;
                 """
-        record = await self.bot.pool.fetchrow(query, event.kwargs['message_id'])
-        bfme_role = channel.guild.get_role(BFME_ROLE_ID)
-        aoe_role = channel.guild.get_role(AOE_ROLE_ID)
-        members = set([member.id for member in reacted_list])
+        record = await self.bot.pool.fetchrow(query, str(message_id))
+        members = {member.id for member in reacted_list}
         if len(members) < 3:
-            await prev_message.delete()
-            await channel.send(f"The event for ***{message}*** has been cancelled due to lack of members!")
             if record['event'] == "bfme2":
-                for member in reacted_list:
-                    if not await self.member_in_multiple(member, "bfme2"):
-                        await member.remove_role(bfme_role, reason="Event cancellation.")
+                role = channel.guild.get_role(BFME_ROLE_ID)
+                await self.remove_reacts(prev_message, role, "bfme2")
             elif record['event'] == "aoe2":
-                for member in reacted_list:
-                    if not await self.member_in_multiple(member, "aoe2"):
-                        await member.remove_role(aoe_role, reason="Event cancellation.")
+                role = channel.guild.get_role(AOE_ROLE_ID)
+                await self.remove_reacts(prev_message, role, "aoe2")
             del_query = """DELETE FROM reminders
                         WHERE extra #>> '{kwargs,message_id}' = $1;
                         """
             await self.bot.pool.execute(del_query, event.kwargs['message_id'])
-            return await prev_message.edit(content="Event has been cancelled.", embed=None)
+            return await prev_message.edit(content=f"The event for ***{message}*** has been cancelled due to lack of members!", embed=None)
 
     @commands.Cog.listener()
     async def on_bfme2_timer_complete(self, event):
@@ -259,8 +270,8 @@ class Specialist(commands.Cog):
         message_id = event.kwargs.get('message_id')
         prev_message = await channel.fetch_message(int(message_id))
         role = channel.guild.get_role(BFME_ROLE_ID)
-        reacted_list = await self.get_reactions(prev_message.reactions)
-        member_names = set([member.display_name for member in reacted_list])
+        reacted_list = await self.get_reacts(prev_message.reactions)
+        member_names = {member.display_name for member in reacted_list}
         embed = discord.Embed(title="**BFME 2 Event time**",
                               colour=discord.Colour.gold())
         event_author = channel.guild.get_member(author_id)
@@ -292,7 +303,7 @@ class Specialist(commands.Cog):
         message_id = event.kwargs.get('message_id')
         prev_message = await channel.fetch_message(message_id)
         role = channel.guild.get_role(AOE_ROLE_ID)
-        reacted_list = await self.get_reactions(prev_message.reactions)
+        reacted_list = await self.get_reacts(prev_message.reactions)
         member_names = set([member.display_name for member in reacted_list])
         embed = discord.Embed(title="**AOE 2 Event time**",
                               colour=discord.Colour.red())
@@ -365,7 +376,7 @@ class Specialist(commands.Cog):
                         if not await self.member_in_multiple(member, "bfme2"):
                             return await member.remove_roles(bfme_role)
                     if str(record['event']) == "aoe2":
-                        if not await self.member_in_multiple(member, "aoe2"):
+                        if not await self.member_in_multiple(member, "aoe2",):
                             return await member.remove_roles(aoe_role)
 
     @commands.Cog.listener()
