@@ -65,12 +65,6 @@ class Memes(commands.Cog):
             await ctx.send(f"Jumbling {member.display_name}'s name..", delete_after=10)
             # time to jumble...
             new_name = ""
-            # Remove CFS Tag
-            if "[𝓒𝓕𝓢] " in original_name:
-                original_name = original_name.replace("[𝓒𝓕𝓢] ", "")
-            # Take away non-utf8 cahracters.
-            original_name = unidecode(original_name).replace(
-                "[", "").replace("]", "")
             for char in f"{original_name}":
                 if char in vowels:
                     new_name += choice(list(vowels))
@@ -79,19 +73,16 @@ class Memes(commands.Cog):
             await member.edit(nick=new_name.capitalize(), reason="Cannot spell.")
 
     @commands.command()
-    async def dumbass(self, ctx):
+    async def dumbass(self, ctx, *, search_param):
         """ Generates a LMGTFY link of the passed text. """
-        msg_body = ctx.message.system_content.replace("^dumbass ", "")
-
         def url_encode(query):
             """ Encodes URL formatting for query. """
             encoded_query = quote(str(query), safe='')
             return encoded_query
 
-        base_url = "http://lmgtfy.com/?q=^QUERY^"
-        lmgtfy_url = base_url.replace(
-            "^QUERY^", url_encode(str(msg_body)))
-        await ctx.send(lmgtfy_url)
+        clean_param = url_encode(search_param)
+        url = f"http://lmgtfy.com/?q={clean_param}"
+        await ctx.send(url)
 
     @commands.command()
     async def bobme(self, ctx, *, sentence):
