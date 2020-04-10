@@ -166,6 +166,7 @@ def safe_reason_append(base, to_append):
         return base
     return appended
 
+
 class CooldownByContent(commands.CooldownMapping):
     def _bucket_key(self, message):
         return (message.channel.id, message.content)
@@ -177,13 +178,12 @@ class SpamChecker:
     1) It checks if a user has spammed more than 10 times in 12 seconds
     2) It checks if the content has been spammed 15 times in 17 seconds.
     3) It checks if new users have spammed 30 times in 35 seconds.
+    4) It checks if "fast joiners" have spammed 10 times in 12 seconds.
 
     The second case is meant to catch alternating spam bots while the first one
     just catches regular singular spam bots.
 
     From experience these values aren't reached unless someone is actively spamming.
-
-    The third case is used for logging purposes only.
     """
 
     def __init__(self):
@@ -195,11 +195,15 @@ class SpamChecker:
         self.new_user = commands.CooldownMapping.from_cooldown(
             30, 35.0, commands.BucketType.channel)
 
+        self.fast_joiners = cache.ExpiringCache(seconds=1800.0)
+        self.hit_and_run = commands.CooldownMapping.from_cooldown(
+            10, 12, commands.BucketType.channel)
+
     def is_new(self, member):
         now = datetime.datetime.utcnow()
         seven_days_ago = now - datetime.timedelta(days=7)
         ninety_days_ago = now - datetime.timedelta(days=90)
-        return member.created_at > ninety_days_ago and member.joined_at > seven_days_ago
+        return member.created_at > ninety_days_ago or member.joined_at > seven_days_ago
 
     def is_spamming(self, message):
         if message.guild is None:
@@ -207,6 +211,11 @@ class SpamChecker:
 
         current = message.created_at.replace(
             tzinfo=datetime.timezone.utc).timestamp()
+
+        if message.author.id in self.fast_joiners:
+            bucket = self.hit_and_run.get_bucket(message)
+            if bucket.update_rate_limit(current):
+                return True
 
         if self.is_new(message.author):
             new_bucket = self.new_user.get_bucket(message)
@@ -230,6 +239,8 @@ class SpamChecker:
             return False
         is_fast = (joined - self.last_join).total_seconds() <= 2.0
         self.last_join = joined
+        if is_fast:
+            self.fast_joiners[member.id] = True
         return is_fast
 
 # Checks
@@ -278,11 +289,18 @@ class Mod(commands.Cog):
         self.batch_updates.add_exception_type(asyncpg.PostgresConnectionError)
         self.batch_updates.start()
 
+        # (guild_id, channel_id): List[str]
+        # A batch list of message content for message
+        self.message_batches = defaultdict(list)
+        self._batch_message_lock = asyncio.Lock(loop=bot.loop)
+        self.bulk_send_messages.start()
+
     def __repr__(self):
         return '<cogs.Mod>'
 
     def cog_unload(self):
         self.batch_updates.stop()
+        self.bulk_send_messages.stop()
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
@@ -332,6 +350,24 @@ class Mod(commands.Cog):
     async def batch_updates(self):
         async with self._batch_lock:
             await self.bulk_insert()
+
+    @tasks.loop(seconds=10.0)
+    async def bulk_send_messages(self):
+        async with self._batch_message_lock:
+            for ((guild_id, channel_id), messages) in self.message_batches.items():
+                guild = self.bot.get_guild(guild_id)
+                channel = guild and guild.get_channel(channel_id)
+                if channel is None:
+                    continue
+                paginator = commands.Paginator(suffix="", prefix="")
+                for message in messages:
+                    paginator.add_line(message)
+
+                for page in paginator.pages:
+                    try:
+                        await channel.send(page)
+                    except discord.HTTPException:
+                        pass
 
     @cache.cache()
     async def get_guild_config(self, guild_id):
@@ -408,7 +444,11 @@ class Mod(commands.Cog):
             log.info(
                 f'Failed to autoban member {author} (ID: {author.id}) in guild ID {guild_id}')
         else:
-            await message.channel.send(f'Banned {author} (ID: {author.id}) for spamming {mention_count} mentions.')
+            to_send = f"Banned {author} (ID: {author.id}) for spamming {mention_count} mentions."
+            async with self._batch_message_lock:
+                self.message_batches[(
+                    guild_id, message.channel_id)].append(to_send)
+
             log.info(
                 f'Member {author} (ID: {author.id}) has been autobanned from guild ID {guild_id}')
 
@@ -876,7 +916,8 @@ class Mod(commands.Cog):
 
         # member filters
         predicates = [
-            lambda m: can_execute_action(ctx, author, m),  # Only if applicable
+            lambda m: isinstance(m, discord.Member) and can_execute_action(
+                ctx, author, m),  # Only if applicable
             lambda m: not m.bot,  # No bots
             lambda m: m.discriminator != '0000',  # No deleted users
         ]
@@ -911,6 +952,9 @@ class Mod(commands.Cog):
             predicates.append(created)
         if args.joined:
             def joined(member, *, offset=now - datetime.timedelta(minutes=args.joined)):
+                if isinstance(member, discord.User):
+                    # They already left
+                    return True
                 return member.joined_at and member.joined_at > offset
             predicates.append(joined)
         if args.joined_after:
