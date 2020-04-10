@@ -33,9 +33,6 @@ class Twitch(commands.Cog):
         self.game_endpoint = "https://api.twitch.tv/helix/games"
         self.get_streamers.start()
 
-    def cog_unload(self):
-        self.get_streamers.cancel()
-
     async def _get_streamers(self, name: str) -> asyncpg.Record:
         """ To get all streamers in the db. """
         query = """ SELECT * FROM twitchtable WHERE streamer_name = $1; """
@@ -140,11 +137,6 @@ class Twitch(commands.Cog):
                         name="Game/Category", value=f"{game_json['data'][0]['name']}", inline=True)
                     embed.add_field(name="Viewers",
                                     value=f"{stream_json['data'][0]['viewer_count']}", inline=True)
-                    uptime = datetime.datetime.utcnow() - cur_time
-                    up_hours = f"{uptime.seconds / 3600:.0f}"
-                    up_mins = f"{uptime.seconds / 60:.0f}"
-                    embed.add_field(name="Stream uptime",
-                                    value=f"{up_hours} hour{'s' if int(up_hours) == 1 else ''} & {up_mins} minutes", inline=False)
                     embed.set_image(url=stream_json['data'][0]['thumbnail_url'].replace(
                         "{width}", "600").replace("{height}", "400"))
                     embed.set_footer(
