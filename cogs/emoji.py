@@ -1,22 +1,24 @@
+import asyncio
+from collections import Counter, defaultdict
+import datetime
+import io
+import logging
+import re
+
+import asyncpg
+import discord
 from discord.ext import commands, tasks
+import yarl
+
 from utils import db, checks
 
-from collections import Counter, defaultdict
-
-import discord
-import asyncio
-import asyncpg
-import datetime
-import logging
-import yarl
-import re
-import io
 
 log = logging.getLogger(__name__)
 
 BLOB_GUILD_ID = 658130291315048448
 EMOJI_REGEX = re.compile(r'<a?:.+?:([0-9]{15,21})>')
 EMOJI_NAME_REGEX = re.compile(r'[0-9a-zA-Z\_]{2,32}')
+
 
 class BlobEmoji(commands.Converter):
     async def convert(self, ctx, argument):
@@ -29,11 +31,13 @@ class BlobEmoji(commands.Converter):
         elif argument.isdigit():
             emoji = emojis.get(int(argument))
         else:
-            emoji = discord.utils.find(lambda e: e.name == argument, emojis.values())
+            emoji = discord.utils.find(
+                lambda e: e.name == argument, emojis.values())
 
         if emoji is None:
             raise commands.BadArgument('Not a valid blob emoji.')
         return emoji
+
 
 def partial_emoji(argument, *, regex=EMOJI_REGEX):
     if argument.isdigit():
@@ -45,11 +49,13 @@ def partial_emoji(argument, *, regex=EMOJI_REGEX):
         raise commands.BadArgument("That's not a custom emoji...")
     return int(m.group(1))
 
+
 def emoji_name(argument, *, regex=EMOJI_NAME_REGEX):
     m = regex.match(argument)
     if m is None:
         raise commands.BadArgument('Invalid emoji name.')
     return argument
+
 
 class EmojiURL:
     def __init__(self, *, animated, url):
@@ -70,9 +76,11 @@ class EmojiURL:
                     raise RuntimeError
                 return cls(animated=url.path.endswith('.gif'), url=url)
             except Exception:
-                raise commands.BadArgument('Not a valid or supported emoji URL.') from None
+                raise commands.BadArgument(
+                    'Not a valid or supported emoji URL.') from None
         else:
             return cls(animated=partial.animated, url=str(partial.url))
+
 
 def usage_per_day(dt, usages):
     tracking_started = datetime.datetime(2017, 3, 31)
@@ -82,10 +90,11 @@ def usage_per_day(dt, usages):
     else:
         base = dt
 
-    days = (now - base).total_seconds() / 86400 # 86400 seconds in a day
+    days = (now - base).total_seconds() / 86400  # 86400 seconds in a day
     if int(days) == 0:
         return usages
     return usages / days
+
 
 class EmojiStats(db.Table, table_name='emoji_stats'):
     id = db.Column(db.Integer(big=True, auto_increment=True), primary_key=True)
@@ -102,6 +111,7 @@ class EmojiStats(db.Table, table_name='emoji_stats'):
         sql = "CREATE UNIQUE INDEX IF NOT EXISTS emoji_stats_uniq_idx ON emoji_stats (guild_id, emoji_id);"
         return statement + '\n' + sql
 
+
 class Emoji(commands.Cog):
     """Custom emoji tracking"""
 
@@ -116,7 +126,7 @@ class Emoji(commands.Cog):
         self.bulk_insert.stop()
 
     async def cog_command_error(self, ctx, error):
-       if isinstance(error, commands.BadArgument):
+        if isinstance(error, commands.BadArgument):
             await ctx.send(error)
 
     @tasks.loop(seconds=60.0)
@@ -159,7 +169,7 @@ class Emoji(commands.Cog):
             return
 
         if message.author.bot:
-            return # no bots.
+            return  # no bots.
 
         # handle the redirection from #suggestions
         if message.channel.id == 295012914564169728:
@@ -175,14 +185,14 @@ class Emoji(commands.Cog):
     @commands.Cog.listener()
     async def on_guild_emojis_update(self, guild, before, after):
         # we only care when an emoji is added
-        lookup = { e.id for e in before }
+        lookup = {e.id for e in before}
         added = [e for e in after if e.id not in lookup and len(e.roles) == 0]
         if len(added) == 0:
             return
 
         log.info('Server %s has added %s emojis.', guild, len(added))
         if guild.id != BLOB_GUILD_ID:
-            return # not the guild we care about
+            return  # not the guild we care about
 
         # this is the backup channel
         channel = self.bot.get_channel(305841865293430795)
@@ -200,7 +210,7 @@ class Emoji(commands.Cog):
 
     async def get_all_blob_stats(self, ctx):
         blob_guild = self.bot.get_guild(BLOB_GUILD_ID)
-        blob_ids = {e.id: e for e in blob_guild.emojis if len(e.roles) == 0 }
+        blob_ids = {e.id: e for e in blob_guild.emojis if len(e.roles) == 0}
 
         query = "SELECT COALESCE(SUM(total), 0) FROM emoji_stats;"
         total_usage = await ctx.db.fetchrow(query)
@@ -218,7 +228,8 @@ class Emoji(commands.Cog):
 
         total_count = sum(r['Count'] for r in blob_usage)
         global_usage = total_usage[0]
-        e.add_field(name='Total Usage', value=f'{total_count} ({total_count / global_usage:.2%})')
+        e.add_field(name='Total Usage',
+                    value=f'{total_count} ({total_count / global_usage:.2%})')
 
         def elem_to_string(key, count):
             elem = blob_ids.get(key)
@@ -244,7 +255,8 @@ class Emoji(commands.Cog):
         usage = usage[0]
 
         e.add_field(name='Emoji', value=emoji)
-        e.add_field(name='Usage', value=f'{usage}, {usage_per_day(emoji.created_at, usage):.2f}/day')
+        e.add_field(
+            name='Usage', value=f'{usage}, {usage_per_day(emoji.created_at, usage):.2f}/day')
         await ctx.send(embed=e)
 
     @commands.group(hidden=True, invoke_without_command=True)
@@ -260,7 +272,8 @@ class Emoji(commands.Cog):
     @checks.is_admin()
     async def blobsort(self, ctx):
         """Sorts the blob post."""
-        emojis = sorted([e.name for e in ctx.guild.emojis if len(e.roles) == 0])
+        emojis = sorted(
+            [e.name for e in ctx.guild.emojis if len(e.roles) == 0])
         fp = io.BytesIO()
         pages = [emojis[i:i + 30] for i in range(0, len(emojis), 30)]
 
@@ -289,7 +302,8 @@ class Emoji(commands.Cog):
         return f'{name}: {count} uses ({p:.1%}), {per_day:.1f} uses/day.'
 
     async def get_guild_stats(self, ctx):
-        e = discord.Embed(title='Emoji Leaderboard', colour=discord.Colour.blurple())
+        e = discord.Embed(title='Emoji Leaderboard',
+                          colour=discord.Colour.blurple())
 
         query = """SELECT
                        COALESCE(SUM(total), 0) AS "Count",
@@ -305,7 +319,8 @@ class Emoji(commands.Cog):
         total = record['Count']
         emoji_used = record['Emoji']
         per_day = usage_per_day(ctx.me.joined_at, total)
-        e.set_footer(text=f'{total} uses over {emoji_used} emoji for {per_day:.2f} uses per day.')
+        e.set_footer(
+            text=f'{total} uses over {emoji_used} emoji for {per_day:.2f} uses per day.')
 
         query = """SELECT emoji_id, total
                    FROM emoji_stats
@@ -316,7 +331,8 @@ class Emoji(commands.Cog):
 
         top = await ctx.db.fetch(query, ctx.guild.id)
 
-        e.description = '\n'.join(f'{i}. {self.emoji_fmt(emoji, count, total)}' for i, (emoji, count) in enumerate(top, 1))
+        e.description = '\n'.join(
+            f'{i}. {self.emoji_fmt(emoji, count, total)}' for i, (emoji, count) in enumerate(top, 1))
         await ctx.send(embed=e)
 
     async def get_emoji_stats(self, ctx, emoji_id):
@@ -327,7 +343,8 @@ class Emoji(commands.Cog):
         async with ctx.session.get(cdn) as resp:
             if resp.status == 404:
                 e.description = "This isn't a valid emoji."
-                e.set_thumbnail(url='https://this.is-serious.business/09e106.jpg')
+                e.set_thumbnail(
+                    url='https://this.is-serious.business/09e106.jpg')
                 return await ctx.send(embed=e)
 
         e.set_thumbnail(url=cdn)
@@ -390,21 +407,25 @@ class Emoji(commands.Cog):
                    ORDER BY total DESC
                 """
 
-        e = discord.Embed(title='Emoji Leaderboard', colour=discord.Colour.blurple())
+        e = discord.Embed(title='Emoji Leaderboard',
+                          colour=discord.Colour.blurple())
         records = await ctx.db.fetch(query, ctx.guild.id, emoji_ids)
 
         total = sum(a for _, a in records)
         emoji_used = len(records)
         per_day = usage_per_day(ctx.me.joined_at, total)
-        e.set_footer(text=f'{total} uses over {emoji_used} emoji for {per_day:.2f} uses per day.')
+        e.set_footer(
+            text=f'{total} uses over {emoji_used} emoji for {per_day:.2f} uses per day.')
         top = records[:10]
-        value = '\n'.join(self.emoji_fmt(emoji, count, total) for (emoji, count) in top)
+        value = '\n'.join(self.emoji_fmt(emoji, count, total)
+                          for (emoji, count) in top)
         e.add_field(name=f'Top {len(top)}', value=value or 'Nothing...')
 
         record_count = len(records)
         if record_count > 10:
             bottom = records[-10:] if record_count >= 20 else records[-record_count + 10:]
-            value = '\n'.join(self.emoji_fmt(emoji, count, total) for (emoji, count) in bottom)
+            value = '\n'.join(self.emoji_fmt(emoji, count, total)
+                              for (emoji, count) in bottom)
             e.add_field(name=f'Bottom {len(bottom)}', value=value)
 
         await ctx.send(embed=e)
@@ -429,7 +450,8 @@ class Emoji(commands.Cog):
 
         reason = f'Action done by {ctx.author} (ID: {ctx.author.id})'
 
-        emoji_count = sum(e.animated == emoji.animated for e in ctx.guild.emojis)
+        emoji_count = sum(
+            e.animated == emoji.animated for e in ctx.guild.emojis)
         if emoji_count >= ctx.guild.emoji_limit:
             return await ctx.send('There are no more emoji slots in this server.')
 
@@ -439,7 +461,8 @@ class Emoji(commands.Cog):
             if int(resp.headers['Content-Length']) >= (256 * 1024):
                 return await ctx.send('Image is too big.')
             data = await resp.read()
-            coro = ctx.guild.create_custom_emoji(name=name, image=data, reason=reason)
+            coro = ctx.guild.create_custom_emoji(
+                name=name, image=data, reason=reason)
             async with ctx.typing():
                 try:
                     created = await asyncio.wait_for(coro, timeout=10.0)
@@ -449,6 +472,7 @@ class Emoji(commands.Cog):
                     return await ctx.send(f'Failed to create emoji somehow: {e}')
                 else:
                     return await ctx.send(f'Created {created}')
+
 
 def setup(bot):
     bot.add_cog(Emoji(bot))
