@@ -38,7 +38,8 @@ class Specialist(commands.Cog):
     async def remove_reacts(self, message: discord.Message, role: discord.Role, event_type: str):
         for reaction in message.reactions:
             async for user in reaction.users():
-                if not self.member_in_multiple(user, event_type):
+                await message.remove_reaction(user, reaction)
+                if not await self.member_in_multiple(user, event_type):
                     await user.remove_roles(role)
 
     async def member_in_multiple(self, member: discord.Member, event_type: str):
@@ -206,23 +207,24 @@ class Specialist(commands.Cog):
         event_check_query = """DELETE FROM reminders
                                WHERE extra #>> '{kwargs,message_id}' = $1
                             """
-        status = await ctx.db.fetch(query, record_id, str(ctx.author.id))
-        if not status:
+        records = await ctx.db.fetch(query, record_id, str(ctx.author.id))
+        if not records:
             return await ctx.send("Could not delete event by that ID. Are you sure it's there and you're it's author?")
-        message_deets = {record['extra']['args'][1]: record['extra']
-                         ['kwargs']['message_id'] for record in status}
-        for chan_id, m_id in message_deets:
+        message_deets = {int(record['extra']['args'][1]): str(
+            record['extra']['kwargs']['message_id']) for record in records}
+        for chan_id, m_id in message_deets.items():
             channel = self.bot.get_channel(chan_id)
             message = await channel.fetch_message(m_id)
             await ctx.db.execute(event_check_query, str(message.id))
-            if status['event'] == "event_check":
+        for record in records:
+            if record['event'] == "event_check":
                 continue
-            if status['event'] == "bfme2":
+            if record['event'] == "bfme2":
                 role = ctx.guild.get_role(BFME_ROLE_ID)
-                self.remove_reacts(message, role, "bfme2")
-            elif status['event'] == "aoe2":
+                await self.remove_reacts(message, role, "bfme2")
+            elif record['event'] == "aoe2":
                 role = ctx.guild.get_role(AOE_ROLE_ID)
-                self.remove_reacts(message, role, "aoe2")
+                await self.remove_reacts(message, role, "aoe2")
         return await ctx.send("Deleted event.")
 
     @commands.Cog.listener()
@@ -244,7 +246,7 @@ class Specialist(commands.Cog):
                 """
         record = await self.bot.pool.fetchrow(query, str(message_id))
         members = {member.id for member in reacted_list}
-        if len(members) < 3:
+        if len(members) < 1:  # TODO Change back to 3 after testing.
             if record['event'] == "bfme2":
                 role = channel.guild.get_role(BFME_ROLE_ID)
                 await self.remove_reacts(prev_message, role, "bfme2")
@@ -254,7 +256,7 @@ class Specialist(commands.Cog):
             del_query = """DELETE FROM reminders
                         WHERE extra #>> '{kwargs,message_id}' = $1;
                         """
-            await self.bot.pool.execute(del_query, event.kwargs['message_id'])
+            await self.bot.pool.execute(del_query, str(event.kwargs['message_id']))
             return await prev_message.edit(content=f"The event for ***{message}*** has been cancelled due to lack of members!", embed=None)
 
     @commands.Cog.listener()

@@ -1387,7 +1387,7 @@ class Mod(commands.Cog):
                             const=lambda m: len(m.attachments))
         parser.add_argument('--reactions', action='store_const',
                             const=lambda m: len(m.reactions))
-        parser.add_argument('--search', type=int, default=100)
+        parser.add_argument('--search', type=int)
         parser.add_argument('--after', type=int)
         parser.add_argument('--before', type=int)
 
@@ -1446,6 +1446,13 @@ class Mod(commands.Cog):
             if args._not:
                 return not r
             return r
+
+        if args.after:
+            if args.search is None:
+                args.search = 2000
+
+        if args.search is None:
+            args.search = 100
 
         args.search = max(0, min(2000, args.search))  # clamp from 0-2000
         await self.do_removal(ctx, args.search, predicate, before=args.before, after=args.after)

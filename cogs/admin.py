@@ -195,7 +195,7 @@ class Admin(commands.Cog):
         # however, things like "fast forward" and files
         # along with the text "already up-to-date" are in stdout
 
-        if stdout.startswith('Already up-to-date.'):
+        if stdout.startswith('Already up to date.'):
             return await ctx.send(stdout)
 
         modules = self.find_modules_from_git(stdout)

@@ -808,29 +808,6 @@ class Stats(commands.Cog):
         description.append(
             f'Commands Waiting: {command_waiters}, Batch Locked: {is_locked}')
 
-        # RESUME/IDENTIFY data
-        yesterday = datetime.datetime.utcnow() - datetime.timedelta(days=1)
-        total_resumes = sum(1 for dt in self._resumes if dt > yesterday)
-        identifies = {
-            shard_id: sum(1 for dt in dates if dt > yesterday)
-            for shard_id, dates in self._identifies.items()
-        }
-        absolute_total_identifies = sum(identifies.values())
-        resume_info_builder = [
-            f'Total RESUMEs: {total_resumes}',
-            f'Total IDENTIFYs: {absolute_total_identifies}'
-        ]
-        for shard_id, total in identifies.items():
-            resume_info_builder.append(
-                f'Shard ID {shard_id} IDENTIFYs: {total}')
-
-        if absolute_total_identifies >= (len(self.bot.shards) * 5):
-            total_warnings += 1
-            embed.colour = WARNING
-
-        embed.add_field(name='Gateway (last 24 hours)',
-                        value='\n'.join(resume_info_builder), inline=False)
-
         memory_usage = self.process.memory_full_info().uss / 1024**2
         cpu_usage = self.process.cpu_percent() / psutil.cpu_count()
         embed.add_field(
@@ -848,6 +825,68 @@ class Stats(commands.Cog):
 
         embed.set_footer(text=f'{total_warnings} warning(s)')
         embed.description = '\n'.join(description)
+        await ctx.send(embed=embed)
+
+    @commands.command(hidden=True)
+    @commands.is_owner()
+    async def gateway(self, ctx):
+        """Gateway related stats."""
+
+        yesterday = datetime.datetime.utcnow() - datetime.timedelta(days=1)
+        total_resumes = sum(1 for dt in self._resumes if dt > yesterday)
+        identifies = {
+            shard_id: sum(1 for dt in dates if dt > yesterday)
+            for shard_id, dates in self._identifies.items()
+        }
+        total_identifies = sum(identifies.values())
+
+        builder = [
+            f'Total RESUMEs: {total_resumes}',
+            f'Total IDENTIFYs: {total_identifies}'
+        ]
+
+        shard_count = len(self.bot.shards)
+        if total_identifies > (shard_count * 10):
+            issues = 2 + (total_identifies // 10) - shard_count
+        else:
+            issues = 0
+
+        for shard_id, shard in self.bot.shards.items():
+            identify = identifies.get(shard_id, 0)
+            badge = None
+            # Shard WS closed
+            # Shard Task failure
+            # Shard Task complete (no failure)
+            if shard._task.done():
+                exc = shard._task.exception()
+                if exc is not None:
+                    badge = '\N{FIRE}'
+                    issues += 1
+                else:
+                    badge = '\U0001f504'
+            elif not shard.ws.open:
+                badge = '<:offline:316856575501402112>'
+                issues += 1
+
+            if badge is None:
+                badge = '<:online:316856575413321728>'
+
+            if identify == 0:
+                builder.append(f'Shard ID {shard_id}: {badge}')
+            else:
+                builder.append(
+                    f'Shard ID {shard_id}: {badge} ({identify} IDENTIFYs)')
+
+        if issues == 0:
+            colour = 0x43B581
+        elif issues < len(self.bot.shards) // 4:
+            colour = 0xF09E47
+        else:
+            colour = 0xF04947
+
+        embed = discord.Embed(colour=colour, title='Gateway (last 24 hours)')
+        embed.description = '\n'.join(builder)
+        embed.set_footer(text=f'{issues} warnings')
         await ctx.send(embed=embed)
 
     @commands.command(hidden=True, aliases=['cancel_task'])
