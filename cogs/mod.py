@@ -1306,7 +1306,7 @@ class Mod(commands.Cog):
         else:
             await self.do_removal(ctx, 100, lambda e: substr in e.content)
 
-    @remove.command(name='bot')
+    @remove.command(name='bot', aliases=['bots'])
     async def _bot(self, ctx, prefix=None, search=100):
         """Removes a bot user's messages and messages with their optional prefix."""
 
@@ -1856,7 +1856,7 @@ class Mod(commands.Cog):
             raise NoMuteRole()
 
         if ctx.author._roles.has(role_id):
-            return await ctx.send('Somehow you are already muted <:rooThink:596576798351949847>')
+            return await ctx.send('Somehow you are already muted <:rooThink:698436190311022652>')
 
         created_at = ctx.message.created_at
         if duration.dt > (created_at + datetime.timedelta(days=1)):

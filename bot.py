@@ -109,8 +109,6 @@ class RoboHz(commands.AutoShardedBot):
             await ctx.author.send('This command cannot be used in private messages.')
         elif isinstance(error, commands.DisabledCommand):
             await ctx.author.send('Sorry. This command is disabled and cannot be used.')
-        elif isinstance(error, commands.MissingRequiredArgument):
-            await ctx.send(f"'{error.param}' is a required argument that you are missing.")
         elif isinstance(error, commands.CommandInvokeError):
             original = error.original
             if not isinstance(original, discord.HTTPException):

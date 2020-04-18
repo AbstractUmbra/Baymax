@@ -1,13 +1,11 @@
-
 """ Memes Cog. """
 
+from math import ceil
 import os
 from random import choice, sample
-from math import ceil
 from time import sleep
 from urllib.parse import quote
 
-from unidecode import unidecode
 import discord
 from discord.ext import commands
 
@@ -24,8 +22,6 @@ class Memes(commands.Cog):
     async def twist(self, ctx):
         """ Moves all voice members to a random VC. """
         for dcmember in all_voice_members_guild(ctx):
-            await ctx.send(f"You are weak, {dcmember}",
-                           delete_after=5)
             await dcmember.move_to(
                 choice(ctx.message.guild.voice_channels), reason="Was too weak."
             )
@@ -62,7 +58,6 @@ class Memes(commands.Cog):
             if member is ctx.guild.owner:
                 continue
             original_name = member.display_name
-            await ctx.send(f"Jumbling {member.display_name}'s name..", delete_after=10)
             # time to jumble...
             new_name = ""
             for char in f"{original_name}":
@@ -70,7 +65,7 @@ class Memes(commands.Cog):
                     new_name += choice(list(vowels))
                 else:
                     new_name += char
-            await member.edit(nick=new_name.capitalize(), reason="Cannot spell.")
+            await member.edit(nick=new_name.capitalize())
 
     @commands.command()
     async def dumbass(self, ctx, *, search_param):

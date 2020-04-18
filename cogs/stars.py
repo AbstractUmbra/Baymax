@@ -1,19 +1,20 @@
+import asyncio
+from collections import Counter, defaultdict
+import datetime
+import json
+import logging
+import random
+import re
+import time
+import weakref
+
+import asyncpg
+import discord
 from discord.ext import commands, tasks
+
 from utils import checks, db, cache
 from utils.formats import plural, human_join
 from utils.paginator import Pages
-from collections import Counter, defaultdict
-
-import discord
-import datetime
-import time
-import json
-import random
-import asyncio
-import asyncpg
-import logging
-import weakref
-import re
 
 log = logging.getLogger(__name__)
 

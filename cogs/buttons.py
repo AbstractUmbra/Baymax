@@ -128,7 +128,7 @@ class SpoilerCache:
 
     def to_spoiler_embed(self, ctx, storage_message):
         """ Spoiler embed! """
-        description = 'React with <:doot:459014535949582357> to reveal the spoiler.'
+        description = 'React with <:Revan:695483590485737482> to reveal the spoiler.'
         embed = discord.Embed(
             title=f'{self.title} Spoiler', description=description)
         if self.has_single_image() and self.text is None:

@@ -9,7 +9,6 @@ parsedatetime
 lru_dict
 python-dateutil
 lxml
-unidecode
 pytz
 
 #### Shell

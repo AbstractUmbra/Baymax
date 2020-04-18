@@ -492,8 +492,8 @@ class Meta(commands.Cog):
 
         channel_info = []
         key_to_emoji = {
-            discord.TextChannel: '<:text_channel:586339098172850187>',
-            discord.VoiceChannel: '<:voice_channel:586339098524909604>',
+            discord.TextChannel: '<:TextChannel:672157505358528524>',
+            discord.VoiceChannel: '<:VoiceChannel:672157538145402889>',
         }
         for key, total in totals.items():
             secrets = secret[key]
@@ -542,10 +542,10 @@ class Meta(commands.Cog):
                 boosts = f'{boosts}\nLast Boost: {last_boost} ({time.human_timedelta(last_boost.premium_since, accuracy=2)})'
             e.add_field(name='Boosts', value=boosts, inline=False)
 
-        fmt = f'<:online:316856575413321728> {member_by_status["online"]} ' \
-              f'<:idle:316856575098880002> {member_by_status["idle"]} ' \
-              f'<:dnd:316856574868193281> {member_by_status["dnd"]} ' \
-              f'<:offline:316856575501402112> {member_by_status["offline"]}\n' \
+        fmt = f'<:online:672157495908630538> {member_by_status["online"]} ' \
+              f'<:idle:672157477898289152> {member_by_status["idle"]} ' \
+              f'<:dnd:672157452468224030> {member_by_status["dnd"]} ' \
+              f'<:offline:672157486710652937> {member_by_status["offline"]}\n' \
               f'Total: {guild.member_count}'
 
         e.add_field(name='Members', value=fmt, inline=False)

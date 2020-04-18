@@ -33,10 +33,10 @@ def requires_autoroles():
 
 class AutoRolesConfig:
     """ Generic config object - dataclass. """
-    __slots__ = ("bot", "id", "channel_id", "message_id")
+    __slots__ = ("bot", "guild_id", "channel_id", "message_id")
 
     def __init__(self, *, guild_id, bot, record=None):
-        self.id = guild_id
+        self.guild_id = guild_id
         self.bot = bot
 
         if record:
@@ -46,7 +46,7 @@ class AutoRolesConfig:
     @property
     def channel(self):
         """ Returns the discord.TextChannel we use for config. """
-        guild = self.bot.get_guild(self.id)
+        guild = self.bot.get_guild(self.guild_id)
         return guild and guild.get_channel(self.channel_id)
 
 
@@ -92,7 +92,7 @@ class AutoRoles(commands.Cog):
         results = await connection.fetchrow(query, guild_id)
         return AutoRolesConfig(guild_id=guild_id, bot=self.bot, record=results)
 
-    async def get_autoroles(self, guild_id: int, *, connection=None) -> asyncpg.Record:
+    async def get_autoroles(self, guild_id: int, *, connection=None) -> typing.List[asyncpg.Record]:
         """ Gets the autoroles for the current guild. """
         connection = connection or self.bot.pool
         query = """SELECT *
@@ -102,7 +102,7 @@ class AutoRoles(commands.Cog):
         return await connection.fetch(query, guild_id)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_add(self, payload):
+    async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
         """ On reaction_add for live data. """
         rrole_record = None  # placeholder
         if not payload.guild_id:
@@ -170,7 +170,7 @@ class AutoRoles(commands.Cog):
             return await member.add_roles(requested_role, reason="Autorole", atomic=True)
 
     @commands.Cog.listener()
-    async def on_raw_reaction_remove(self, payload):
+    async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
         """ On reaction_remove for live data. """
         if not payload.guild_id:
             return
@@ -208,13 +208,13 @@ class AutoRoles(commands.Cog):
         return await reaction_message.remove_reaction(payload.emoji, member)
 
     @commands.group(invoke_without_command=True, aliases=["rr"])
-    async def reactrole(self, ctx):
+    async def reactrole(self, ctx: commands.Context):
         """ Time for some react roles! """
         if not ctx.invoked_subcommand:
             return await self.rrole_list(ctx)
 
     @reactrole.command(name="config")
-    async def rrole_config(self, ctx, message: discord.Message):
+    async def rrole_config(self, ctx: commands.Context, message: discord.Message):
         """ Configure this guilds reaction roles. """
         query = """INSERT INTO autoroles_config (guild_id, channel_id, message_id)
                    VALUES ($1, $2, $3)
@@ -226,7 +226,7 @@ class AutoRoles(commands.Cog):
     @commands.has_guild_permissions(manage_roles=True)
     @reactrole.command(name="add")
     async def rrole_add(self,
-                        ctx,
+                        ctx: commands.Context,
                         role: discord.Role,
                         emoji: typing.Union[discord.Emoji, discord.PartialEmoji, str],
                         approval_channel: typing.Optional[discord.TextChannel]):
@@ -274,7 +274,7 @@ class AutoRoles(commands.Cog):
 
     @requires_autoroles()
     @reactrole.command(name="remove")
-    async def rrole_remove(self, ctx, record_id: int = None):
+    async def rrole_remove(self, ctx: commands.Context, record_id: int = None):
         """ Remove a reaction role configuration. """
         if not record_id:
             await ctx.send("You have not provided a record id to delete.")
@@ -304,7 +304,7 @@ class AutoRoles(commands.Cog):
     @requires_autoroles()
     @commands.has_guild_permissions(manage_roles=True)
     @reactrole.command(name="list")
-    async def rrole_list(self, ctx):
+    async def rrole_list(self, ctx: commands.Context):
         """ List the reactions roles for this guild. """
         query = "SELECT * FROM autoroles WHERE guild_id = $1;"
         rrole_stuff = await ctx.db.fetch(query, ctx.guild.id)
@@ -330,6 +330,6 @@ class AutoRoles(commands.Cog):
         return await ctx.send(embed=embed)
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     """ Cog setup. """
     bot.add_cog(AutoRoles(bot))

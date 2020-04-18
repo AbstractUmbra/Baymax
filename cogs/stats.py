@@ -119,7 +119,7 @@ class Stats(commands.Cog):
 
     def cog_unload(self):
         self.bulk_insert_loop.stop()
-        self._gateway_worker.cancel()
+        self.gateway_worker.cancel()
 
     @tasks.loop(seconds=10.0)
     async def bulk_insert_loop(self):
@@ -662,7 +662,7 @@ class Stats(commands.Cog):
             return
 
         error = error.original
-        if isinstance(error, (discord.Forbidden, discord.NotFound, CannotPaginate)):
+        if isinstance(error, (discord.Forbidden, discord.LoginFailure, discord.NotFound, CannotPaginate)):
             return
 
         e = discord.Embed(title='Command Error', colour=0xcc3366)
@@ -865,11 +865,11 @@ class Stats(commands.Cog):
                 else:
                     badge = '\U0001f504'
             elif not shard.ws.open:
-                badge = '<:offline:316856575501402112>'
+                badge = '<:offline:672157486710652937>'
                 issues += 1
 
             if badge is None:
-                badge = '<:online:316856575413321728>'
+                badge = '<:online:672157495908630538>'
 
             if identify == 0:
                 builder.append(f'Shard ID {shard_id}: {badge}')
