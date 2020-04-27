@@ -20,7 +20,7 @@ class TokenWorks(commands.Cog):
         return token_id
 
     @commands.group()
-    @checks.has_guild_permissions(manage_members=True)
+    @checks.has_guild_permissions(manage_roles=True)
     async def token(self, ctx):
         """ Token primary command. """
         if not ctx.invoked_subcommand:
@@ -48,7 +48,7 @@ class TokenWorks(commands.Cog):
         client_info = InfoClient(loop=asyncio.get_event_loop())
         try:
             await client_info.start(_token)
-        except discord.LoginFailure:
+        except (discord.LoginFailure, discord.ConnectionClosed, discord.HTTPException):
             await ctx.send(embed=embed)
             return token_user
         embed.add_field(name="Owner", value=f"{client_info.owner}")
@@ -84,10 +84,9 @@ class TokenWorks(commands.Cog):
         if isinstance(error, discord.errors.LoginFailure):
             return await ctx.send("Nice. Not a valid token.")
         elif isinstance(error, commands.CheckFailure):
-            return await ctx.send(f"Sorry to use `{ctx.command.name}` you need to be the owner of have **Manage Members**.")
+            return await ctx.send(f"Sorry to use `{ctx.command.name}` you need to be the owner of have **Manage Roles**.")
         else:
             return await ctx.send(f"```{type(error)}\n{error}```")
-
 
 
 class SpamClient(discord.Client):
@@ -100,12 +99,13 @@ class SpamClient(discord.Client):
     async def on_ready(self):
         """ On ready for warn. """
         for channel in self.get_all_channels():
-            try:
-                await channel.send("Oh look, you've leaked your token and now I can do this. Please go and change it.")
-            except Exception as err:
-                print(err)
-            else:
-                self.messages_sent += 1
+            if isinstance(channel, discord.TextChannel):
+                try:
+                    await channel.send("Oh look, you've leaked your token and now I can do this. Please go and change it.")
+                except Exception as err:
+                    print(err)
+                else:
+                    self.messages_sent += 1
         await self.close()
 
 
