@@ -62,8 +62,9 @@ class Twitch(commands.Cog):
     async def streamdb(self, ctx: commands.Context) -> None:
         query = """SELECT * FROM twitchtable;"""
         results = await self.bot.pool.fetch(query)
-        for item in results:
-            await ctx.send(f"{item['guild_id']} -> {item['channel_id']} -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}")
+        embed = discord.Embed(title="Streamer details", colour=discord.Colour.blurple())
+        embed.description = "\n".join(f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}" for item in results)
+        await ctx.send(embed=embed)
 
     @twitch.command(name="add")
     @commands.has_guild_permissions(manage_channels=True)
