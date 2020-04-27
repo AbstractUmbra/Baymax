@@ -26,7 +26,7 @@ class TokenWorks(commands.Cog):
         if not ctx.invoked_subcommand:
             return
 
-    @token.command(name="i")
+    @token.command(name="i", aliases=["info", "information"])
     async def token_info(self, ctx, *, _token: str):
         """ Use the token to get the information on the bot. """
         try:
@@ -58,7 +58,7 @@ class TokenWorks(commands.Cog):
         await ctx.send(embed=embed)
         return token_user
 
-    @token.command(name="w")
+    @token.command(name="w", aliases=["warn", "warning"])
     async def token_warn(self, ctx, *, token: str):
         """ Token boy. This will warn the author of the leaked token. """
         try:
