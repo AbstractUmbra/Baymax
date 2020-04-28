@@ -15,13 +15,40 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with Robo-Hz. If not, see <https://www.gnu.org/licenses/>.
 """
-import time
 
+
+"""
+This code and all contents are responsibly sourced from 
+chr1sBot discord bot and author
+(https://github.com/crrapi) | (https://github.com/crrapi/chr1sBot)
+RoboDanny licensing below:
+"""
+"""
+chr1sBot Discord Bot
+
+Copyright(C) 2020 crrapi
+
+chr1sBot is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+chr1sBot is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with chr1sBot. If not, see < https: // www.gnu.org/licenses/>.
+"""
+
+
+
+
+import time
 import async_cse
 import discord
 from discord.ext import commands, menus
-
-
 class GoogleMenuSource(menus.ListPageSource):
     """ Format discord.ext.menus for Google searches. """
 
