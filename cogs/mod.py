@@ -1,3 +1,21 @@
+"""
+Robo-Hz Discord Bot
+Copyright (C) 2020 64Hz
+
+Robo-Hz is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Robo-Hz is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with Robo-Hz. If not, see <https://www.gnu.org/licenses/>.
+"""
+
 import asyncio
 import argparse
 from collections import Counter, defaultdict
@@ -294,6 +312,8 @@ class Mod(commands.Cog):
         self.message_batches = defaultdict(list)
         self._batch_message_lock = asyncio.Lock(loop=bot.loop)
         self.bulk_send_messages.start()
+
+        self._recently_blocked = set()
 
     def __repr__(self):
         return '<cogs.Mod>'
@@ -1885,6 +1905,120 @@ class Mod(commands.Cog):
     async def on_selfmute_error(self, ctx, error):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Missing a duration to selfmute for.')
+
+    def get_block_channel(self, guild, channel):
+        """ Get the active block channel. """
+        if channel.id == 174702278673039360:
+            return guild.get_channel(174702278673039360)
+        return [channel]
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_roles=True)
+    async def block(self, ctx, channel=None, *, member: discord.Member):
+        """Blocks a user from your channel."""
+
+        reason = f'Block by {ctx.author} (ID: {ctx.author.id})'
+
+        if channel:
+            channels = [channel]
+        else:
+            channels = ctx.guild.text_channels
+
+        try:
+            for channel in channels:
+                await channel.set_permissions(
+                    member,
+                    send_messages=False,
+                    add_reactions=False,
+                    reason=reason)
+        except:
+            await ctx.send('\N{THUMBS DOWN SIGN}')
+        else:
+            await ctx.send('\N{THUMBS UP SIGN}')
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_roles=True)
+    async def tempblock(self, ctx, channel=None, duration: time.FutureTime, *, member: discord.Member):
+        """Temporarily blocks a user from your channel.
+
+        The duration can be a a short time form, e.g. 30d or a more human
+        duration such as "until thursday at 3PM" or a more concrete time
+        such as "2017-12-31".
+
+        Note that times are in UTC.
+        """
+
+        reminder = self.bot.get_cog('Reminder')
+        if reminder is None:
+            return await ctx.send(
+                'Sorry, this functionality is currently unavailable. Try again later?')
+
+        if channel:
+            channels = [channel]
+        else:
+            channels = ctx.guild.text_channels
+        timer = await reminder.create_timer(duration.dt, 'tempblock', ctx.guild.id, ctx.author.id,
+                                            ctx.channel.id, member.id,
+                                            connection=ctx.db,
+                                            created=ctx.message.created_at)
+
+        reason = f'Tempblock by {ctx.author} (ID: {ctx.author.id}) until {duration.dt}'
+
+        try:
+            for channel in channels:
+                await channel.set_permissions(
+                    member,
+                    send_messages=False,
+                    add_reactions=False,
+                    reason=reason)
+        except:
+            await ctx.send('\N{THUMBS DOWN SIGN}')
+        else:
+            await ctx.send(
+                f'Blocked {member}: {time.human_timedelta(duration.dt, source=timer.created_at)}.')
+
+    @commands.Cog.listener()
+    async def on_tempblock_timer_complete(self, timer):
+        """ Custom event for timer - when it completes. """
+        guild_id, mod_id, channel_id, member_id = timer.args
+
+        guild = self.bot.get_guild(guild_id)
+        if guild is None:
+            # RIP
+            return
+
+        channel = guild.get_channel(channel_id)
+        if channel is None:
+            # RIP x2
+            return
+
+        to_unblock = guild.get_member(member_id)
+        if to_unblock is None:
+            # RIP x3
+            return
+
+        moderator = guild.get_member(mod_id)
+        if moderator is None:
+            try:
+                moderator = await self.bot.fetch_user(mod_id)
+            except:
+                # request failed somehow
+                moderator = f'Mod ID {mod_id}'
+            else:
+                moderator = f'{moderator} (ID: {mod_id})'
+        else:
+            moderator = f'{moderator} (ID: {mod_id})'
+
+        reason = f'Automatic unblock from timer made on {timer.created_at} by {moderator}.'
+
+        for chann in self.get_block_channel(guild, channel):
+            try:
+                await chann.set_permissions(to_unblock,
+                                            send_messages=None,
+                                            add_reactions=None,
+                                            reason=reason)
+            except:
+                pass
 
 
 def setup(bot):

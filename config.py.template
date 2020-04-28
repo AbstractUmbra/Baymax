@@ -6,3 +6,4 @@ stat_webhook = (689305251588997121,
 twitch_headers = {"Client-ID": "4la4i9nltujg0bv86mgr6zt6p8vvfj",
                   "Authorization": "Bearer zpnybut3hdx6b9bx5j0jti11wjaiee", # Replace this with a real twitch secret
                   "User-Agent": "Robo-Hz v1.0"}
+google_key = "GOOGLEKEYWOOOOO"
