@@ -17,10 +17,12 @@ along with Robo-Hz. If not, see <https://www.gnu.org/licenses/>.
 """
 
 import asyncio
+import codecs
 from collections import Counter
 import inspect
 import itertools
 import os
+import pathlib
 from typing import Union
 import unicodedata
 
@@ -398,6 +400,26 @@ class Meta(commands.Cog):
 
         final_url = f'<{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>'
         await ctx.send(final_url)
+
+    @commands.command()
+    async def linecount(self, ctx):
+        pylines = 0
+        pyfiles = 0
+        for path, subdirs, files in os.walk("."):
+            for name in files:
+                if name.endswith(".py"):
+                    pyfiles += 1
+                    with codecs.open("./" + str(pathlib.PurePath(path, name)), "r", "utf-8") as file:
+                        for idx, line in enumerate(file):
+                            if line.strip().startswith("#") or len(line.strip()) is 0:  # Skip comments!
+                                pass
+                            else:
+                                pylines += 1
+        embed = discord.Embed(colour=discord.Colour.red(
+        ), description="Total source line count for Robo-Hz.")
+        embed.set_footer(
+            text=f"{pyfiles} files with a total of {pylines} lines of code.")
+        return await ctx.send(embed=embed)
 
     @commands.command(name='quit', hidden=True)
     @commands.is_owner()

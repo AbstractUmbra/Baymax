@@ -3,6 +3,7 @@ from collections import Counter, deque
 import datetime
 import logging
 import json
+import os
 import sys
 import traceback
 
@@ -21,23 +22,29 @@ Hello! I am a bot written by Revan#0640 to provide some nice utilities.
 
 LOGGER = logging.getLogger(__name__)
 
+os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
+os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
+os.environ["JISHAKU_HIDE"] = "True"
+os.environ["JISHAKU_RETAIN"] = "True"
+
 COGS = (
     'jishaku',
     'cogs.admin',
     'cogs.autoroles',
+    # 'cogs.botspw',
     'cogs.buttons',
     'cogs.config',
     'cogs.dnd',
     'cogs.emoji',
     'cogs.funhouse',
     'cogs.google',
-    'cogs.memes',
     'cogs.meta',
     'cogs.mod',
     'cogs.reminders',
     'cogs.specialist',
     'cogs.stats',
     'cogs.tags',
+    'cogs.tokens',
     'cogs.twitch',
 )
 
@@ -46,10 +53,9 @@ def _prefix_callable(bot, msg):
     user_id = bot.user.id
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
     if msg.guild is None:
-        base.append('!')
-        base.append('?')
+        base.append('r!')
     else:
-        base.extend(bot.prefixes.get(msg.guild.id, ['?', '!']))
+        base.extend(bot.prefixes.get(msg.guild.id, ['r!']))
     return base
 
 
@@ -67,6 +73,7 @@ class RoboHz(commands.AutoShardedBot):
                          status=discord.Status.online)
 
         self.client_id = config.client_id
+        self.bots_key = config.bots_key
         self.session = aiohttp.ClientSession(loop=self.loop)
 
         self._prev_events = deque(maxlen=10)
@@ -124,7 +131,7 @@ class RoboHz(commands.AutoShardedBot):
 
     def get_raw_guild_prefixes(self, guild_id):
         """ The raw prefixes. """
-        return self.prefixes.get(guild_id, ['r!', '^'])
+        return self.prefixes.get(guild_id, ['r!'])
 
     async def set_guild_prefixes(self, guild, prefixes):
         """ Set the prefixes. """

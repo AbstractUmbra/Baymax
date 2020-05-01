@@ -36,12 +36,23 @@ class TokenWorks(commands.Cog):
         token_id = int(base64.b64decode(token))
         return token_id
 
-    @commands.group()
+    @commands.group(hidden=True)
     @checks.has_guild_permissions(manage_roles=True)
     async def token(self, ctx):
         """ Token primary command. """
         if not ctx.invoked_subcommand:
             return
+
+    @token.command(name="r", aliases=["raw"])
+    async def token_raw(self, ctx, *, _token: str):
+        """ Use the token to get raw API deets. """
+        data = await self.bot.session.get("https://discordapp.com/api/oauth2/applications/@me", headers={
+            "Authorization": f"Bot {_token}"})
+        data_json = await data.json()
+        if data_json['message'] == "401: Unauthorized":
+            return await ctx.send("They changed the token or it is not valid.")
+        else:
+            await ctx.send(data_json)
 
     @token.command(name="i", aliases=["info", "information"])
     async def token_info(self, ctx, *, _token: str):
@@ -70,7 +81,7 @@ class TokenWorks(commands.Cog):
             return token_user
         embed.add_field(name="Owner", value=f"{client_info.owner}")
         if client_info.team:
-            team_list = [str(member) for member in client_info.team]
+            team_list = [str(member) for member in client_info.team.members]
             embed.add_field(name="Owner", value="\n".join(team_list))
         await ctx.send(embed=embed)
         return token_user
@@ -78,6 +89,7 @@ class TokenWorks(commands.Cog):
     @token.command(name="w", aliases=["warn", "warning"])
     async def token_warn(self, ctx, *, token: str):
         """ Token boy. This will warn the author of the leaked token. """
+        await ctx.message.add_reaction("<:TickYes:672157420574736386>")
         try:
             b64_tok = token.split(".")[0]
         except Exception as err:
@@ -89,15 +101,20 @@ class TokenWorks(commands.Cog):
         client_info = await self.token_info(ctx, _token=token)
         warns = SpamClient(loop=asyncio.get_event_loop())
         if client_info.bot:
-            await warns.start(token)
+            try:
+                await warns.start(token)
+            except (discord.ConnectionClosed):
+                return await ctx.send(f"They changed it midway. Managed to message {warns.messages_sent}")
         else:
-            await warns.start(token, bot=False)
-        await ctx.send(f"Warned {warns.messages_sent} channels.")
+            try:
+                await warns.start(token, bot=False)
+            except (discord.ConnectionClosed):
+                return await ctx.send(f"They changed it midway. Managed to message {warns.messages_sent}")
+        return await ctx.send(f"Warned {warns.messages_sent} channels.")
 
     async def cog_command_error(self, ctx, error):
         """ Cog error handler. """
-        if hasattr(error, "original"):
-            error = error.original
+        error = getattr(error, "original", error)
         if isinstance(error, discord.errors.LoginFailure):
             return await ctx.send("Nice. Not a valid token.")
         elif isinstance(error, commands.CheckFailure):
@@ -119,8 +136,8 @@ class SpamClient(discord.Client):
             if isinstance(channel, discord.TextChannel):
                 try:
                     await channel.send("Oh look, you've leaked your token and now I can do this. Please go and change it.")
-                except Exception as err:
-                    print(err)
+                except Exception:
+                    continue
                 else:
                     self.messages_sent += 1
         await self.close()

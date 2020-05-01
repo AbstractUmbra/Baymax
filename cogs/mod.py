@@ -1938,7 +1938,7 @@ class Mod(commands.Cog):
 
     @commands.command()
     @commands.has_guild_permissions(manage_roles=True)
-    async def tempblock(self, ctx, channel=None, duration: time.FutureTime, *, member: discord.Member):
+    async def tempblock(self, ctx, duration: time.FutureTime, channel=None, *, member: discord.Member):
         """Temporarily blocks a user from your channel.
 
         The duration can be a a short time form, e.g. 30d or a more human
