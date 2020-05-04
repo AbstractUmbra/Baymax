@@ -98,6 +98,14 @@ class AutoRoles(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_guild_leave(self, guild):
+        """ Clears Reaction config on guild leave. """
+        query = "DELETE * FROM autoroles WHERE guild_id = $1"
+        conf_query = "DELETE * FROM autoroles_config WHERE guild_id = $1"
+        await self.bot.pool.execute(query, guild.id)
+        await self.bot.pool.execute(conf_query, guild.id)
+
     @cache.cache()
     async def get_autoroles_config(self, guild_id: int, *, connection=None) -> AutoRolesConfig:
         """ Gets the guild config from postgres. """
