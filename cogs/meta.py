@@ -217,7 +217,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
     async def send_command_help(self, command):
         # No pagination necessary for a single command.
-        embed = discord.Embed(colour=discord.Colour.blurple())
+        embed = discord.Embed(colour=discord.Colour.red())
         self.common_command_formatting(embed, command)
         await self.context.send(embed=embed)
 
@@ -403,6 +403,7 @@ class Meta(commands.Cog):
 
     @commands.command()
     async def linecount(self, ctx):
+        """ Quick embed with the total line count of the Bot so far. """
         pylines = 0
         pyfiles = 0
         for path, subdirs, files in os.walk("."):
@@ -429,7 +430,7 @@ class Meta(commands.Cog):
 
     @commands.command()
     async def avatar(self, ctx, *, user: Union[discord.Member, FetchedUser] = None):
-        """Shows a user's enlarged avatar (if possible)."""
+        """Shows a user's enlarged avatar(if possible)."""
         embed = discord.Embed()
         user = user or ctx.author
         avatar = user.avatar_url_as(static_format='png')
