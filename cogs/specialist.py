@@ -1,20 +1,27 @@
 """
-Robo-Hz Discord Bot
-Copyright (C) 2020 64Hz
+The MIT License (MIT)
 
-Robo-Hz is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published
-by the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Copyright (c) 2020 AbstractUmbra
 
-Robo-Hz is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
 
-You should have received a copy of the GNU Affero General Public License
-along with Robo-Hz. If not, see <https://www.gnu.org/licenses/>.
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
 """
+
 import asyncio
 import datetime
 import random
@@ -119,8 +126,8 @@ class Specialist(commands.Cog):
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
         role = ctx.guild.create_role("".join(random.choice(
             string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5)),
-                                     colour=discord.Colour(0x7a6d42),
-                                     reason="Event creation.")
+            colour=discord.Colour(0x7a6d42),
+            reason="Event creation.")
         await reminder.create_timer(event_trigger, 'bfme2', ctx.author.id,
                                     ctx.channel.id,
                                     when.arg,
@@ -164,8 +171,8 @@ class Specialist(commands.Cog):
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
         role = ctx.guild.create_role("".join(random.choice(
             string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5)),
-                                     colour=discord.Colour(0x702d2d),
-                                     reason="Event creation.")
+            colour=discord.Colour(0x702d2d),
+            reason="Event creation.")
         await reminder.create_timer(event_trigger, 'aoe2', ctx.author.id,
                                     ctx.channel.id,
                                     when.arg,
