@@ -103,12 +103,12 @@ class TokenWorks(commands.Cog):
         if client_info.bot:
             try:
                 await warns.start(token)
-            except (discord.ConnectionClosed):
+            except discord.ConnectionClosed:
                 return await ctx.send(f"They changed it midway. Managed to message {warns.messages_sent}")
         else:
             try:
                 await warns.start(token, bot=False)
-            except (discord.ConnectionClosed):
+            except discord.ConnectionClosed:
                 return await ctx.send(f"They changed it midway. Managed to message {warns.messages_sent}")
         return await ctx.send(f"Warned {warns.messages_sent} channels.")
 
