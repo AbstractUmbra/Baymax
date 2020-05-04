@@ -28,6 +28,9 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+
+
+
 import asyncio
 import codecs
 from collections import Counter
@@ -37,13 +40,10 @@ import os
 import pathlib
 from typing import Union
 import unicodedata
-
 import discord
 from discord.ext import commands
-
 from utils import checks, time
 from utils.paginator import Pages
-
 
 class Prefix(commands.Converter):
     async def convert(self, ctx, argument):
@@ -265,7 +265,7 @@ class Meta(commands.Cog):
     @commands.command(hidden=True)
     async def hello(self, ctx):
         """Displays my intro message."""
-        await ctx.send('Hello! I\'m a robot! Revan#0640 made me.')
+        await ctx.send('Hello! I\'m a robot! Umbra#5443 made me.')
 
     @commands.command()
     async def charinfo(self, ctx, *, characters: str):

@@ -17,7 +17,7 @@ import config
 
 
 DESCRIPTION = """
-Hello! I am a bot written by Revan#0640 to provide some nice utilities.
+Hello! I am a bot written by Umbra#5443 to provide some nice utilities.
 """
 
 LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,7 @@ COGS = (
     'jishaku',
     'cogs.admin',
     'cogs.autoroles',
-    # 'cogs.botspw',
+    'cogs.botspw',
     'cogs.buttons',
     'cogs.config',
     'cogs.dnd',
