@@ -3,8 +3,7 @@ This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -39,14 +38,11 @@ import json
 import logging
 import re
 import shlex
-
 import asyncpg
 import discord
 from discord.ext import commands, tasks
-
 from utils import checks, db, time, cache
 from utils.formats import plural
-
 log = logging.getLogger(__name__)
 
 # Misc utilities
@@ -783,7 +779,14 @@ class Mod(commands.Cog):
             reason = f'Action done by {ctx.author} (ID: {ctx.author.id})'
 
         await ctx.guild.kick(member, reason=reason)
-        await ctx.send('\N{OK HAND SIGN}')
+        embed = discord.Embed(
+            title="Moderation action: Kick",
+            colour=discord.Colour.dark_red()
+        )
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.add_field(name="Target", value=member.name)
+        embed.set_footer(text=reason)
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
@@ -803,7 +806,14 @@ class Mod(commands.Cog):
             reason = f'Action done by {ctx.author} (ID: {ctx.author.id})'
 
         await ctx.guild.ban(member, reason=reason)
-        await ctx.send('\N{OK HAND SIGN}')
+        embed = discord.Embed(
+            title="Moderation action: Ban",
+            colour=discord.Colour.black()
+        )
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.add_field(name="Target", value=member.name)
+        embed.set_footer(text=reason)
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
@@ -836,7 +846,18 @@ class Mod(commands.Cog):
             except discord.HTTPException:
                 failed += 1
 
-        await ctx.send(f'Banned {total_members - failed}/{total_members} members.')
+        confirmation = f'Banned {total_members - failed}/{total_members} members.'
+
+        embed = discord.Embed(
+            title="Moderation action: Ban",
+            colour=discord.Colour.black()
+        )
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.add_field(name="Target", value=member.name)
+        embed.description = confirmation
+        embed.set_footer(text=reason)
+
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
@@ -1055,7 +1076,14 @@ class Mod(commands.Cog):
 
         await ctx.guild.ban(member, reason=reason)
         await ctx.guild.unban(member, reason=reason)
-        await ctx.send('\N{OK HAND SIGN}')
+        embed = discord.Embed(
+            title="Moderation action: Softban",
+            colour=discord.Colour.greyple()
+        )
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.add_field(name="Target", value=member.name)
+        embed.set_footer(text=reason)
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
@@ -1075,10 +1103,18 @@ class Mod(commands.Cog):
             reason = f'Action done by {ctx.author} (ID: {ctx.author.id})'
 
         await ctx.guild.unban(member.user, reason=reason)
+        embed = discord.Embed(
+            title="Moderation action: Unban",
+            colour=discord.Colour.white()
+        )
+        embed.timestamp = datetime.datetime.utcnow()
+        embed.add_field(name="Target", value=member.name)
         if member.reason:
-            await ctx.send(f'Unbanned {member.user} (ID: {member.user.id}), previously banned for {member.reason}.')
+            embed.set_footer(text=reason)
         else:
-            await ctx.send(f'Unbanned {member.user} (ID: {member.user.id}).')
+            embed.set_footer(
+                text=f'Unbanned {member.user} (ID: {member.user.id}).')
+        await ctx.send(embed=embed)
 
     @commands.command()
     @commands.guild_only()
@@ -1123,7 +1159,16 @@ class Mod(commands.Cog):
                                             member.id,
                                             connection=ctx.db,
                                             created=ctx.message.created_at)
-        await ctx.send(f'Banned {member} for {time.human_timedelta(duration.dt, source=timer.created_at)}.')
+        embed = discord.Embed(
+            title="Moderation action: Temp Ban",
+            colour=discord.Colour.black()
+        )
+        embed.timestamp = timer.created_at
+        embed.add_field(name="Target", value=member.name)
+        embed.description = reason
+        embed.set_footer(
+            text=f'Banned {member} for {time.human_timedelta(duration.dt, source=timer.created_at)}.')
+        await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_tempban_timer_complete(self, timer):
