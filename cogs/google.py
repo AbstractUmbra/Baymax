@@ -23,9 +23,6 @@ You should have received a copy of the GNU Affero General Public License
 along with chr1sBot. If not, see < https: // www.gnu.org/licenses/>.
 """
 
-
-
-
 import time
 import async_cse
 import discord

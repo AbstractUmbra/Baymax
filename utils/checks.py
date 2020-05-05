@@ -28,9 +28,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-
-
-
 from discord.ext import commands
 async def check_permissions(ctx, perms, *, check=all):
     is_owner = await ctx.bot.is_owner(ctx.author)

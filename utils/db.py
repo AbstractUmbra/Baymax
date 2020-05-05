@@ -27,10 +27,10 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
+
 # These are just things that allow me to make tables for PostgreSQL easier
 # This isn't exactly good. It's just good enough for my uses.
 # Also shoddy migration support.
-
 
 from collections import OrderedDict
 from pathlib import Path
