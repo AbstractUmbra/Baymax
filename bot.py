@@ -69,7 +69,7 @@ class RoboHz(commands.AutoShardedBot):
                          help_attrs=dict(hidden=True),
                          heartbeat_timeout=150.0,
                          activity=discord.Game(
-                             name="r!help for help, fuckers."),
+                             name="r!help for help."),
                          status=discord.Status.online)
 
         self.client_id = config.client_id

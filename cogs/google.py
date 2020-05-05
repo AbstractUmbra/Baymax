@@ -44,7 +44,7 @@ class GoogleMenuSource(menus.ListPageSource):
 
 
 class Google(commands.Cog):
-    """ Google cog for RoboHz. """
+    """ Google cog for Robo-Hz. """
 
     def __init__(self, bot):
         self.bot = bot

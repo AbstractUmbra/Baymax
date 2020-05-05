@@ -28,6 +28,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+
 import asyncio
 from collections import Counter, defaultdict
 import datetime
@@ -44,15 +45,11 @@ import re
 import textwrap
 import traceback
 import typing
-
 import asyncpg
 import discord
 from discord.ext import commands, tasks
-
 from utils import checks, db, time, formats
 from utils.paginator import CannotPaginate
-
-
 log = logging.getLogger(__name__)
 
 LOGGING_CHANNEL = 309632009427222529
@@ -270,7 +267,7 @@ class Stats(commands.Cog):
         # [`hash`](url) message (offset)
         offset = time.human_timedelta(commit_time.astimezone(
             datetime.timezone.utc).replace(tzinfo=None), accuracy=1)
-        return f'[`{short_sha2}`](https://github.com/64Hz/RoboHz/commit/{commit.hex}) {short} ({offset})'
+        return f'[`{short_sha2}`](https://github.com/AbstractUmbra/Robo-Hz/commit/{commit.hex}) {short} ({offset})'
 
     def get_last_commits(self, count=3):
         repo = pygit2.Repository('.git')

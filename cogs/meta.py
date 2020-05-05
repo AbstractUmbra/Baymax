@@ -44,7 +44,6 @@ import discord
 from discord.ext import commands
 from utils import checks, time
 from utils.paginator import Pages
-
 class Prefix(commands.Converter):
     async def convert(self, ctx, argument):
         user_id = ctx.bot.user.id
@@ -381,7 +380,7 @@ class Meta(commands.Cog):
         periods, e.g. tag.create for the create subcommand of the tag command
         or by spaces.
         """
-        source_url = 'https://github.com/64Hz/RoboHz'
+        source_url = 'https://github.com/AbstractUmbra/Robo-Hz'
         branch = 'rewrite'
         if command is None:
             return await ctx.send(source_url)

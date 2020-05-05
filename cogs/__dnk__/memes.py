@@ -1,6 +1,6 @@
 """
 Robo-Hz Discord Bot
-Copyright (C) 2020 64Hz
+Copyright (C) 2020 AbstractUmbra
 
 Robo-Hz is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published
