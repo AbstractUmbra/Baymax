@@ -31,4 +31,5 @@ Nevertheless; installation steps are below.
     - Python 3.6+
     - PostgreSQL server/access with a minimum of v9
     - Minimum of Discord.py v1.3.0
+    - libgit2 install on host, or via pip.
     - Modules within `requirements.txt`

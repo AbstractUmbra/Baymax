@@ -16,7 +16,3 @@ lru_dict
 python-dateutil
 lxml
 pytz
-
-#### Shell
-## python3-libgit2
-##
