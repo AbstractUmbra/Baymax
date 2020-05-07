@@ -23,13 +23,15 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from datetime import datetime
-from random import choice, randint
+from random import randint
 
 import discord
 from discord.ext import commands
 
 
 class DND(commands.Cog):
+    """ Do not disturb... Jk, it's Dungeons and Dragons. """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -39,17 +41,19 @@ class DND(commands.Cog):
         roll_counts = []
         str_roll_counts = []
         rolls, sides = diceroll.lower().split('d')
+        rolls = int(rolls)
+        sides = int(sides)
         if rolls > 20:
             return await ctx.send(f"There no way you're doing {rolls} rolls!\nPlease roll 20 times or less.")
-        for roll in range(1, int(rolls) + 1):
+        for _ in range(1, (int(rolls) + 1)):
             roll_counts.append(randint(1, int(sides)))
-        for x in roll_counts:
-            if int(sides) == 20 and x == 20:
+        for dice_roll in roll_counts:
+            if int(sides) == 20 and dice_roll == 20:
                 str_roll_counts.append("*20*")
-            elif x == 1:
+            elif dice_roll == 1:
                 str_roll_counts.append("*1*")
             else:
-                str_roll_counts.append(str(x))
+                str_roll_counts.append(str(dice_roll))
         roll_embed = discord.Embed(
             title=f"Dice roll: {str(diceroll)}", colour=discord.Colour(randint(0, 0xFFFFFF)))
         roll_embed.set_author(name=ctx.author.display_name,
@@ -62,4 +66,5 @@ class DND(commands.Cog):
 
 
 def setup(bot):
+    """ Cog entrypoint. """
     bot.add_cog(DND(bot))
