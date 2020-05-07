@@ -107,13 +107,7 @@ venv.bak/
 .vscode/
 
 ##personal
-*.mp3
 *.bak
-data/
 *.log
-bot_bak.py
 config.py
-_mick_stuff.py
-utils/__tb_stuff.py
-helpers.py
-cogs/tokens.py
+cogs/__dnk__/
