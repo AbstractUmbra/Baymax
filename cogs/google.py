@@ -1,10 +1,9 @@
 """
-This code and all contents are responsibly sourced from 
+This code and all contents are responsibly sourced from
 chr1sBot discord bot and author
 (https://github.com/crrapi) | (https://github.com/crrapi/chr1sBot)
-RoboDanny licensing below:
-"""
-"""
+chr1sbot licensing below:
+
 chr1sBot Discord Bot
 
 Copyright(C) 2020 crrapi
@@ -27,6 +26,8 @@ import time
 import async_cse
 import discord
 from discord.ext import commands, menus
+
+
 class GoogleMenuSource(menus.ListPageSource):
     """ Format discord.ext.menus for Google searches. """
 
@@ -84,7 +85,7 @@ class Google(commands.Cog):
             return await ctx.send(f"An error occurred during Google operation: {err}")
         else:
             end = time.time()
-            footer = f"{end - start:.2f}s | SafeSearrch is {safesearch}."
+            footer = f"{end - start:.2f}s | SafeSearch is {safesearch}."
             return self._gen_embeds(resp, footer, images)
 
     @commands.group(name="google", invoke_without_command=True, aliases=["g", "search"])

@@ -3,8 +3,7 @@ This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -37,10 +36,14 @@ import os
 import pathlib
 from typing import Union
 import unicodedata
+
 import discord
 from discord.ext import commands
+
 from utils import checks, time
 from utils.paginator import Pages
+
+
 class Prefix(commands.Converter):
     async def convert(self, ctx, argument):
         user_id = ctx.bot.user.id
@@ -83,6 +86,7 @@ class HelpPaginator(Pages):
         self.embed.clear_fields()
         self.embed.description = self.description
         self.embed.title = self.title
+        self.embed.colour = discord.Colour.red()
 
         self.embed.set_footer(
             text=f'Use "{self.prefix}help command" for more info on a command.')

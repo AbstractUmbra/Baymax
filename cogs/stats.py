@@ -3,8 +3,7 @@ This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -44,11 +43,14 @@ import re
 import textwrap
 import traceback
 import typing
+
 import asyncpg
 import discord
 from discord.ext import commands, tasks
+
 from utils import checks, db, time, formats
 from utils.paginator import CannotPaginate
+
 log = logging.getLogger(__name__)
 
 LOGGING_CHANNEL = 309632009427222529

@@ -3,8 +3,7 @@ This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -42,8 +41,10 @@ import textwrap
 import time
 import traceback
 from typing import Optional
+
 import discord
 from discord.ext import commands
+
 
 class PerformanceMocker:
     """A mock object that can also be used in await expressions."""

@@ -3,8 +3,7 @@ This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -40,6 +39,7 @@ from utils import checks
 class Funhouse(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.trans = googletrans.Translator()
 
     @commands.command(hidden=True)
     async def cat(self, ctx):

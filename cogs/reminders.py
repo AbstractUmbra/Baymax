@@ -3,8 +3,7 @@ This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -29,12 +28,15 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import asyncpg
 import datetime
 import textwrap
+
+import asyncpg
 import discord
 from discord.ext import commands
+
 from utils import checks, db, time, formats
+
 
 class Reminders(db.Table):
     id = db.PrimaryKeyColumn()
