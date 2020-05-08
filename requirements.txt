@@ -1,5 +1,5 @@
 # Discord
-git+https://github.com/Rapptz/discord.py@sharding-rework
+git+https://github.com/Rapptz/discord.py@master
 git+https://github.com/Rapptz/discord-ext-menus@master
 git+https://github.com/XuaTheGrate/Flag-Parsing@master
 jishaku
@@ -16,3 +16,4 @@ lru_dict
 python-dateutil
 lxml
 pytz
+pygit2
