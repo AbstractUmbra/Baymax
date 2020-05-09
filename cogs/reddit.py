@@ -108,7 +108,7 @@ class Reddit(commands.Cog):
 
             embeds.append(embed)
 
-        return embeds
+        return embeds[:10]
 
     async def _perform_search(self, requester: str, channel: discord.TextChannel, subreddit: str, sort_by: str):
         """ Performs the search for queries with aiohttp. Returns 10 items. """
@@ -157,7 +157,7 @@ class Reddit(commands.Cog):
                 url, subreddit, title, upvotes, nsfw=nsfw, image_link=image_url, video_link=video_url, self_text=self_text, comment_count=comments, author=author))
             idx += 1
 
-        return self._gen_embeds(requester, subreddit_pages, channel.is_nsfw())
+        return self._gen_embeds(requester, subreddit_pages[:10], channel.is_nsfw())
 
     @commands.command(name="reddit")
     @commands.cooldown(5, 300, commands.BucketType.user)
