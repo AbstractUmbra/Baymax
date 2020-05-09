@@ -40,6 +40,7 @@ COGS = (
     'cogs.google',
     'cogs.meta',
     'cogs.mod',
+    'cogs.reddit',
     'cogs.reminders',
     'cogs.specialist',
     'cogs.stats',
