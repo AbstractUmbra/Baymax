@@ -77,7 +77,10 @@ class Reddit(commands.Cog):
         self.bot = bot
         self.headers = {"User-Agent": "Robo-Hz Discord bot"}
 
-    def _gen_embeds(self, requester: str, iterable: list, nsfw_channel: bool) -> typing.List[discord.Embed]:
+    def _gen_embeds(self,
+                    requester: str,
+                    iterable: list,
+                    nsfw_channel: bool) -> typing.List[discord.Embed]:
         """ Generate many embeds from the top 10 posts on each subreddit. """
         embeds = []
 
@@ -110,17 +113,23 @@ class Reddit(commands.Cog):
 
         return embeds[:10]
 
-    async def _perform_search(self, requester: str, channel: discord.TextChannel, subreddit: str, sort_by: str):
+    async def _perform_search(self,
+                              requester: str,
+                              channel: discord.TextChannel,
+                              subreddit: str,
+                              sort_by: str):
         """ Performs the search for queries with aiohttp. Returns 10 items. """
         async with self.bot.session.get(
-                f"https://reddit.com/r/{subreddit}/about.json", headers=self.headers) as subr_top_resp:
+                f"https://reddit.com/r/{subreddit}/about.json",
+                headers=self.headers) as subr_top_resp:
             subr_deets = await subr_top_resp.json()
 
         if subr_deets['data'].get('over18', None) and not channel.is_nsfw():
             raise commands.NSFWChannelRequired(channel)
 
         async with self.bot.session.get(
-                f"https://reddit.com/r/{subreddit}/{sort_by}.json", headers=self.headers) as subr_resp:
+                f"https://reddit.com/r/{subreddit}/{sort_by}.json",
+                headers=self.headers) as subr_resp:
             subreddit_json = await subr_resp.json()
 
         subreddit_pages = []
@@ -154,7 +163,16 @@ class Reddit(commands.Cog):
                 video_url = _short['media']['reddit_video']['fallback_url']
                 image_url = _short['thumbnail']
             subreddit_pages.append(SubredditPost(
-                url, subreddit, title, upvotes, nsfw=nsfw, image_link=image_url, video_link=video_url, self_text=self_text, comment_count=comments, author=author))
+                url,
+                subreddit,
+                title,
+                upvotes,
+                nsfw=nsfw,
+                image_link=image_url,
+                video_link=video_url,
+                self_text=self_text,
+                comment_count=comments,
+                author=author))
             idx += 1
 
         return self._gen_embeds(requester, subreddit_pages[:10], channel.is_nsfw())
@@ -173,6 +191,7 @@ class Reddit(commands.Cog):
 
     @_reddit.error
     async def reddit_error(self, ctx, error):
+        """ Local Error handler for reddit command. """
         error = getattr(error, "original", error)
         if isinstance(error, commands.NSFWChannelRequired):
             return await ctx.send("This ain't an NSFW channel.")
