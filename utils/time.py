@@ -1,10 +1,9 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -28,12 +27,21 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+
 import datetime
-import parsedatetime as pdt
 import re
+
 from dateutil.relativedelta import relativedelta
-from .formats import plural, human_join
 from discord.ext import commands
+import parsedatetime as pdt
+
+from .formats import plural, human_join
+
+# Monkey patch mins and secs into the units
+units = pdt.pdtLocales['en_US'].units
+units['minutes'].append('mins')
+units['seconds'].append('secs')
+
 
 class ShortTime:
     compiled = re.compile("""(?:(?P<years>[0-9])(?:years?|y))?             # e.g. 2y
@@ -129,7 +137,17 @@ class UserFriendlyTime(commands.Converter):
             self.arg = remaining
         return self
 
+    def copy(self):
+        cls = self.__class__
+        obj = cls.__new__(cls)
+        obj.converter = self.converter
+        obj.default = self.default
+        return obj
+
     async def convert(self, ctx, argument):
+        # Create a copy of ourselves to prevent race conditions from two
+        # events modifying the same instance of a converter
+        result = self.copy()
         try:
             calendar = HumanTime.calendar
             regex = ShortTime.compiled
@@ -140,8 +158,8 @@ class UserFriendlyTime(commands.Converter):
                 data = {k: int(v)
                         for k, v in match.groupdict(default=0).items()}
                 remaining = argument[match.end():].strip()
-                self.dt = now + relativedelta(**data)
-                return await self.check_constraints(ctx, now, remaining)
+                result.dt = now + relativedelta(**data)
+                return await result.check_constraints(ctx, now, remaining)
 
             # apparently nlp does not like "from now"
             # it likes "from x" in other cases though so let me handle the 'now' case
@@ -184,7 +202,7 @@ class UserFriendlyTime(commands.Converter):
             if status.accuracy == pdt.pdtContext.ACU_HALFDAY:
                 dt = dt.replace(day=now.day + 1)
 
-            self.dt = dt
+            result.dt = dt
 
             if begin in (0, 1):
                 if begin == 1:
@@ -203,7 +221,7 @@ class UserFriendlyTime(commands.Converter):
             elif len(argument) == end:
                 remaining = argument[:begin].strip()
 
-            return await self.check_constraints(ctx, now, remaining)
+            return await result.check_constraints(ctx, now, remaining)
         except:
             import traceback
             traceback.print_exc()
