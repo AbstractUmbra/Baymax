@@ -11,9 +11,9 @@ Nevertheless; installation steps are below.
 ### Installation
 1. Install Python 3.6.0 or higher.
 2. Set up a venv (of any flavour)
-   1. `python -m venv myvenv`
+   1. I prefer pipenv, so I have provided a Pipfile as well as a 'requirements.txt'
 3. Install required dependencies
-   1. `pip install -U -r requirements.txt`
+   1. `pipenv install` or `pip install -U -r requirements.txt`
 4. Create the database in PostgreSQL
    ```sql
    CREATE ROLE robohz WITH LOGIN PASSWORD 'mypasswd';
@@ -30,6 +30,6 @@ Nevertheless; installation steps are below.
 
     - Python 3.6+
     - PostgreSQL server/access with a minimum of v9
-    - Minimum of Discord.py v1.3.0
+    - Minimum version of Discord.py v1.3.0
     - libgit2 install on host, or via pip.
-    - Modules within `requirements.txt`
+    - Modules within `Pipfile` or `requirements.txt`
