@@ -111,3 +111,4 @@ venv.bak/
 *.log
 config.py
 cogs/__dnk__/
+Pipfile.lock
