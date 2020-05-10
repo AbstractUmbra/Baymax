@@ -112,3 +112,4 @@ venv.bak/
 config.py
 cogs/__dnk__/
 Pipfile.lock
+prefixes.json
