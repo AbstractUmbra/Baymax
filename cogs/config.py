@@ -1,5 +1,5 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
@@ -28,6 +28,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 from collections import defaultdict
+from itertools import accumulate
 from typing import Optional
 
 import asyncpg
@@ -147,7 +148,6 @@ class ResolvedCommandPermissions:
     def _split(self, obj):
         """ Splits objects into list. """
         # "hello there world" -> ["hello", "hello there", "hello there world"]
-        from itertools import accumulate
         return list(accumulate(obj.split(), lambda x, y: f'{x} {y}'))
 
     def get_blocked_commands(self, channel_id):

@@ -57,8 +57,6 @@ COGS = (
     'cogs.botspw',
     'cogs.buttons',
     'cogs.config',
-    'cogs.dnd',
-    'cogs.emoji',
     'cogs.funhouse',
     'cogs.google',
     'cogs.meta',

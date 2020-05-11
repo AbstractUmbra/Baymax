@@ -1,5 +1,5 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
@@ -32,9 +32,6 @@ import io
 import discord
 from discord.ext import commands
 import googletrans
-
-from utils import checks
-
 
 class Funhouse(commands.Cog):
     def __init__(self, bot):
