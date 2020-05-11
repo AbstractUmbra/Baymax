@@ -45,12 +45,20 @@ class TwitchTable(db.Table):
     streamer_last_datetime = db.Column(db.Datetime())
 
 
+class TwitchSecretTable(db.Table):
+    """ Creates the database for storing the OAuth secret. """
+    id = db.PrimaryKeyColumn()
+
+    secret = db.Column(db.String)
+
+
 class Twitch(commands.Cog):
     """ Twitch based stuff on discord! """
 
     def __init__(self, bot):
         """ Classic init function. """
         self.bot = bot
+        self.oauth_get_endpoint = "https://id.twitch.tv/oauth2/token"
         self.stream_endpoint = "https://api.twitch.tv/helix/streams"
         self.user_endpoint = "https://api.twitch.tv/helix/users"
         self.game_endpoint = "https://api.twitch.tv/helix/games"
@@ -60,6 +68,30 @@ class Twitch(commands.Cog):
         """ To get all streamers in the db. """
         query = """ SELECT * FROM twitchtable WHERE streamer_name = $1; """
         return await self.bot.pool.fetch(query, name)
+
+    async def _refresh_oauth(self) -> None:
+        """ Let's call this whenever we get locked out. """
+        async with self.bot.session.post(self.oauth_get_endpoint,
+                                         headers=self.bot.config.twitch_oauth_headers) as oa_resp:
+            oauth_json = await oa_resp.json()
+        if "error" in oauth_json:
+            stats = self.bot.get_cog("Stats")
+            if not stats:
+                raise commands.BadArgument("Twitch API is locking you out.")
+            webhook = stats.webhook
+            return await webhook.send("**Can't seem to refresh OAuth on the Twitch API.")
+        auth_token = oauth_json['access_token']
+        query = "INSERT INTO twitchsecrettable (secret) VALUES ($1) WHERE id=1 ON CONFLICT DO UPDATE SET secret = $1"
+        await self.bot.session.execute(query, auth_token)
+
+    async def _gen_headers(self) -> dict:
+        """ Let's use this to create the Headers. """
+        base = self.bot.config.twitch_headers
+        query = "SELECT secret from twitchsecrettable WHERE id = 1;"
+        new_token_resp = await self.bot.pool.fetchrow(query)
+        new_token = new_token_resp['secret']
+        base['Authorization'] = f"Bearer {new_token}"
+        return base
 
     async def _get_streamer_guilds(self, guild_id: int) -> asyncpg.Record:
         """ Return records for matched guild_ids. """
@@ -83,6 +115,7 @@ class Twitch(commands.Cog):
     @twitch.command(hidden=True)
     @commands.is_owner()
     async def streamdb(self, ctx: commands.Context) -> None:
+        """ Debug for me. """
         query = """SELECT * FROM twitchtable;"""
         results = await self.bot.pool.fetch(query)
         embed = discord.Embed(title="Streamer details",
@@ -118,57 +151,63 @@ class Twitch(commands.Cog):
     async def get_streamers(self) -> None:
         """ Task loop to get the active streamers in the db and post to specified channels. """
         await self.bot.wait_until_ready()
-        query = """ SELECT * FROM twitchtable; """
-        results = await self.bot.pool.fetch(query)
-        for item in results:
-            if not item['streamer_last_datetime']:
-                item['streamer_last_datetime'] = (
-                    datetime.datetime.utcnow() - datetime.timedelta(hours=3))
-            guild = self.bot.get_guild(item['guild_id'])
-            channel = guild.get_channel(item['channel_id'])
-            async with self.bot.session.get(self.stream_endpoint,
-                                            params={
-                                                "user_login": f"{item['streamer_name']}"},
-                                            headers=self.bot.config.twitch_headers) as resp:
-                stream_json = await resp.json()
-            if stream_json['data'] == []:
-                continue
-            current_stream = datetime.datetime.utcnow() - \
-                item['streamer_last_datetime']
-            if ((stream_json['data'][0]['title'] != item['streamer_last_game'])
-                    or (current_stream.seconds >= 7200)):
-                cur_time = datetime.datetime.strptime(
-                    f"{stream_json['data'][0]['started_at']}", "%Y-%m-%dT%H:%M:%SZ")
-                localtime = cur_time.replace(tzinfo=pytz.timezone(
-                    "Europe/London")).astimezone(tz=None)
-                embed = discord.Embed(
-                    title=f"{item['streamer_name']} is live with: {stream_json['data'][0]['title']}",
-                    colour=discord.Colour.blurple(),
-                    url=f"https://twitch.tv/{item['streamer_name']}")
-                async with self.bot.session.get(self.game_endpoint,
+        try:
+            headers = await self._gen_headers()
+            query = """ SELECT * FROM twitchtable; """
+            results = await self.bot.pool.fetch(query)
+            for item in results:
+                if not item['streamer_last_datetime']:
+                    item['streamer_last_datetime'] = (
+                        datetime.datetime.utcnow() - datetime.timedelta(hours=3))
+                guild = self.bot.get_guild(item['guild_id'])
+                channel = guild.get_channel(item['channel_id'])
+                async with self.bot.session.get(self.stream_endpoint,
                                                 params={
-                                                    "id": f"{stream_json['data'][0]['game_id']}"},
-                                                headers=self.bot.config.twitch_headers) as game_resp:
-                    game_json = await game_resp.json()
-                async with self.bot.session.get(self.user_endpoint,
-                                                params={
-                                                    "id": stream_json['data'][0]['user_id']},
-                                                headers=self.bot.config.twitch_headers) as user_resp:
-                    user_json = await user_resp.json()
-                embed.set_author(name=stream_json['data'][0]['user_name'])
-                embed.set_thumbnail(
-                    url=f"{user_json['data'][0]['profile_image_url']}")
-                embed.add_field(
-                    name="Game/Category", value=f"{game_json['data'][0]['name']}", inline=True)
-                embed.add_field(name="Viewers",
-                                value=f"{stream_json['data'][0]['viewer_count']}", inline=True)
-                embed.set_image(url=stream_json['data'][0]['thumbnail_url'].replace(
-                    "{width}", "600").replace("{height}", "400"))
-                embed.set_footer(
-                    text=f"Stream started at: {localtime.strftime('%b %d %Y - %H:%M')} | Currently: {datetime.datetime.now().strftime('%b %d %Y - %H:%M')}")
-                message = await channel.send(f"{item['streamer_name']} is now live!", embed=embed)
-                insert_query = """ UPDATE twitchtable SET streamer_last_game = $1, streamer_last_datetime = $2 WHERE streamer_name = $3; """
-                await self.bot.pool.execute(insert_query, stream_json['data'][0]['title'], message.created_at, item['streamer_name'])
+                                                    "user_login": f"{item['streamer_name']}"},
+                                                headers=headers) as resp:
+                    stream_json = await resp.json()
+                if not stream_json['data']:
+                    if "error" in stream_json:
+                        await self._refresh_oauth()
+                    continue
+                current_stream = datetime.datetime.utcnow() - \
+                    item['streamer_last_datetime']
+                if ((stream_json['data'][0]['title'] != item['streamer_last_game'])
+                        or (current_stream.seconds >= 7200)):
+                    cur_time = datetime.datetime.strptime(
+                        f"{stream_json['data'][0]['started_at']}", "%Y-%m-%dT%H:%M:%SZ")
+                    localtime = cur_time.replace(tzinfo=pytz.timezone(
+                        "Europe/London")).astimezone(tz=None)
+                    embed = discord.Embed(
+                        title=f"{item['streamer_name']} is live with: {stream_json['data'][0]['title']}",
+                        colour=discord.Colour.blurple(),
+                        url=f"https://twitch.tv/{item['streamer_name']}")
+                    async with self.bot.session.get(self.game_endpoint,
+                                                    params={
+                                                        "id": f"{stream_json['data'][0]['game_id']}"},
+                                                    headers=headers) as game_resp:
+                        game_json = await game_resp.json()
+                    async with self.bot.session.get(self.user_endpoint,
+                                                    params={
+                                                        "id": stream_json['data'][0]['user_id']},
+                                                    headers=headers) as user_resp:
+                        user_json = await user_resp.json()
+                    embed.set_author(name=stream_json['data'][0]['user_name'])
+                    embed.set_thumbnail(
+                        url=f"{user_json['data'][0]['profile_image_url']}")
+                    embed.add_field(
+                        name="Game/Category", value=f"{game_json['data'][0]['name']}", inline=True)
+                    embed.add_field(name="Viewers",
+                                    value=f"{stream_json['data'][0]['viewer_count']}", inline=True)
+                    embed.set_image(url=stream_json['data'][0]['thumbnail_url'].replace(
+                        "{width}", "600").replace("{height}", "400"))
+                    embed.set_footer(
+                        text=f"Stream started at: {localtime.strftime('%b %d %Y - %H:%M')} | Currently: {datetime.datetime.now().strftime('%b %d %Y - %H:%M')}")
+                    message = await channel.send(f"{item['streamer_name']} is now live!", embed=embed)
+                    insert_query = """ UPDATE twitchtable SET streamer_last_game = $1, streamer_last_datetime = $2 WHERE streamer_name = $3; """
+                    await self.bot.pool.execute(insert_query, stream_json['data'][0]['title'], message.created_at, item['streamer_name'])
+        except Exception:
+            traceback.print_exc()
 
     @get_streamers.after_loop
     async def streamers_error(self):
