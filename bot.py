@@ -1,4 +1,27 @@
-""" RoboHz - my love. """
+"""
+The MIT License (MIT)
+
+Copyright (c) 2020 AbstractUmbra
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
 from collections import Counter, deque
 import datetime
 import logging
@@ -6,14 +29,15 @@ import json
 import os
 import sys
 import traceback
+import typing
 
 import aiohttp
 import discord
 from discord.ext import commands
 
+import config
 from utils import context
 from utils.config import Config
-import config
 
 
 DESCRIPTION = """
@@ -30,7 +54,6 @@ os.environ["JISHAKU_RETAIN"] = "True"
 COGS = (
     'jishaku',
     'cogs.admin',
-    'cogs.autoroles',
     'cogs.botspw',
     'cogs.buttons',
     'cogs.config',
@@ -40,6 +63,7 @@ COGS = (
     'cogs.google',
     'cogs.meta',
     'cogs.mod',
+    'cogs.reactionroles',
     'cogs.reddit',
     'cogs.reminders',
     'cogs.specialist',
@@ -50,7 +74,7 @@ COGS = (
 )
 
 
-def _prefix_callable(bot, msg):
+def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> typing.List[str]:
     user_id = bot.user.id
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
     if msg.guild is None:
@@ -68,7 +92,6 @@ class RoboHz(commands.AutoShardedBot):
                          description=DESCRIPTION,
                          pm_help=None,
                          help_attrs=dict(hidden=True),
-                         heartbeat_timeout=150.0,
                          activity=discord.Game(
                              name="r!help for help."),
                          status=discord.Status.online)
@@ -76,15 +99,8 @@ class RoboHz(commands.AutoShardedBot):
         self.client_id = config.client_id
         self.bots_key = config.bots_key
         self.session = aiohttp.ClientSession(loop=self.loop)
-
         self._prev_events = deque(maxlen=10)
-
-        # guild_id: list
         self.prefixes = Config('prefixes.json')
-
-        # guild_id and user_id mapped to True
-        # these are users and guilds globally blacklisted
-        # from using the bot
         self.blacklist = Config('blacklist.json')
 
         # in case of even further spam, add a cooldown mapping
@@ -99,7 +115,7 @@ class RoboHz(commands.AutoShardedBot):
         for extension in COGS:
             try:
                 self.load_extension(extension)
-            except:
+            except Exception:
                 print(
                     f'Failed to load extension {extension}.', file=sys.stderr)
                 traceback.print_exc()
