@@ -45,29 +45,32 @@ class SubredditPost:
     """ Let's try and create a generic object for a subreddit return... """
 
     def __init__(self,
-                 url: str,
-                 subreddit: str,
-                 title: str,
-                 upvotes: int,
+                 subreddit_dict: dict,
                  *,
-                 nsfw: bool = False,
-                 image_link: str = None,
-                 video_link: str = None,
-                 self_text: str = None,
-                 comment_count: int = None,
-                 author: str = None):
+                 video_link: str,
+                 image_link: str):
         """ Hrm. """
-        self.url = url
-        self.subreddit = f"/r/{subreddit}"
-        self.title = title
-        self.upvotes = int(upvotes)
-
-        self.nsfw = nsfw
-        self.image_link = image_link
+        self.url = f"https://reddit.com/{subreddit_dict['permalink']}"
+        self.resp_url = subreddit_dict['url']
+        self.subreddit = subreddit_dict['subreddit_name_prefixed']
+        self.title = subreddit_dict['title']
+        self.upvotes = int(subreddit_dict['ups'])
+        self.text = subreddit_dict.get('selftext', None)
+        self.nsfw = subreddit_dict.get('over_18', False)
+        self.thumbnail = subreddit_dict.get('thumbnail', None)
+        self.comment_count = subreddit_dict.get('num_comments', 0)
+        self.author = f"/u/{subreddit_dict['author']}"
         self.video_link = video_link
-        self.self_text = self_text
-        self.comment_count = int(comment_count) if comment_count else 0
-        self.author = f"/u/{author}"
+        self.image_link = image_link
+
+    @property
+    def selftext(self):
+        """ Self-text handling. """
+        if self.text:
+            if len(self.text) > 2000:
+                return f"{self.text[:2000]}..."
+            return self.text
+        return None
 
 
 class Reddit(commands.Cog):
@@ -90,7 +93,7 @@ class Reddit(commands.Cog):
 
             embed = discord.Embed(
                 title=item.title,
-                description=item.self_text,
+                description=item.selftext,
                 colour=discord.Colour.red(),
                 url=item.url)
 
@@ -133,13 +136,12 @@ class Reddit(commands.Cog):
             subreddit_json = await subr_resp.json()
 
         subreddit_pages = []
-        common_img_exts = (".jpg", ".jpeg", ".png", ".gif", ".webm")
+        common_img_exts = (".jpg", ".jpeg", ".png", ".gif")
 
         idx = 0
         for post_data in subreddit_json['data']['children']:
             image_url = None
             video_url = None
-            self_text = None
 
             if idx == 20:
                 break
@@ -148,31 +150,16 @@ class Reddit(commands.Cog):
             if _short['stickied']:
                 idx += 1
                 continue
-            url = f"https://reddit.com/{_short['permalink']}"
-            author = _short['author']
-            title = _short['title']
-            upvotes = _short['ups']
-            comments = _short['num_comments']
-            nsfw = _short['over_18'] if _short['over_18'] else False
-            self_text = _short['selftext']
-            if len(self_text) > 2000:
-                self_text = f"{self_text[:2000]}..."
             image_url = _short['url'] if _short['url'].endswith(
                 common_img_exts) else None
             if "v.redd.it" in _short['url']:
-                video_url = _short['media']['reddit_video']['fallback_url']
                 image_url = _short['thumbnail']
+                video_url = _short['media']['reddit_video']['fallback_url']
+
             subreddit_pages.append(SubredditPost(
-                url,
-                subreddit,
-                title,
-                upvotes,
-                nsfw=nsfw,
+                _short,
                 image_link=image_url,
-                video_link=video_url,
-                self_text=self_text,
-                comment_count=comments,
-                author=author))
+                video_link=video_url))
             idx += 1
 
         return self._gen_embeds(requester, subreddit_pages[:10], channel.is_nsfw())
