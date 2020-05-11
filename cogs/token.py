@@ -24,8 +24,6 @@ DEALINGS IN THE SOFTWARE.
 
 import asyncio
 import base64
-import random
-import string
 
 import discord
 from discord.ext import commands
