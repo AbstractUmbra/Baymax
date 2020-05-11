@@ -28,6 +28,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
+import codecs
 from collections import Counter, defaultdict
 import datetime
 import gc
@@ -35,6 +36,7 @@ import io
 import itertools
 import logging
 import json
+import pathlib
 import pkg_resources
 import os
 import psutil
@@ -275,6 +277,27 @@ class Stats(commands.Cog):
         commits = list(itertools.islice(
             repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL), count))
         return '\n'.join(self.format_commit(c) for c in commits)
+
+    @commands.command()
+    async def linecount(self, ctx):
+        """ Quick embed with the total line count of the Bot so far. """
+        pylines = 0
+        pyfiles = 0
+        for path, subdirs, files in os.walk("."):
+            for name in files:
+                if name.endswith(".py"):
+                    pyfiles += 1
+                    with codecs.open("./" + str(pathlib.PurePath(path, name)), "r", "utf-8") as file:
+                        for idx, line in enumerate(file):
+                            if line.strip().startswith("#") or len(line.strip()) is 0:  # Skip comments!
+                                pass
+                            else:
+                                pylines += 1
+        embed = discord.Embed(colour=discord.Colour.red(
+        ), description="Total source line count for Robo-Hz.")
+        embed.set_footer(
+            text=f"{pyfiles} files with a total of {pylines} lines of code.")
+        return await ctx.send(embed=embed)
 
     @commands.command()
     async def about(self, ctx):
