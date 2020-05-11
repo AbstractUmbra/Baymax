@@ -211,6 +211,7 @@ class Twitch(commands.Cog):
 
     @get_streamers.after_loop
     async def streamers_error(self):
+        """ On task.loop exception. """
         if self.get_streamers.failed():
             stats = self.bot.get_cog("Stats")
             if not stats:
