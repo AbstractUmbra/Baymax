@@ -130,7 +130,7 @@ class Buttons(commands.Cog):
         await channel.send(embed=embed)
         await ctx.send(f'{ctx.tick(True)} Successfully sent feedback')
 
-    @commands.command(name="pm")
+    @commands.command(name="pm", hidden=True)
     @commands.is_owner()
     async def _pm(self, ctx, user_id: int, *, content: str):
         """ PMs requested users. """
