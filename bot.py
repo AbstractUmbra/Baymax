@@ -45,7 +45,7 @@ COGS = (
     'cogs.specialist',
     'cogs.stats',
     'cogs.tags',
-    'cogs.tokens',
+    'cogs.token',
     'cogs.twitch',
 )
 
