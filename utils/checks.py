@@ -100,3 +100,11 @@ def is_in_guilds(*guild_ids):
             return False
         return guild.id in guild_ids
     return commands.check(predicate)
+
+
+def moogs_and_me():
+    def predicate(ctx):
+        if ctx.author.id in (361158149371199488, 155863164544614402) and ctx.guild.id == 658130291315048448:
+            return True
+        return False
+    return commands.check(predicate)
