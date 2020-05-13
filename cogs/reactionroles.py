@@ -43,7 +43,7 @@ def requires_reactionroles():
         if not ctx.guild:
             return False
 
-        cog = ctx.bot.get_cog("reactionroles")
+        cog = ctx.bot.get_cog("ReactionRoles")
 
         ctx.reactionroles = await cog.get_reactionroles_config(ctx.guild.id)
         if ctx.reactionroles.channel is None:
@@ -111,6 +111,11 @@ class ReactionRoles(commands.Cog):
         conf_query = "DELETE * FROM reactionroles_config WHERE guild_id = $1"
         await self.bot.pool.execute(query, guild.id)
         await self.bot.pool.execute(conf_query, guild.id)
+
+    @commands.Cog.listener()
+    async def on_guild_channel_delete(self, channel: typing.Union[discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel]):
+        query = "DELETE FROM reactionreaction_config WHERE channel_id = $1"
+        await self.bot.pool.execute(query, channel.id)
 
     @cache.cache()
     async def get_reactionroles_config(self, guild_id: int, *, connection=None) -> ReactionRolesConfig:
