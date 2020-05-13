@@ -50,6 +50,8 @@ class TwitchSecretTable(db.Table):
     id = db.PrimaryKeyColumn()
 
     secret = db.Column(db.String)
+    edited_at = db.Column(db.Datetime)
+    expires_at = db.Column(db.Datetime)
 
 
 class Twitch(commands.Cog):
@@ -72,17 +74,23 @@ class Twitch(commands.Cog):
     async def _refresh_oauth(self) -> None:
         """ Let's call this whenever we get locked out. """
         async with self.bot.session.post(self.oauth_get_endpoint,
-                                         headers=self.bot.config.twitch_oauth_headers) as oa_resp:
+                                         params=self.bot.config.twitch_oauth_headers) as oa_resp:
             oauth_json = await oa_resp.json()
         if "error" in oauth_json:
             stats = self.bot.get_cog("Stats")
             if not stats:
                 raise commands.BadArgument("Twitch API is locking you out.")
             webhook = stats.webhook
-            return await webhook.send("**Can't seem to refresh OAuth on the Twitch API.")
+            return await webhook.send("**Can't seem to refresh OAuth on the Twitch API.**")
         auth_token = oauth_json['access_token']
-        query = "INSERT INTO twitchsecrettable (secret) VALUES ($1) WHERE id=1 ON CONFLICT DO UPDATE SET secret = $1"
-        await self.bot.session.execute(query, auth_token)
+        expire_secs = int(oauth_json['expires_in'])
+        query = """INSERT INTO twitchsecrettable (id, secret, edited_at, expires_at)
+                   VALUES (1, $1, $2, $3)
+                   ON CONFLICT (id)
+                   DO UPDATE SET secret = $1, edited_at = $2, expires_at = $3;"""
+        now = datetime.datetime.now()
+        expire_date = datetime.datetime.now() + datetime.timedelta(seconds=expire_secs)
+        return await self.bot.pool.execute(query, auth_token, now, expire_date)
 
     async def _gen_headers(self) -> dict:
         """ Let's use this to create the Headers. """
@@ -114,14 +122,20 @@ class Twitch(commands.Cog):
 
     @twitch.command(hidden=True)
     @commands.is_owner()
-    async def streamdb(self, ctx: commands.Context) -> None:
+    async def streamdb(self, ctx: commands.Context) -> discord.Message:
         """ Debug for me. """
-        query = """SELECT * FROM twitchtable;"""
+        query = """SELECT * FROM twitchtable; """
+        oauth_query = """ SELECT edited_at, expires_at FROM twitchsecrettable;"""
         results = await self.bot.pool.fetch(query)
+        oauth_results = await self.bot.pool.fetchrow(oauth_query)
         embed = discord.Embed(title="Streamer details",
                               colour=discord.Colour.blurple())
         embed.description = "\n".join(
             f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}" for item in results)
+        embed.add_field(name="OAuth Edited at", value=oauth_results['edited_at'].strftime(
+            "%d-%m-%Y %H:%M:%S"))
+        embed.add_field(name="OAuth Expires at", value=oauth_results['expires_at'].strftime(
+            "%d-%m-%Y %H:%M:%S"))
         await ctx.send(embed=embed)
 
     @twitch.command(name="add")
@@ -132,7 +146,7 @@ class Twitch(commands.Cog):
         results = await self._get_streamers(name)
         if results:
             return await ctx.send("This streamer is already monitored.")
-        query = """ INSERT INTO twitchtable (guild_id, channel_id, streamer_name, streamer_last_datetime) VALUES ($1, $2, $3, $4); """
+        query = """ INSERT INTO twitchtable(guild_id, channel_id, streamer_name, streamer_last_datetime) VALUES($1, $2, $3, $4); """
         await self.bot.pool.execute(query, ctx.guild.id, channel.id, name, (datetime.datetime.utcnow() - datetime.timedelta(hours=3)))
         return await ctx.message.add_reaction(":TickYes:672157420574736386")
 
@@ -166,7 +180,7 @@ class Twitch(commands.Cog):
                                                     "user_login": f"{item['streamer_name']}"},
                                                 headers=headers) as resp:
                     stream_json = await resp.json()
-                if not stream_json['data']:
+                if 'data' not in stream_json:
                     if "error" in stream_json:
                         await self._refresh_oauth()
                     continue
