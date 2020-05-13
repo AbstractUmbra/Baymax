@@ -65,6 +65,7 @@ class SubredditPost:
 
     @property
     def posttitle(self):
+        """ Handles posttitle if length is too much. """
         if len(self.title) > 256:
             return f"{self.title[:200]}..."
         return self.title
@@ -162,7 +163,11 @@ class Reddit(commands.Cog):
                 common_img_exts) else None
             if "v.redd.it" in _short['url']:
                 image_url = _short['thumbnail']
-                video_url = _short['media']['reddit_video']['fallback_url']
+                video_teriary = _short.get('media', None)
+                if video_teriary:
+                    video_url = video_teriary['reddit_video']['fallback_url']
+                else:
+                    continue
 
             subreddit_pages.append(SubredditPost(
                 _short,
