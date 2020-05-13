@@ -64,6 +64,12 @@ class SubredditPost:
         self.image_link = image_link
 
     @property
+    def posttitle(self):
+        if len(self.title) > 256:
+            return f"{self.title[:200]}..."
+        return self.title
+
+    @property
     def selftext(self):
         """ Self-text handling. """
         if self.text:
@@ -92,7 +98,7 @@ class Reddit(commands.Cog):
                 continue
 
             embed = discord.Embed(
-                title=item.title,
+                title=item.posttitle,
                 description=item.selftext,
                 colour=discord.Colour.red(),
                 url=item.url)
@@ -127,6 +133,8 @@ class Reddit(commands.Cog):
                 headers=self.headers) as subr_top_resp:
             subr_deets = await subr_top_resp.json()
 
+        if 'data' not in subr_deets:
+            raise commands.BadArgument("Subreddit not found.")
         if subr_deets['data'].get('over18', None) and not channel.is_nsfw():
             raise commands.NSFWChannelRequired(channel)
 
