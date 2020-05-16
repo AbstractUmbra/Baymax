@@ -148,7 +148,7 @@ class RoboHz(commands.AutoShardedBot):
 
     def get_raw_guild_prefixes(self, guild_id):
         """ The raw prefixes. """
-        return self.prefixes.get(guild_id, ['r!'])
+        return self.prefixes.get(guild_id, ['r!', 'R!'])
 
     async def set_guild_prefixes(self, guild, prefixes):
         """ Set the prefixes. """
