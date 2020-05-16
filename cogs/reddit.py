@@ -115,13 +115,13 @@ class Reddit(commands.Cog):
 
             embed.add_field(name="Upvotes", value=item.upvotes, inline=True)
             embed.add_field(name="Total comments", value=item.comment_count)
-            fmt = f"Result {iterable.index(item)}/{len(iterable)-1}"
+            fmt = f"Result {iterable.index(item)+1}/{len(iterable)}"
             embed.set_footer(
                 text=f"{fmt} | {item.subreddit} | Requested by: {requester}")
 
             embeds.append(embed)
 
-        return embeds[:10]
+        return embeds[:15]
 
     async def _perform_search(self,
                               requester: str,
@@ -186,7 +186,7 @@ class Reddit(commands.Cog):
         if not embeds:
             raise commands.BadArgument("Bad subreddit.", subreddit)
         pages = menus.MenuPages(source=SubredditPageSource(
-            range(1, 10), embeds), clear_reactions_after=True)
+            range(0, 10), embeds))
         await pages.start(ctx)
 
     @_reddit.error
