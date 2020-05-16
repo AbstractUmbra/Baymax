@@ -1,6 +1,6 @@
 # Discord
-discord.py
-#git+https://github.com/Rapptz/discord.py@master#egg=discord-py
+# discord.py
+git+https://github.com/Rapptz/discord.py@master#egg=discord-py
 git+https://github.com/Rapptz/discord-ext-menus@master#egg=discord-ext-menus
 git+https://github.com/XuaTheGrate/Flag-Parsing@master#egg=discord-flags
 jishaku

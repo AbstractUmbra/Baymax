@@ -57,6 +57,8 @@ COGS = (
     'cogs.botspw',
     'cogs.buttons',
     'cogs.config',
+    'cogs.emoji',
+    'cogs.external',
     'cogs.funhouse',
     'cogs.google',
     'cogs.meta',
@@ -140,7 +142,7 @@ class RoboHz(commands.AutoShardedBot):
 
     def get_guild_prefixes(self, guild, *, local_inject=_prefix_callable):
         """ Get prefixes per guild. """
-        proxy_msg = discord.Object(id=None)
+        proxy_msg = discord.Object(id=0)
         proxy_msg.guild = guild
         return local_inject(self, proxy_msg)
 
