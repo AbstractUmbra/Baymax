@@ -130,8 +130,7 @@ class Twitch(commands.Cog):
         oauth_results = await self.bot.pool.fetchrow(oauth_query)
         embed = discord.Embed(title="Streamer details",
                               colour=discord.Colour.blurple())
-        embed.description = "\n".join(
-            f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}" for item in results)
+        embed.description = "\n".join(f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}" for item in results)
         embed.add_field(name="OAuth Edited at", value=oauth_results['edited_at'].strftime(
             "%d-%m-%Y %H:%M:%S"))
         embed.add_field(name="OAuth Expires at", value=oauth_results['expires_at'].strftime(
@@ -180,9 +179,9 @@ class Twitch(commands.Cog):
                                                     "user_login": f"{item['streamer_name']}"},
                                                 headers=headers) as resp:
                     stream_json = await resp.json()
-                if 'data' not in stream_json:
-                    if "error" in stream_json:
-                        await self._refresh_oauth()
+                if "error" in stream_json:
+                    await self._refresh_oauth()
+                if not stream_json['data']:
                     continue
                 current_stream = datetime.datetime.utcnow() - \
                     item['streamer_last_datetime']
