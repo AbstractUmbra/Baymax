@@ -6,3 +6,4 @@ cogs/__dnk__/
 Pipfile.lock
 prefixes.json
 migrations/
+pm2.config.json
