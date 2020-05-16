@@ -89,15 +89,12 @@ class Reddit(commands.Cog):
 
     def _gen_embeds(self,
                     requester: str,
-                    iterable: list,
-                    nsfw_channel: bool) -> typing.List[discord.Embed]:
+                    iterable: list) -> typing.List[discord.Embed]:
         """ Generate many embeds from the top 10 posts on each subreddit. """
         embeds = []
+        counter = 0
 
         for item in iterable:
-            if item.nsfw and not nsfw_channel:
-                continue
-
             embed = discord.Embed(
                 title=item.posttitle,
                 description=item.selftext,
@@ -115,11 +112,12 @@ class Reddit(commands.Cog):
 
             embed.add_field(name="Upvotes", value=item.upvotes, inline=True)
             embed.add_field(name="Total comments", value=item.comment_count)
-            fmt = f"Result {iterable.index(item)+1}/{len(iterable)}"
+            fmt = f"Result {counter+1}/{len(iterable)}"
             embed.set_footer(
                 text=f"{fmt} | {item.subreddit} | Requested by: {requester}")
 
             embeds.append(embed)
+            counter += 1
 
         return embeds[:15]
 
@@ -156,7 +154,7 @@ class Reddit(commands.Cog):
                 break
 
             _short = post_data['data']
-            if _short['stickied']:
+            if _short['stickied'] or (_short['over_18'] and not channel.is_nsfw()):
                 idx += 1
                 continue
             image_url = _short['url'] if _short['url'].endswith(
@@ -175,7 +173,7 @@ class Reddit(commands.Cog):
                 video_link=video_url))
             idx += 1
 
-        return self._gen_embeds(requester, subreddit_pages[:10], channel.is_nsfw())
+        return self._gen_embeds(requester, subreddit_pages[:10])
 
     @commands.command(name="reddit")
     @commands.cooldown(5, 300, commands.BucketType.user)
@@ -185,11 +183,13 @@ class Reddit(commands.Cog):
         embeds = await self._perform_search(str(ctx.author), ctx.channel, subreddit, sort_by)
         if not embeds:
             raise commands.BadArgument("Bad subreddit.", subreddit)
+        print(
+            "\n".join(f"{embeds.index(embed)} -> {embed.title}" for embed in embeds))
         pages = menus.MenuPages(source=SubredditPageSource(
             range(0, 10), embeds))
         await pages.start(ctx)
 
-    @_reddit.error
+    @ _reddit.error
     async def reddit_error(self, ctx, error):
         """ Local Error handler for reddit command. """
         error = getattr(error, "original", error)
