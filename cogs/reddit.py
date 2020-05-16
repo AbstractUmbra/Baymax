@@ -165,7 +165,7 @@ class Reddit(commands.Cog):
                 image_url = _short['thumbnail']
                 video_teriary = _short.get('media', None)
                 if video_teriary:
-                    video_url = video_teriary['reddit_video']['fallback_url']
+                    video_url = _short['url']
                 else:
                     continue
 
