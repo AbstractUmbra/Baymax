@@ -92,7 +92,6 @@ class Reddit(commands.Cog):
                     iterable: list) -> typing.List[discord.Embed]:
         """ Generate many embeds from the top 10 posts on each subreddit. """
         embeds = []
-        counter = 0
 
         for item in iterable:
             embed = discord.Embed(
@@ -112,12 +111,11 @@ class Reddit(commands.Cog):
 
             embed.add_field(name="Upvotes", value=item.upvotes, inline=True)
             embed.add_field(name="Total comments", value=item.comment_count)
-            fmt = f"Result {counter+1}/{len(iterable)}"
+            fmt = f"Result {iterable.index(item)+1}/{len(iterable)}"
             embed.set_footer(
                 text=f"{fmt} | {item.subreddit} | Requested by: {requester}")
 
             embeds.append(embed)
-            counter += 1
 
         return embeds[:15]
 
