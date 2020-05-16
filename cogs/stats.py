@@ -289,7 +289,7 @@ class Stats(commands.Cog):
                     pyfiles += 1
                     with codecs.open("./" + str(pathlib.PurePath(path, name)), "r", "utf-8") as file:
                         for idx, line in enumerate(file):
-                            if line.strip().startswith("#") or len(line.strip()) is 0:  # Skip comments!
+                            if line.strip().startswith("#") or len(line.strip()) == 0:  # Skip comments!
                                 pass
                             else:
                                 pylines += 1
