@@ -70,6 +70,7 @@ COGS = (
     'cogs.stats',
     'cogs.tags',
     'cogs.token',
+    'cogs.time',
     'cogs.twitch',
 )
 
