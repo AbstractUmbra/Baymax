@@ -12,7 +12,6 @@ discord-py = {git = "https://github.com/Rapptz/discord.py.git",ref = "master"}
 discord-ext-menus = {git = "https://github.com/Rapptz/discord-ext-menus",ref = "master"}
 discord-flags = {git = "https://github.com/XuaTheGrate/Flag-Parsing",ref = "master"}
 jishaku = "*"
-
 # Others
 asyncpg = "*"
 psutil = "*"
@@ -25,6 +24,7 @@ python-dateutil = "*"
 lxml = "*"
 pytz = "*"
 pygit2 = "*"
+import-expression = "*"
 
 [requires]
 python_version = "3.8"
