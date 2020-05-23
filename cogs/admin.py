@@ -1,5 +1,5 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 import copy
 from contextlib import redirect_stdout
+from datetime import datetime
 import importlib
 import inspect
 import io
@@ -163,7 +164,7 @@ class Admin(commands.Cog):
         except commands.ExtensionError as err:
             await ctx.send(f'{err.__class__.__name__}: {err}')
         else:
-            await ctx.send('\N{OK HAND SIGN}')
+            await ctx.message.add_reaction('<:TickYes:672157420574736386>')
 
     @commands.command(hidden=True)
     async def unload(self, ctx, *, module):
@@ -173,7 +174,7 @@ class Admin(commands.Cog):
         except commands.ExtensionError as err:
             await ctx.send(f'{err.__class__.__name__}: {err}')
         else:
-            await ctx.send('\N{OK HAND SIGN}')
+            await ctx.message.add_reaction('<:TickYes:672157420574736386>')
 
     @commands.group(name='reload', hidden=True, invoke_without_command=True)
     async def _reload(self, ctx, *, module):
@@ -183,7 +184,7 @@ class Admin(commands.Cog):
         except commands.ExtensionError as err:
             await ctx.send(f'{err.__class__.__name__}: {err}')
         else:
-            await ctx.send('\N{OK HAND SIGN}')
+            await ctx.message.add_reaction('<:TickYes:672157420574736386>')
 
     _GIT_PULL_REGEX = re.compile(r'\s*(?P<filename>.+?)\s*\|\s*[0-9]+\s*[+-]+')
 
@@ -287,7 +288,7 @@ class Admin(commands.Cog):
         try:
             with redirect_stdout(stdout):
                 ret = await func()
-        except Exception as e:
+        except Exception:
             value = stdout.getvalue()
             await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
         else:
@@ -297,12 +298,16 @@ class Admin(commands.Cog):
             except:
                 pass
 
+            embed = discord.Embed(colour=discord.Colour(0xab19b7),
+                                  timestamp=datetime.utcnow())
             if ret is None:
                 if value:
-                    await ctx.send(f'```py\n{value}\n```')
+                    embed.description = f'```py\n{value}\n```',
+                    await ctx.send(embed=embed)
             else:
                 self._last_result = ret
-                await ctx.send(f'```py\n{value}{ret}\n```')
+                embed.description = f'```py\n{value}{ret}\n```'
+                await ctx.send(embed=embed)
 
     @commands.command(hidden=True)
     async def repl(self, ctx):
@@ -371,7 +376,7 @@ class Admin(commands.Cog):
                     result = executor(code, variables)
                     if inspect.isawaitable(result):
                         result = await result
-            except Exception as err:
+            except Exception:
                 value = stdout.getvalue()
                 fmt = f'```py\n{value}{traceback.format_exc()}\n```'
             else:
@@ -535,6 +540,10 @@ class Admin(commands.Cog):
             success = True
 
         await ctx.send(f'Status: {ctx.tick(success)} Time: {(end - start) * 1000:.2f}ms')
+
+    @commands.group(name="blocked")
+    async def _blocked(self, ctx: commands.Context, user_id: int, *, reason: str):
+        """ Let's make a private 'why I blocked them case'. """
 
 
 def setup(bot):
