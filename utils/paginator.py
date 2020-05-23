@@ -28,10 +28,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+
+
+
 import asyncio
 import discord
 from discord.ext.commands import Paginator as CommandPaginator
-
 class CannotPaginate(Exception):
     pass
 
@@ -314,7 +316,7 @@ class FieldPages(Pages):
 class TextPages(Pages):
     """Uses a commands.Paginator internally to paginate some text."""
 
-    def __init__(self, ctx, text, *, prefix='```', suffix='```', max_size=2000):
+    def __init__(self, ctx, text, *, prefix='```', suffix='```', max_size=1250):
         paginator = CommandPaginator(
             prefix=prefix, suffix=suffix, max_size=max_size - 200)
         for line in text.split('\n'):
