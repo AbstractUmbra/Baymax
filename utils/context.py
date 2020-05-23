@@ -1,10 +1,9 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -33,6 +32,7 @@ import asyncio
 import discord
 import io
 
+
 class _ContextDBAcquire:
     __slots__ = ('ctx', 'timeout')
 
@@ -56,6 +56,10 @@ class Context(commands.Context):
         super().__init__(**kwargs)
         self.pool = self.bot.pool
         self._db = None
+
+    @staticmethod
+    def codeblock(content, hl_lang=None):
+        return f"```{hl_lang or ''}\n{content}\n```"
 
     async def entry_to_code(self, entries):
         width = max(len(a) for a, b in entries)
