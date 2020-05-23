@@ -41,7 +41,7 @@ import discord
 from discord.ext import commands
 import import_expression
 
-from utils import formatters
+from utils import formats
 from utils.paginator import TextPages
 
 
@@ -228,7 +228,7 @@ class Admin(commands.Cog):
             # to_return = f"{value}{result}"
             to_return = f"{result}"
         if result:
-            pages = formatters.group(to_return, 1000)
+            pages = formats.group(to_return, 1000)
             pages = [ctx.codeblock(page, 'py') for page in pages]
             pages = TextPages(ctx, to_return, prefix="```py")
             await pages.paginate()
