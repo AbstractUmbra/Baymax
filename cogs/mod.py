@@ -33,8 +33,6 @@ from collections import Counter, defaultdict
 import datetime
 import enum
 import io
-from inspect import cleandoc
-import json
 import logging
 import re
 import shlex
@@ -468,7 +466,7 @@ class Mod(commands.Cog):
 
         try:
             await author.ban(reason=f'Spamming mentions ({mention_count} mentions)')
-        except Exception as e:
+        except Exception:
             log.info(
                 f'Failed to autoban member {author} (ID: {author.id}) in guild ID {guild_id}')
         else:
