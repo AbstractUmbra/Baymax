@@ -23,6 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import typing
+from textwrap import shorten
 
 import discord
 from discord.ext import commands, menus
@@ -53,31 +54,15 @@ class SubredditPost:
         self.url = f"https://reddit.com/{subreddit_dict['permalink']}"
         self.resp_url = subreddit_dict['url']
         self.subreddit = subreddit_dict['subreddit_name_prefixed']
-        self.title = subreddit_dict['title']
+        self.title = shorten(subreddit_dict['title'], width=200)
         self.upvotes = int(subreddit_dict['ups'])
-        self.text = subreddit_dict.get('selftext', None)
+        self.text = shorten(subreddit_dict.get('selftext', None), width=2000)
         self.nsfw = subreddit_dict.get('over_18', False)
         self.thumbnail = subreddit_dict.get('thumbnail', None)
         self.comment_count = subreddit_dict.get('num_comments', 0)
         self.author = f"/u/{subreddit_dict['author']}"
         self.video_link = video_link
         self.image_link = image_link
-
-    @property
-    def posttitle(self):
-        """ Handles posttitle if length is too much. """
-        if len(self.title) > 256:
-            return f"{self.title[:200]}..."
-        return self.title
-
-    @property
-    def selftext(self):
-        """ Self-text handling. """
-        if self.text:
-            if len(self.text) > 2000:
-                return f"{self.text[:2000]}..."
-            return self.text
-        return None
 
 
 class Reddit(commands.Cog):
@@ -95,8 +80,8 @@ class Reddit(commands.Cog):
 
         for item in iterable:
             embed = discord.Embed(
-                title=item.posttitle,
-                description=item.selftext,
+                title=item.title,
+                description=item.text,
                 colour=discord.Colour.red(),
                 url=item.url)
 
@@ -135,9 +120,11 @@ class Reddit(commands.Cog):
         if subr_deets['data'].get('over18', None) and not channel.is_nsfw():
             raise commands.NSFWChannelRequired(channel)
 
+        params = {"t": "all" if sort_by == "top" else ""}
+
         async with self.bot.session.get(
                 f"https://reddit.com/r/{subreddit}/{sort_by}.json",
-                headers=self.headers) as subr_resp:
+                headers=self.headers, params=params) as subr_resp:
             subreddit_json = await subr_resp.json()
 
         subreddit_pages = []
@@ -155,6 +142,7 @@ class Reddit(commands.Cog):
             if _short['stickied'] or (_short['over_18'] and not channel.is_nsfw()):
                 idx += 1
                 continue
+
             image_url = _short['url'] if _short['url'].endswith(
                 common_img_exts) else None
             if "v.redd.it" in _short['url']:
@@ -181,8 +169,6 @@ class Reddit(commands.Cog):
         embeds = await self._perform_search(str(ctx.author), ctx.channel, subreddit, sort_by)
         if not embeds:
             raise commands.BadArgument("Bad subreddit.", subreddit)
-        print(
-            "\n".join(f"{embeds.index(embed)} -> {embed.title}" for embed in embeds))
         pages = menus.MenuPages(source=SubredditPageSource(
             range(0, 10), embeds))
         await pages.start(ctx)
