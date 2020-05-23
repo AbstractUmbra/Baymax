@@ -808,10 +808,10 @@ class Mod(commands.Cog):
         await ctx.guild.ban(member, reason=reason)
         embed = discord.Embed(
             title="Moderation action: Ban",
-            colour=discord.Colour.black()
+            colour=discord.Colour(0xffffff)
         )
         embed.timestamp = datetime.datetime.utcnow()
-        embed.add_field(name="Target", value=member.name)
+        embed.add_field(name="Target", value=member)
         embed.set_footer(text=reason)
         await ctx.send(embed=embed)
 
@@ -853,7 +853,7 @@ class Mod(commands.Cog):
             colour=discord.Colour.black()
         )
         embed.timestamp = datetime.datetime.utcnow()
-        embed.add_field(name="Target", value=member.name)
+        embed.add_field(name="Target", value="\n".join(members))
         embed.description = confirmation
         embed.set_footer(text=reason)
 
@@ -1081,7 +1081,7 @@ class Mod(commands.Cog):
             colour=discord.Colour.greyple()
         )
         embed.timestamp = datetime.datetime.utcnow()
-        embed.add_field(name="Target", value=member.name)
+        embed.add_field(name="Target", value=member)
         embed.set_footer(text=reason)
         await ctx.send(embed=embed)
 
