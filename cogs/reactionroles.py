@@ -114,9 +114,11 @@ class ReactionRoles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel: typing.Union[discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel]):
-        conf_query = "DELETE FROM reactionreaction_config WHERE channel_id = $1 RETURNING guild_id;"
+        conf_query = "DELETE FROM reactionroles_config WHERE channel_id = $1 RETURNING guild_id;"
         role_query = "DELETE FROM reactionroles WHERE guild_id = $1;"
         guild_id = await self.bot.pool.fetchrow(conf_query, channel.id)
+        if not guild_id:
+            return
         return await self.bot.pool.execute(role_query, guild_id['guild_id'])
 
     @cache.cache()
