@@ -157,6 +157,7 @@ class Admin(commands.Cog):
     @commands.command(hidden=True)
     async def load(self, ctx, *, module):
         """Loads a module."""
+        module = f"cogs.{module}"
         try:
             self.bot.load_extension(module)
         except commands.ExtensionError as err:
@@ -167,6 +168,7 @@ class Admin(commands.Cog):
     @commands.command(hidden=True)
     async def unload(self, ctx, *, module):
         """Unloads a module."""
+        module = f"cogs.{module}"
         try:
             self.bot.unload_extension(module)
         except commands.ExtensionError as err:
@@ -177,10 +179,13 @@ class Admin(commands.Cog):
     @commands.group(name='reload', hidden=True, invoke_without_command=True)
     async def _reload(self, ctx, *, module):
         """Reloads a module."""
+        module = f"cogs.{module}"
         try:
             self.bot.reload_extension(module)
         except commands.ExtensionError as err:
             await ctx.send(f'{err.__class__.__name__}: {err}')
+        except commands.ExtensionNotLoaded:
+            return self.bot.load_extension(module)
         else:
             await ctx.message.add_reaction('<:TickYes:672157420574736386>')
 
