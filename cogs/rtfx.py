@@ -6,7 +6,7 @@ import os
 import zlib
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 from utils import fuzzy
 
@@ -205,47 +205,25 @@ class RTFX(commands.Cog):
 
     @commands.command()
     async def rtfs(self, ctx, *, search: str):
-        out_text = ""
-        searches = []
-        if "." in search:
-            searches = search.split(".")
-            search = searches[0]
-            searches = searches[1:]
-        search_out = getattr(discord, search, None)
-        if not search_out:
-            search_out = getattr(commands, search, None)
-            if not search_out:
-                search_out = getattr(tasks, search, None)
-        if not search_out:
-            return await ctx.send("No object found in the discord.py library with this search.")
-        if inspect.isclass(search_out) or searches:
-            if searches:
-                for item in searches:
-                    last_output = search_out
-                    new_output = getattr(search_out, item, None)
-                    if not new_output and not last_output:
-                        return await ctx.send("No object found in the discord.py library with this search.")
-                    elif not new_output:
-                        out_text = f"Could not find `{item}` in `{new_output.__name__}`, instead showing source for `{new_output.__name__}`:\n\n"
-                        search_out = new_output
-                        break
-        if isinstance(search_out, property):
-            search_out = search_out.fget
-
-        lines, firstlinenum = inspect.getsourcelines(search_out)
-        try:
-            module = search_out.__module__
-            location = f"{module.replace('.', '/')}.py"
-        except AttributeError:
-            location = f"{search_out.__name__.replace('.', '/')}.py"
-
+        strs = []
         embed = discord.Embed(
             title="Read the f*ckin source",
             colour=discord.Colour.gold()
         )
-        link = f"https://github.com/Rapptz/discord.py/blob/v{discord.__version__}"
-        embed.description = f"{out_text}[{location}]({link}/{location}#L{firstlinenum}-L{firstlinenum + len(lines) - 1})"
-        embed.set_footer(text=f"Requested by {ctx.author}")
+        async with self.bot.session.get(f"https://rtfs.eviee.me/dpy?search={search}") as resp:
+            results = await resp.json()
+        if results:
+            for result in results:
+                strs.append(
+                    f"[`{result['module']}.{result['object']}`]({result['url']})")
+            strs = strs[:10]
+            embed.title = f"RTFS for '{search}'"
+            embed.description = '\n'.join(x for x in strs)
+            eviee = self.bot.get_user(402159684724719617)
+            embed.set_footer(
+                text=f"Requested by {ctx.author} | Thanks to {eviee} for the API.")
+        else:
+            embed.title = "Couldn't find anything."
         return await ctx.send(embed=embed)
 
 
