@@ -1,3 +1,27 @@
+"""
+The MIT License (MIT)
+
+Copyright (c) 2020 AbstractUmbra
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
 from datetime import datetime
 import random
 
@@ -16,20 +40,31 @@ class TZMenuSource(menus.ListPageSource):
         self.embeds = embeds
         super().__init__(data, per_page=1)
 
-    async def format_page(self, menu, entries):
+    async def format_page(self, menu, page):
         """ Format each page. """
-        return self.embeds[entries]
+        return self.embeds[page]
 
 
 class TimeTable(db.Table, table_name="tz_store"):
+    """ Create the table for timezones. Make it unique per user, per guild. """
+
     id = db.PrimaryKeyColumn()
 
     user_id = db.Column(db.Integer(big=True))
     guild_id = db.Column(db.Integer(big=True))
     tz = db.Column(db.String, unique=True)
 
+    @classmethod
+    def create_table(cls, *, exists_ok=True):
+        """ Unique index for tzs. """
+        statement = super().create_table(exists_ok=exists_ok)
+
+        sql = "CREATE UNIQUE INDEX IF NOT EXISTS timezone_uniq_idx ON tz_store (guild_id, user_id);"
+        return statement + '\n' + sql
+
 
 class Time(commands.Cog):
+    """ Time cog for fun time stuff. """
 
     def __init__(self, bot):
         self.bot = bot
@@ -50,19 +85,19 @@ class Time(commands.Cog):
             embeds.append(embed)
         return embeds
 
-    def _verify_tz(self, tz: str) -> str:
-        lower_tzs = [tz.lower() for tz in pytz.all_timezones]
-        if tz.lower() not in lower_tzs:
+    def _verify_tz(self, v_timezone: str) -> str:
+        lower_tzs = [pt_timezone.lower() for pt_timezone in pytz.all_timezones]
+        if v_timezone.lower() not in lower_tzs:
             return None
-        idx = lower_tzs.index(tz.lower())
-        tz = pytz.all_timezones[idx]
-        return tz
+        idx = lower_tzs.index(v_timezone.lower())
+        v_timezone = pytz.all_timezones[idx]
+        return v_timezone
 
-    def _curr_tz_time(self, tz: str, *, dt: bool = False):
+    def _curr_tz_time(self, curr_timezone: str, *, ret_datetime: bool = False):
         """ We assume it's a good tz here. """
-        timezone = pytz.timezone(tz)
+        timezone = pytz.timezone(curr_timezone)
         dt_obj = datetime.now(timezone)
-        if dt:
+        if ret_datetime:
             return dt_obj
         if dt_obj.day in [1, 21, 31]:
             date_modif = "st"
@@ -72,19 +107,19 @@ class Time(commands.Cog):
             date_modif = "rd"
         else:
             date_modif = "th"
-        return dt_obj.strftime(f"%A %d{date_modif} of %B %Y @ %H:%M %Z%z")
+        return dt_obj.strftime(f"%A %-d{date_modif} of %B %Y @ %H:%M %Z%z")
 
     @commands.command(aliases=['tz'])
-    async def timezone(self, ctx: commands.Context, *, tz: str = None) -> discord.Message:
+    async def timezone(self, ctx: commands.Context, *, timezone: str = None) -> discord.Message:
         """ This will return the time in a specified timezone. """
-        if not tz:
-            tz = random.choice(pytz.all_timezones)
-        tz = self._verify_tz(tz)
-        if not tz:
+        if not timezone:
+            timezone = random.choice(pytz.all_timezones)
+        timezone = self._verify_tz(timezone)
+        if not timezone:
             return await ctx.send("This doesn't seem like a valid timezone.")
         embed = discord.Embed(
-            title=f"Current time in {tz}",
-            description=f"{self._curr_tz_time(tz, dt=False)}"
+            title=f"Current time in {timezone}",
+            description=f"{self._curr_tz_time(timezone, ret_datetime=False)}"
         )
         embed.set_footer(text=f"Requested by: {ctx.author}")
         embed.timestamp = datetime.utcnow()
@@ -102,7 +137,7 @@ class Time(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
-    async def time(self, ctx: commands.Context, member: discord.Member = None):
+    async def time(self, ctx: commands.Context, *, member: discord.Member = None):
         """ Let's look at storing member's tz. """
         if ctx.invoked_subcommand:
             pass
@@ -114,32 +149,34 @@ class Time(commands.Cog):
                 """
         result = await self.bot.pool.fetchrow(query, member.id, ctx.guild.id)
         if not result:
-            return await ctx.send("It seems they haven't set a timezone.")
-        tz = result['tz']
-        current_time = self._curr_tz_time(tz, dt=False)
+            return await ctx.send(f"No timezone for {member} set.")
+        member_timezone = result['tz']
+        current_time = self._curr_tz_time(member_timezone, ret_datetime=False)
         embed = discord.Embed(
             title=f"Time for {member}",
             description=f"```py\n{current_time}```"
         )
+        embed.set_footer(text=member_timezone)
+        embed.timestamp = datetime.utcnow()
         return await ctx.send(embed=embed)
 
     @time.command(name="set")
     @commands.guild_only()
-    async def _set(self, ctx, *, tz: str):
+    async def _set(self, ctx, *, set_timezone: str):
         """ Add your time zone, with a warning about public info. """
-        tz = self._verify_tz(tz)
-        if not tz:
+        set_timezone = self._verify_tz(set_timezone)
+        if not set_timezone:
             return await ctx.send("This doesn't appear to be a valid timezone.")
         query = """ INSERT INTO tz_store (user_id, guild_id, tz)
                     VALUES ($1, $2, $3)
                     ON CONFLICT ON CONSTRAINT unique_guild_user
                     DO UPDATE SET tz = $3;
                 """
-        confirm = await ctx.prompt("This will make your timezone public in this guild, are you sure?",
+        confirm = await ctx.prompt("This will make your timezone public in this guild, confirm?",
                                    reacquire=False)
         if not confirm:
             return
-        await self.bot.pool.execute(query, ctx.author.id, ctx.guild.id, tz)
+        await self.bot.pool.execute(query, ctx.author.id, ctx.guild.id, set_timezone)
         return await ctx.message.add_reaction("<:TickYes:672157420574736386>")
 
     @time.command(name="remove")
@@ -161,10 +198,12 @@ class Time(commands.Cog):
         return await ctx.message.add_reaction("<:TickYes:672157420574736386>")
 
     async def time_error(self, ctx, error):
+        """ Quick error handling for timezones. """
         error = getattr(error, "original", error)
         if isinstance(error, commands.MissingRequiredArgument):
             return await ctx.send("How am I supposed to do this if you don't supply the timezone?")
 
 
 def setup(bot):
+    """ Cog entrypoint. """
     bot.add_cog(Time(bot))
