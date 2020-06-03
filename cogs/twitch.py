@@ -34,6 +34,10 @@ import pytz
 from utils import db
 
 
+class TooManyAlerts(commands.CommandError):
+    """ There are too many twitch alerts for this guild. """
+
+
 class TwitchTable(db.Table):
     """ Create the twitch database table. """
     id = db.PrimaryKeyColumn()
@@ -65,11 +69,12 @@ class Twitch(commands.Cog):
         self.user_endpoint = "https://api.twitch.tv/helix/users"
         self.game_endpoint = "https://api.twitch.tv/helix/games"
         self.get_streamers.start()
+        self.streamer_limit = 5
 
-    async def _get_streamers(self, name: str) -> asyncpg.Record:
+    async def _get_streamers(self, name: str, guild_id: int) -> asyncpg.Record:
         """ To get all streamers in the db. """
-        query = """ SELECT * FROM twitchtable WHERE streamer_name = $1; """
-        return await self.bot.pool.fetch(query, name)
+        query = """ SELECT * FROM twitchtable WHERE streamer_name = $1 AND guild_id = $2; """
+        return await self.bot.pool.fetch(query, name, guild_id)
 
     async def _refresh_oauth(self) -> None:
         """ Let's call this whenever we get locked out. """
@@ -130,7 +135,8 @@ class Twitch(commands.Cog):
         oauth_results = await self.bot.pool.fetchrow(oauth_query)
         embed = discord.Embed(title="Streamer details",
                               colour=discord.Colour.blurple())
-        embed.description = "\n".join(f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}" for item in results)
+        embed.description = "\n".join(
+            f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}" for item in results)
         embed.add_field(name="OAuth Edited at", value=oauth_results['edited_at'].strftime(
             "%d-%m-%Y %H:%M:%S"))
         embed.add_field(name="OAuth Expires at", value=oauth_results['expires_at'].strftime(
@@ -142,23 +148,56 @@ class Twitch(commands.Cog):
     async def add_streamer(self, ctx, name: str, channel: discord.TextChannel = None) -> typing.Union[discord.Reaction, discord.Message]:
         """ Add a streamer to the database for polling. """
         channel = channel or ctx.channel
-        results = await self._get_streamers(name)
+        results = await self._get_streamers(name, ctx.guild.id)
         if results:
             return await ctx.send("This streamer is already monitored.")
         query = """ INSERT INTO twitchtable(guild_id, channel_id, streamer_name, streamer_last_datetime) VALUES($1, $2, $3, $4); """
         await self.bot.pool.execute(query, ctx.guild.id, channel.id, name, (datetime.datetime.utcnow() - datetime.timedelta(hours=3)))
         return await ctx.message.add_reaction(":TickYes:672157420574736386")
 
+    @add_streamer.before_invoke
+    async def notification_check(self, ctx):
+        """ We're gonna check if they have X streams already. """
+        query = "SELECT * FROM twitchtable WHERE guild_id = $1;"
+        results = await self.bot.pool.fetch(query, ctx.guild.id)
+        if len(results) >= self.streamer_limit:
+            raise TooManyAlerts(
+                "There are too many alerts for this guild already configured.")
+
     @twitch.command(name="remove")
     @commands.has_guild_permissions(manage_channels=True)
     async def remove_streamer(self, ctx, name: str) -> typing.Union[discord.Reaction, discord.Message]:
         """ Add a streamer to the database for polling. """
-        results = await self._get_streamers(name)
+        results = await self._get_streamers(name, ctx.guild.id)
         if not results:
             return await ctx.send("This streamer is not in the monitored list.")
         query = """ DELETE FROM twitchtable WHERE streamer_name = $1; """
         await self.bot.pool.execute(query, name)
         return await ctx.message.add_reaction(":TickYes:672157420574736386")
+
+    @twitch.command(name="clear")
+    @commands.has_guild_permissions(manage_channels=True)
+    async def clear_streams(self, ctx, channel: discord.TextChannel = None) -> typing.Union[discord.Reaction, discord.Message]:
+        """ Clears all streams for the context channel or passed channel. """
+        channel = channel or ctx.channel
+        query = "DELETE FROM twitchtable WHERE channel_id = $1 AND guild_id = $2;"
+        confirm = await ctx.prompt("This will remove all streams notifications for the specified channel. Are you sure?", reacquire=False)
+        if confirm:
+            await self.bot.pool.execute(query, channel.id, ctx.guild.id)
+            return await ctx.message.add_reaction(":TickYes:672157420574736386")
+        return await ctx.message.add_reaction(":TickNo:672157388823986187")
+
+    @clear_streams.error
+    @remove_streamer.error
+    @add_streamer.error
+    async def twitch_error(self, ctx, error):
+        error = getattr(error, "original", error)
+        if isinstance(error, commands.MissingPermissions):
+            return await ctx.send("Doesn't look like you can manage channels there bub.")
+        elif isinstance(error, commands.BotMissingPermissions):
+            return await ctx.send("Doesn't look like I can manage channels here bub.")
+        elif isinstance(error, TooManyAlerts):
+            return await ctx.send("Sorry, you have too many alerts active in this guild.")
 
     @tasks.loop(minutes=5.0)
     async def get_streamers(self) -> None:
