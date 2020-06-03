@@ -1,0 +1,18 @@
+{
+    "apps": [
+        {
+            "name": "Robo-Hz",
+            "cwd": "/root/Robo-Hz/",
+            "script": "launcher.py",
+            "env": {
+                "PIPENV_VERBOSITY": -1
+            },
+            "wait_ready": true,
+            "autorestart": true,
+            "max_restart": 5,
+            "interpreter": "/usr/local/bin/pipenv",
+            "interpreter_args": "run python",
+            "log_date_format": "DD-MM-YYYY HH:mm:ss"
+        }
+    ]
+}
