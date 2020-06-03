@@ -1,5 +1,5 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
@@ -32,6 +32,7 @@ from collections import Counter
 import inspect
 import itertools
 import os
+import textwrap
 from typing import Union
 import unicodedata
 
@@ -371,7 +372,7 @@ class Meta(commands.Cog):
         await self.bot.set_guild_prefixes(ctx.guild, [])
         await ctx.send(ctx.tick(True))
 
-    @commands.command()
+    @commands.command(enabled=False)
     async def source(self, ctx, *, command: str = None):
         """Displays my full source code or for a specific command.
 
@@ -666,7 +667,16 @@ class Meta(commands.Cog):
         """Joins a server."""
         perms = discord.Permissions.all()
         perms.administrator = False
-        await ctx.send(f'<{discord.utils.oauth_url(self.bot.client_id, perms)}>')
+        stringy = f"""
+                   Okay you have two options:
+                   Invite me with managed permissions [here]({discord.utils.oauth_url(self.bot.client_id, perms)})
+                   or...
+                   Invite me with no permissions, and you handle it with your own roles.
+                   [I can't promise I'll work until you fix my perms.]({discord.utils.oauth_url(self.bot.client_id)})
+                   """
+        embed = discord.Embed()
+        embed.description = textwrap.dedent(stringy)
+        await ctx.send(embed=embed)
 
     @commands.command(rest_is_raw=True, hidden=True)
     @commands.is_owner()
