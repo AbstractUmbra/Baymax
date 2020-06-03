@@ -1,5 +1,5 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
@@ -89,7 +89,6 @@ class Pages:
             ('\N{BLACK RIGHT-POINTING TRIANGLE}', self.next_page),
             ('\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}',
              self.last_page),
-            ('\N{INPUT SYMBOL FOR NUMBERS}', self.numbered_page),
             ('\N{BLACK SQUARE FOR STOP}', self.stop_pages),
             ('\N{INFORMATION SOURCE}', self.show_help),
         ]
@@ -222,6 +221,9 @@ class Pages:
         except Exception:
             pass
 
+    async def delete_message(self):
+        return await self.message.delete(delay=3)
+
     async def show_help(self):
         """shows this message"""
         messages = ['Welcome to the interactive paginator!\n']
@@ -318,7 +320,7 @@ class TextPages(Pages):
 
     def __init__(self, ctx, text, *, prefix='```', suffix='```', max_size=1250):
         paginator = CommandPaginator(
-            prefix=prefix, suffix=suffix, max_size=max_size - 200)
+            prefix=prefix, suffix=suffix, max_size=max_size)
         for line in text.split('\n'):
             paginator.add_line(line)
 

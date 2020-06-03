@@ -113,3 +113,9 @@ class TabularData:
 
         to_draw.append(sep)
         return '\n'.join(to_draw)
+
+
+def format_codeblock(content, language='py', replace_existing=True, new="'''"):
+    if replace_existing:
+        content = content.replace('```', new)
+    return f'```{language}\n{content}\n```'
