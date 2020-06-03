@@ -38,7 +38,7 @@ import traceback
 from typing import Optional
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, menus
 import import_expression
 
 from utils import formats
@@ -216,6 +216,8 @@ class Admin(commands.Cog):
 
         to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
 
+        result = None
+
         try:
             import_expression.exec(to_compile, env)
         except Exception as err:
@@ -237,16 +239,12 @@ class Admin(commands.Cog):
             pages = [ctx.codeblock(page, 'py') for page in pages]
             pages = TextPages(ctx, to_return, prefix="```py")
             await pages.paginate()
+        else:
+            return ctx.message.add_reaction("\N{CROSS MARK}")
 
     @commands.command(hidden=True)
     async def sql(self, ctx, *, query: str):
         """Run some SQL."""
-        # the imports are here because I imagine some people would want to use
-        # this cog as a base for their other cog, and since this one is kinda
-        # odd and unnecessary for most people, I will make it easy to remove
-        # for those people.
-        from utils.formats import TabularData, plural
-
         query = self.cleanup_code(query)
 
         is_multistatement = query.count(';') > 1
@@ -268,12 +266,12 @@ class Admin(commands.Cog):
             return await ctx.send(f'`{dati:.2f}ms: {results}`')
 
         headers = list(results[0].keys())
-        table = TabularData()
+        table = formats.TabularData()
         table.set_columns(headers)
         table.add_rows(list(r.values()) for r in results)
         render = table.render()
 
-        fmt = f'```\n{render}\n```\n*Returned {plural(rows):row} in {dati:.2f}ms*'
+        fmt = f'```\n{render}\n```\n*Returned {formats.plural(rows):row} in {dati:.2f}ms*'
         if len(fmt) > 2000:
             filep = io.BytesIO(fmt.encode('utf-8'))
             await ctx.send('Too many results...', file=discord.File(filep, 'results.txt'))
@@ -283,8 +281,6 @@ class Admin(commands.Cog):
     @commands.command(hidden=True)
     async def sql_table(self, ctx, *, table_name: str):
         """Runs a query describing the table schema."""
-        from utils.formats import TabularData
-
         query = """SELECT column_name, data_type, column_default, is_nullable
                    FROM INFORMATION_SCHEMA.COLUMNS
                    WHERE table_name = $1
@@ -293,7 +289,7 @@ class Admin(commands.Cog):
         results = await ctx.db.fetch(query, table_name)
 
         headers = list(results[0].keys())
-        table = TabularData()
+        table = formats.TabularData()
         table.set_columns(headers)
         table.add_rows(list(r.values()) for r in results)
         render = table.render()
