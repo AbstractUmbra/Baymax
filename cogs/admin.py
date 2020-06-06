@@ -38,11 +38,17 @@ import traceback
 from typing import Optional
 
 import discord
-from discord.ext import commands, menus
+from discord.ext import commands
 import import_expression
 
-from utils import formats
+from utils import formats, db
 from utils.paginator import TextPages
+
+
+class BlockTable(db.Table, table_name="owner_blocked"):
+    """ I hate these people. """
+    user_id = db.Column(db.Integer(big=True), primary_key=True)
+    reason = db.Column(db.String)
 
 
 class PerformanceMocker:
@@ -363,9 +369,37 @@ class Admin(commands.Cog):
 
         await ctx.send(f'Status: {ctx.tick(success)} Time: {(end - start) * 1000:.2f}ms')
 
-    @commands.group(name="blocked")
+    @commands.group(name="blocked", invoke_without_command=True)
     async def _blocked(self, ctx: commands.Context, user_id: int, *, reason: str):
         """ Let's make a private 'why I blocked them case'. """
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            pass
+        query = """ INSERT INTO owner_blocked (user_id, reason)
+                    VALUES ($1, $2)
+                    ON CONFLICT (user_id)
+                    DO UPDATE SET reason = $2
+                """
+        await self.bot.pool.execute(query, user_id, reason)
+        return await ctx.message.add_reaction("<:tomatomad:712995196215885835>")
+
+    @_blocked.command(name="query", aliases=["q"])
+    async def _blocked_query(self, ctx, user_id: int):
+        query = """ SELECT reason FROM owner_blocked WHERE user_id = $1; """
+        result = await self.bot.pool.fetchrow(query, user_id)
+        if not result:
+            return await ctx.send("Huh, you've not complained about them yet.")
+        embed = discord.Embed(description=result['reason'])
+        msg = await ctx.send(embed=embed)
+        return await msg.add_reaction("<:tomatomad:712995196215885835>")
+
+    @_blocked.command(name="remove", aliases=["r"])
+    async def _blocked_remove(self, ctx: commands.Context, user_id: int) -> discord.Reaction:
+        """ Remove a block entry. """
+        query = """ DELETE FROM owner_blocked WHERE user_id = $1; """
+        await self.bot.pool.execute(query, user_id)
+        return await ctx.message.add_reaction("<:TickYes:672157420574736386>")
 
 
 def setup(bot):
