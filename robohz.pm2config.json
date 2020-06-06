@@ -10,6 +10,7 @@
             "wait_ready": true,
             "autorestart": true,
             "max_restart": 5,
+            "instances": 1,
             "interpreter": "/usr/local/bin/pipenv",
             "interpreter_args": "run python",
             "log_date_format": "DD-MM-YYYY HH:mm:ss"
