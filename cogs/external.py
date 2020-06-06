@@ -1,4 +1,5 @@
 from datetime import datetime
+import textwrap
 
 import discord
 from discord.ext import commands
@@ -18,7 +19,24 @@ class PypiObject:
             self.module_latest_ver)][0]['upload_time']
         self.module_description = pypi_dict['info']['summary'] or None
         self.urls = pypi_dict['info']['project_urls']
-        self.classifiers = pypi_dict['info']['classifiers'] or None
+        self.raw_classifiers = pypi_dict['info']['classifiers'] or None
+
+    @property
+    def minimum_ver(self) -> str:
+        return discord.utils.escape_markdown(self.module_minimum_py)
+
+    @property
+    def classifiers(self) -> str:
+        if self.raw_classifiers:
+            new = textwrap.shorten("\N{zwsp}".join(
+                self.raw_classifiers), width=300)
+            return "\n".join(new.split("\N{zwsp}"))
+
+    @property
+    def description(self) -> str:
+        if self.module_description:
+            return textwrap.shorten(self.module_description, width=300)
+        return None
 
     @property
     def release_datetime(self) -> datetime:
@@ -51,7 +69,7 @@ class External(commands.Cog):
         embed = discord.Embed(title=f"{pypi_details.module_name} on PyPi",
                               colour=discord.Colour(0x000000))
         embed.set_author(name=pypi_details.module_author)
-        embed.description = pypi_details.module_description
+        embed.description = pypi_details.description
         if pypi_details.module_author_email:
             embed.add_field(name="Author Contact",
                             value=f"[Email]({pypi_details.module_author_email})")
@@ -60,15 +78,16 @@ class External(commands.Cog):
         embed.add_field(name="Released at",
                         value=pypi_details.release_datetime, inline=True)
         embed.add_field(name="Minimum Python ver",
-                        value=pypi_details.module_minimum_py, inline=False)
+                        value=pypi_details.minimum_ver, inline=False)
         urls = "\n".join(
             [f"[{key}]({value})" for key, value in pypi_details.urls.items()])
         embed.add_field(name="Relevant URLs", value=urls)
         embed.add_field(
             name="License", value=pypi_details.module_licese)
-        if pypi_details.classifiers:
-            embed.add_field(name="Classifiers", value="\n".join(
-                pypi_details.classifiers), inline=False)
+        if pypi_details.raw_classifiers:
+            print(pypi_details.raw_classifiers)
+            embed.add_field(name="Classifiers",
+                            value=pypi_details.classifiers, inline=False)
         embed.set_footer(text=f"Requested by {ctx.author.display_name}")
         return await ctx.send(embed=embed)
 
