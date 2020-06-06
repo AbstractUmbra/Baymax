@@ -1,7 +1,7 @@
 import asyncio
 import datetime
 import difflib
-import traceback
+import textwrap
 import typing
 
 import discord
@@ -43,6 +43,7 @@ class SnipeEditTable(db.Table, table_name="snipe_edits"):
     before_content = db.Column(db.String())
     after_content = db.Column(db.String())
     edited_time = db.Column(db.Integer(big=True))
+    jump_url = db.Column(db.String)
 
 
 class AvatarTable(db.Table, table_name="avatars"):
@@ -82,7 +83,7 @@ class Snipe(commands.Cog):
                                         value=f"[link]({item})")
             fmt = f"Result {records.index(record)+1}/{len(records)}"
             embed.set_footer(text=f"{fmt} | Author ID: {author.id}")
-            embed.timestamp = datetime.datetime.fromtimestamp(
+            embed.timestamp = datetime.datetime.utcfromtimestamp(
                 record['delete_time'])
             embeds.append(embed)
         return embeds
@@ -92,15 +93,21 @@ class Snipe(commands.Cog):
         for record in records:
             channel = self.bot.get_channel(record['channel_id'])
             author = self.bot.get_user(record['user_id'])
+            jump = record['jump_url']
             embed = discord.Embed()
             embed.set_author(name=author.name, icon_url=author.avatar_url)
             embed.title = f"Edited in {channel.name}"
             diff_text = self.get_diff(
                 record['before_content'], record['after_content'])
-            embed.description = formats.format_codeblock(
-                diff_text, language="diff") if diff_text else None
+            if len(diff_text) > 2048:
+                embed.description = f"Diff is too large, here's the before:\n```{record['before_content']}```"
+            else:
+                embed.description = formats.format_codeblock(
+                    diff_text, language="diff") if diff_text else None
             fmt = f"Result {records.index(record)+1}/{len(records)}"
             embed.set_footer(text=f"{fmt} | Author ID: {author.id}")
+            embed.add_field(name="Jump to this message",
+                            value=f"[Here!]({jump})")
             embed.timestamp = datetime.datetime.fromtimestamp(
                 record['edited_time'])
             embeds.append(embed)
@@ -160,12 +167,13 @@ class Snipe(commands.Cog):
                 "message_id": m_id,
                 "before_content": before_content,
                 "after_content": after_content,
-                "edited_time": int(edited_time)
+                "edited_time": int(edited_time),
+                "jump_url": after.jump_url
             })
 
     @commands.guild_only()
     @commands.group(name="snipe", aliases=["s"], invoke_without_command=True)
-    async def show_snipes(self, ctx, amount: int = 20, channel: discord.TextChannel = None):
+    async def show_snipes(self, ctx, amount: int = 5, channel: discord.TextChannel = None):
         """ Select the last 20 snipes from this channel. """
         # let's check that amount is an int, clear inputs
         if not isinstance(amount, int):
@@ -189,7 +197,7 @@ class Snipe(commands.Cog):
         await pages.start(ctx)
 
     @show_snipes.command(name="edits", aliases=["e"])
-    async def show_edit_snipes(self, ctx, amount: int = 20, channel: discord.TextChannel = None):
+    async def show_edit_snipes(self, ctx, amount: int = 5, channel: discord.TextChannel = None):
         """ Edit snipes, default of 20. Must have manage_messages to choose a different channel. """
         # let's check that amount is an int, clear inputs
         if not isinstance(amount, int):
@@ -234,9 +242,9 @@ class Snipe(commands.Cog):
         await self.bot.wait_until_ready()
         query = """
                 INSERT INTO snipe_edits (user_id, guild_id, channel_id, message_id, before_content, after_content, edited_time)
-                SELECT x.user_id, x.guild_id, x.channel_id, x.message_id, x.before_content, x.after_content, x.edited_time
+                SELECT x.user_id, x.guild_id, x.channel_id, x.message_id, x.before_content, x.after_content, x.edited_time, x.jump_url
                 FROM jsonb_to_recordset($1::jsonb) AS
-                x(user_id BIGINT, guild_id BIGINT, channel_id BIGINT, message_id BIGINT, before_content TEXT, after_content TEXT, edited_time BIGINT)
+                x(user_id BIGINT, guild_id BIGINT, channel_id BIGINT, message_id BIGINT, before_content TEXT, after_content TEXT, edited_time BIGINT, jump_url TEXT)
                 """
 
         async with self._snipe_lock:
