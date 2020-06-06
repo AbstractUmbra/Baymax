@@ -47,3 +47,22 @@ AOE_QUOTES = [
     "{Celts (Gaelige)} Beidh fear. ~~ As you wish.",
     "{Celts (Gaelige)} Taoubh? ~~ Which way?"
 ]
+
+BF2_QUOTES = [
+    "{Captain Phasma} Submit your weapon for inspection.",
+    "{Captain Phasma} The First Order will conquer you all.",
+    "{Captain Phasma} My troops will storm in and kill you all.",
+    "{Captain Phasma} You can't be so stupid as to think this will be easy.",
+    "{Kylo Ren} I will show you the Dark Side.",
+    "{Kylo Ren} Do not oppose me.",
+    "{Kylo Ren} Cowards!",
+    "{Kylo Ren} Bow... to The First Order.",
+    "{Rey Palpatine} That was lucky.",
+    "{Rey Palpatine} You. You're afraid.",
+    "{Rey Palpatine} You're a monster.",
+    "{Rey Palpatine} I can handle myself.",
+]
+
+COH2_QUOTES = [
+    "Placeholder."
+]
