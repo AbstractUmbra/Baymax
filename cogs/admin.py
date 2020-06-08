@@ -124,6 +124,7 @@ class Admin(commands.Cog):
         self.bot = bot
         self._last_result = None
         self.sessions = set()
+        self.my_guilds = {705500489248145459, 658130291315048448}
 
     async def run_process(self, command):
         """ Runs a shell process. """
@@ -369,6 +370,12 @@ class Admin(commands.Cog):
 
         await ctx.send(f'Status: {ctx.tick(success)} Time: {(end - start) * 1000:.2f}ms')
 
+    async def ban_all(self, dick_id):
+        """ Ban em from all your guilds. """
+        for gid in self.my_guilds:
+            g = self.bot.get_guild(gid)
+            await g.ban(discord.Object(id=dick_id))
+
     @commands.group(name="blocked", invoke_without_command=True)
     async def _blocked(self, ctx: commands.Context, user_id: int, *, reason: str):
         """ Let's make a private 'why I blocked them case'. """
@@ -382,6 +389,7 @@ class Admin(commands.Cog):
                     DO UPDATE SET reason = $2
                 """
         await self.bot.pool.execute(query, user_id, reason)
+        await self.ban_all(user_id)
         return await ctx.message.add_reaction("<:tomatomad:712995196215885835>")
 
     @_blocked.command(name="query", aliases=["q"])
