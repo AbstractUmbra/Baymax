@@ -170,7 +170,7 @@ class Reddit(commands.Cog):
         if not embeds:
             raise commands.BadArgument("Bad subreddit.", subreddit)
         pages = menus.MenuPages(source=SubredditPageSource(
-            range(0, 10), embeds))
+            range(0, 10), embeds), delete_message_after=True)
         await pages.start(ctx)
 
     @ _reddit.error
