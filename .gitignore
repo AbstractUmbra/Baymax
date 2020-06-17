@@ -1,8 +1,7 @@
 __pycache__/
 .vscode/
+__dnk__/
+migrations/
+prefixes.json
 *.log
 config.py
-cogs/__dnk__/
-Pipfile.lock
-prefixes.json
-migrations/
