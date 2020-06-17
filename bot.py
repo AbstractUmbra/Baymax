@@ -41,7 +41,7 @@ from utils.config import Config
 
 
 DESCRIPTION = """
-Hello! I am a bot written by Umbra#5443 to provide some nice utilities.
+Hello! I am a bot written by Umbra#0009 to provide some nice utilities.
 """
 
 LOGGER = logging.getLogger(__name__)
