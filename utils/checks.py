@@ -108,3 +108,11 @@ def moogs_and_me():
             return True
         return False
     return commands.check(predicate)
+
+
+def mick_and_me():
+    def predicate(ctx):
+        if ctx.author.id in (361158149371199488, 155863164544614402) and ctx.guild.id == 690566307409821697:
+            return True
+        return False
+    return commands.check(predicate)
