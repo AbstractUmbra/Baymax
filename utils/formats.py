@@ -27,6 +27,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+from discord.utils import escape_markdown
 
 def group(iterable, page_len=50):
     pages = []
@@ -115,7 +116,13 @@ class TabularData:
         return '\n'.join(to_draw)
 
 
-def format_codeblock(content, language='py', replace_existing=True, new="'''"):
+def format_codeblock(content, language='py', replace_existing=True, escape_md=True, new="'''"):
+    # split_content = content.splitlines()
+    # new = textwrap.shorten("\N{zwsp}".join(
+    #     split_content), width=300)
+    # content = "\n".join(new.split("\N{zwsp}"))
     if replace_existing:
         content = content.replace('```', new)
+    if escape_md:
+        content = escape_markdown(content)
     return f'```{language}\n{content}\n```'
