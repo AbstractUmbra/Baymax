@@ -6,10 +6,12 @@ A personal bot for Discord, written with love and fun.
 
 First things first: I would prefer (and will not support) you running instances of my Bot. Just call the `join` command and invite it to your server.
 
+As such, the setup of my config file is not public.
+
 Nevertheless; installation steps are below.
 
 ### Installation
-1. Install Python 3.6.0 or higher.
+1. Install Python 3.6.1 or higher.
 2. Set up a venv (of any flavour)
    1. I prefer pipenv, so I have provided a Pipfile as well as a 'requirements.txt'
 3. Install required dependencies
@@ -21,14 +23,13 @@ Nevertheless; installation steps are below.
    CREATE EXTENSION pg_trgm;
     ```
 5. Set up configuration.
-   1. There is an example `config.py` in the repo. Please replace the values in there with your actual values.
 6. Configure the database.
    1. `python launcher.py db init`
 
 
 ## Requirements
 
-    - Python 3.6+
+    - Python 3.6.1+
     - PostgreSQL server/access with a minimum of v9
     - Minimum version of Discord.py v1.3.0
     - libgit2 install on host, or via pip.
