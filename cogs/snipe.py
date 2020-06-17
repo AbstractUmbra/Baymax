@@ -46,11 +46,6 @@ class SnipeEditTable(db.Table, table_name="snipe_edits"):
     jump_url = db.Column(db.String)
 
 
-class AvatarTable(db.Table, table_name="avatars"):
-    user_id = db.Column(db.Integer(big=True), primary_key=True)
-    url = db.Column(db.Array(db.String))
-
-
 class Snipe(commands.Cog):
     """ Sniping cog. """
 
