@@ -66,6 +66,13 @@ class Snipe(commands.Cog):
         self.snipe_delete_update.stop()
         self.snipe_edit_update.stop()
 
+    @commands.Cog.listener()
+    async def on_guild_leave(self, guild):
+        query = """ DELETE FROM snipe_edits WHERE guild_id = $1;
+                    DELETE FROM snipe_deletes WHERE guild_id = $1;
+                """
+        return await self.bot.pool.execute(query, guild.id)
+
     def _gen_delete_embeds(self, records: typing.List[Record]) -> typing.List[discord.Embed]:
         embeds = []
         for record in records:
@@ -173,6 +180,7 @@ class Snipe(commands.Cog):
 
     @commands.guild_only()
     @commands.group(name="snipe", aliases=["s"], invoke_without_command=True)
+    @commands.cooldown(1, 15, commands.BucketType.user)
     async def show_snipes(self, ctx, amount: int = 5, channel: discord.TextChannel = None):
         """ Select the last 20 snipes from this channel. """
         # let's check that amount is an int, clear inputs
@@ -193,10 +201,12 @@ class Snipe(commands.Cog):
         if not embeds:
             return await ctx.send("No snipes for this channel.")
         pages = menus.MenuPages(
-            source=SnipePageSource(range(0, amount), embeds))
+            source=SnipePageSource(range(0, amount), embeds), delete_message_after=True)
         await pages.start(ctx)
 
+    @commands.guild_only()
     @show_snipes.command(name="edits", aliases=["e"])
+    @commands.cooldown(1, 15, commands.BucketType.user)
     async def show_edit_snipes(self, ctx, amount: int = 5, channel: discord.TextChannel = None):
         """ Edit snipes, default of 20. Must have manage_messages to choose a different channel. """
         # let's check that amount is an int, clear inputs
@@ -218,7 +228,7 @@ class Snipe(commands.Cog):
         if not embeds:
             return await ctx.send("No edit snipes for this channel.")
         pages = menus.MenuPages(
-            source=SnipePageSource(range(0, amount), embeds))
+            source=SnipePageSource(range(0, amount), embeds), delete_message_after=True)
         await pages.start(ctx)
 
     @tasks.loop(minutes=1)
@@ -241,7 +251,7 @@ class Snipe(commands.Cog):
         """ Batch updates for the snipes. """
         await self.bot.wait_until_ready()
         query = """
-                INSERT INTO snipe_edits (user_id, guild_id, channel_id, message_id, before_content, after_content, edited_time)
+                INSERT INTO snipe_edits (user_id, guild_id, channel_id, message_id, before_content, after_content, edited_time, jump_url)
                 SELECT x.user_id, x.guild_id, x.channel_id, x.message_id, x.before_content, x.after_content, x.edited_time, x.jump_url
                 FROM jsonb_to_recordset($1::jsonb) AS
                 x(user_id BIGINT, guild_id BIGINT, channel_id BIGINT, message_id BIGINT, before_content TEXT, after_content TEXT, edited_time BIGINT, jump_url TEXT)
