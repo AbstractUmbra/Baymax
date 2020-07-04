@@ -2,7 +2,7 @@
     "apps": [
         {
             "name": "Robo-Hz",
-            "cwd": "/root/Robo-Hz/",
+            "cwd": "/home/robohz/Robo-Hz/",
             "script": "launcher.py",
             "env": {
                 "PIPENV_VERBOSITY": -1

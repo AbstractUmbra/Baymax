@@ -74,7 +74,10 @@ class Snipe(commands.Cog):
             channel = self.bot.get_channel(record['channel_id'])
             author = self.bot.get_user(record['user_id'])
             embed = discord.Embed()
-            embed.set_author(name=author.name, icon_url=author.avatar_url)
+            if not author:
+                embed.set_author(name="A deleted user...")
+            else:
+                embed.set_author(name=author.name, icon_url=author.avatar_url)
             embed.title = f"Deleted from {channel.name}"
             embed.description = f"```\n{record['message_content']}```" if record['message_content'] else None
             if record['attachment_urls']:
@@ -97,7 +100,10 @@ class Snipe(commands.Cog):
             author = self.bot.get_user(record['user_id'])
             jump = record['jump_url']
             embed = discord.Embed()
-            embed.set_author(name=author.name, icon_url=author.avatar_url)
+            if not author:
+                embed.set_author(name="A deleted user...")
+            else:
+                embed.set_author(name=author.name, icon_url=author.avatar_url)
             embed.title = f"Edited in {channel.name}"
             diff_text = self.get_diff(
                 record['before_content'], record['after_content'])
@@ -126,6 +132,8 @@ class Snipe(commands.Cog):
             return
         if not message.content and not message.attachments:
             return
+        if message.author.id == 565095015874035742:
+            return
         delete_time = datetime.datetime.now().replace(microsecond=0).timestamp()
         a_id = message.author.id
         g_id = message.guild.id
@@ -153,6 +161,8 @@ class Snipe(commands.Cog):
             return
         if before.content == after.content:
             return
+        if before.author.id == 565095015874035742:
+            return
         edited_time = after.edited_at or datetime.datetime.now()
         edited_time = edited_time.replace(microsecond=0).timestamp()
         a_id = after.author.id
@@ -177,7 +187,7 @@ class Snipe(commands.Cog):
     @commands.group(name="snipe", aliases=["s"], invoke_without_command=True)
     @commands.cooldown(1, 15, commands.BucketType.user)
     async def show_snipes(self, ctx, amount: int = 5, channel: discord.TextChannel = None):
-        """ Select the last 20 snipes from this channel. """
+        """ Select the last N snipes from this channel. """
         # let's check that amount is an int, clear inputs
         if not isinstance(amount, int):
             return await ctx.send("Fuck off.")
@@ -186,15 +196,14 @@ class Snipe(commands.Cog):
                 return await ctx.send("Sorry, you need to have 'Manage Messages' to view another channel.")
         query = "SELECT * FROM snipe_deletes WHERE guild_id = $2 AND channel_id = $3 ORDER BY id DESC LIMIT $1;"
         results = await self.bot.pool.fetch(query, amount, ctx.guild.id, ctx.channel.id)
-        dict_results = [dict(result) for result in results]
-        local_snipes = [
-            snipe for snipe in self.snipe_deletes if snipe['channel_id'] == ctx.channel.id]
+        dict_results = [dict(result) for result in results] if results else []
+        local_snipes = [snipe for snipe in self.snipe_deletes if snipe['channel_id'] == ctx.channel.id]
         full_results = dict_results + local_snipes
+        if not full_results:
+            return await ctx.send("No snipes for this channel.")
         full_results = sorted(
             full_results, key=lambda d: d['delete_time'], reverse=True)[:amount]
         embeds = self._gen_delete_embeds(full_results)
-        if not embeds:
-            return await ctx.send("No snipes for this channel.")
         pages = menus.MenuPages(
             source=SnipePageSource(range(0, amount), embeds), delete_message_after=True)
         await pages.start(ctx)
@@ -203,7 +212,7 @@ class Snipe(commands.Cog):
     @show_snipes.command(name="edits", aliases=["e"])
     @commands.cooldown(1, 15, commands.BucketType.user)
     async def show_edit_snipes(self, ctx, amount: int = 5, channel: discord.TextChannel = None):
-        """ Edit snipes, default of 20. Must have manage_messages to choose a different channel. """
+        """ Edit snipes, shows the last N from. Must have manage_messages to choose a different channel. """
         # let's check that amount is an int, clear inputs
         if not isinstance(amount, int):
             return await ctx.send("Fuck off.")
@@ -225,6 +234,41 @@ class Snipe(commands.Cog):
         pages = menus.MenuPages(
             source=SnipePageSource(range(0, amount), embeds), delete_message_after=True)
         await pages.start(ctx)
+
+    @show_snipes.command(name="clear", aliases=["remove", "delete"], hidden=True)
+    @commands.has_guild_permissions(manage_messages=True)
+    async def _snipe_clear(self, ctx, target: typing.Union[discord.Member, discord.TextChannel]):
+        """
+        Remove all data stored on snipes, including edits for the target Member or TextChannel.
+        Must have the 'manage_messages' permission to do this.
+        """
+        member = False
+        channel = False
+        if isinstance(target, discord.Member):
+            deletes = "DELETE FROM snipe_deletes WHERE guild_id = $1 and user_id = $2;"
+            edits = "DELETE FROM snipe_edits WHERE guild_id = $1 and user_id = $2;"
+            member = True
+        elif isinstance(target, discord.TextChannel):
+            deletes = "DELETE FROM snipe_deletes WHERE guild_id = $1 and channel_id = $2;"
+            edits = "DELETE FROM snipe_edits WHERE guild_id = $1 and channel_id = $2;"
+            channel = True
+        else:
+            # Shouldn't happen...
+            return
+        confirm = await ctx.prompt("This is a destructive action and non-recoverable. Are you sure?")
+        if not confirm:
+            return
+        await self.bot.pool.execute(deletes, ctx.guild.id, target.id)
+        await self.bot.pool.execute(edits, ctx.guild.id, target.id)
+        for item in self.snipe_deletes:
+            if member:
+                if item['user_id'] == target.id:
+                    self.snipe_deletes.remove(item)
+            elif channel:
+                if item['channel_id'] == target.id:
+                    self.snipe_deletes.remove(item)
+
+        return await ctx.message.add_reaction("<:TickYes:672157420574736386>")
 
     @tasks.loop(minutes=1)
     async def snipe_delete_update(self):
@@ -256,6 +300,12 @@ class Snipe(commands.Cog):
             await self.bot.pool.execute(query, self.snipe_edits)
             self.snipe_edits.clear()
 
+    @show_snipes.error
+    @show_edit_snipes.error
+    async def snipe_error(self, ctx, error):
+        error = getattr(error, "original", error)
+        if isinstance(error, commands.CommandOnCooldown):
+            return await ctx.send(f"Ha! Snipes are on cooldown for {error.retry_after}s.")
 
 def setup(bot):
     bot.add_cog(Snipe(bot))

@@ -66,3 +66,13 @@ BF2_QUOTES = [
 COH2_QUOTES = [
     "Placeholder."
 ]
+
+SWTOR_QUOTES = [
+    "{Soa, The Infernal One} For I ruled a thousand worlds, and Korriban was my crown, Korriban my cradle and my testing ground.",
+    "{Soa, The Infernal One} I have waited twenty thousand years, but I will wait no longer.",
+    "{Dread Master Raptus} Sanity is prison. Let the madness release you!",
+    "{Dread Master Bestia} Consume them! Consume them all!",
+    "{HK-47} Interjection: Silence, meatbag!",
+    "{Dread Council} *In unison* We fight as one!",
+    "{Darth Revan} You've never fought anyone like me. I was Sith. I am Jedi!",
+]

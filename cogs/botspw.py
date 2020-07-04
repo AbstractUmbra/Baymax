@@ -24,7 +24,9 @@ DEALINGS IN THE SOFTWARE.
 
 import json
 import logging
+import typing
 
+import discord
 from discord.ext import commands
 
 log = logging.getLogger(__name__)
@@ -66,6 +68,10 @@ class BotsPW(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         await self.update()
+
+    @commands.command()
+    async def dbl(self, ctx, target_bot: typing.Union[discord.Member, int]):
+        """ Get a bot's info from DBL. """
 
 
 def setup(bot):

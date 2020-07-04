@@ -69,6 +69,11 @@ class Time(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_guild_remove(self, guild):
+        query = "DELETE FROM tz_store WHERE guild_id = $1;"
+        return await self.bot.pool.execute(query, guild.id)
+
     def _gen_tz_embeds(self,
                        requester: str,
                        iterable: list):

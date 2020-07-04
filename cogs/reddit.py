@@ -139,7 +139,7 @@ class Reddit(commands.Cog):
                 break
 
             _short = post_data['data']
-            if _short['stickied'] or (_short['over_18'] and not channel.is_nsfw()):
+            if _short.get('stickied', False) or (_short.get('over_18', False) and not channel.is_nsfw()):
                 idx += 1
                 continue
 

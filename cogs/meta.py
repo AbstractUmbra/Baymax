@@ -372,7 +372,7 @@ class Meta(commands.Cog):
         await self.bot.set_guild_prefixes(ctx.guild, [])
         await ctx.send(ctx.tick(True))
 
-    @commands.command(enabled=False)
+    @commands.command()
     async def source(self, ctx, *, command: str = None):
         """Displays my full source code or for a specific command.
 

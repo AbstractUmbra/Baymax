@@ -1,32 +1,3 @@
-"""
-This utility and all contents are responsibly sourced from 
-RoboDanny discord bot and author
-(https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
-RoboDanny licensing below:
-
-The MIT License(MIT)
-
-Copyright(c) 2015 Rapptz
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files(the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-"""
-
 import asyncio
 import datetime
 import textwrap
@@ -103,6 +74,8 @@ class Reminder(commands.Cog):
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send(error)
+        if isinstance(error, commands.TooManyArguments):
+            await ctx.send(f'You called the {ctx.command.name} command with too many arguments.')
 
     async def get_active_timer(self, *, connection=None, days=7):
         query = "SELECT * FROM reminders WHERE expires < (CURRENT_DATE + $1::interval) ORDER BY expires LIMIT 1;"
@@ -158,7 +131,7 @@ class Reminder(commands.Cog):
         self.bot.dispatch(event_name, timer)
 
     async def create_timer(self, *args, **kwargs):
-        r"""Creates a timer.
+        """Creates a timer.
 
         Parameters
         -----------
@@ -251,7 +224,7 @@ class Reminder(commands.Cog):
         delta = time.human_timedelta(when.dt, source=timer.created_at)
         await ctx.send(f"Alright {ctx.author.mention}, in {delta}: {when.arg}")
 
-    @reminder.command(name='list')
+    @reminder.command(name='list', ignore_extra=False)
     async def reminder_list(self, ctx):
         """Shows the 10 latest currently running reminders."""
         query = """SELECT id, expires, extra #>> '{args,2}'
@@ -282,7 +255,7 @@ class Reminder(commands.Cog):
 
         await ctx.send(embed=e)
 
-    @reminder.command(name='delete', aliases=['remove', 'cancel'])
+    @reminder.command(name='delete', aliases=['remove', 'cancel'], ignore_extra=False)
     async def reminder_delete(self, ctx, *, id: int):
         """Deletes a reminder by its ID.
 
@@ -309,7 +282,7 @@ class Reminder(commands.Cog):
 
         await ctx.send('Successfully deleted reminder.')
 
-    @reminder.command(name='clear')
+    @reminder.command(name='clear', ignore_extra=False)
     async def reminder_clear(self, ctx):
         """Clears all reminders you have set."""
 

@@ -1,10 +1,9 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -44,6 +43,7 @@ import decimal
 import asyncpg
 import logging
 import asyncio
+
 log = logging.getLogger(__name__)
 
 
@@ -317,6 +317,7 @@ class Array(SQLType):
 class Column:
     __slots__ = ('column_type', 'index', 'primary_key', 'nullable',
                  'default', 'unique', 'name', 'index_name')
+
     def __init__(self, column_type, *, index=False, primary_key=False,
                  nullable=True, unique=False, default=None, name=None):
 
