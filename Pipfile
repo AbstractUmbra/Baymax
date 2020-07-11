@@ -9,15 +9,12 @@ autopep8 = "*"
 
 [packages]
 # Discord
-# discord-py = "*"
-discord-py = {git = "https://github.com/Rapptz/discord.py.git",ref = "master"}
+discord-py = {git = "https://github.com/Rapptz/discord.py", ref = "master"}
 discord-ext-menus = {git = "https://github.com/Rapptz/discord-ext-menus",ref = "master"}
-discord-flags = {git = "https://github.com/XuaTheGrate/Flag-Parsing",ref = "master"}
 jishaku = "*"
 # Others
 asyncpg = "*"
 psutil = "*"
-async-cse = "*"
 googletrans = "*"
 click = "*"
 parsedatetime = "*"
