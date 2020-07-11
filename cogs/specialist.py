@@ -88,23 +88,6 @@ class Specialist(commands.Cog):
             await ctx.send("This command requires a subcommand!")
             return await ctx.send_help("specialist")
 
-    @specialist.command(hidden=True)
-    @commands.cooldown(rate=1, per=3600, type=commands.BucketType.user)
-    async def announcements(self, ctx: commands.Context):
-        """ Toggles announcement notification. """
-        role = ctx.guild.get_role(696916589248774174)
-        if role in ctx.author.roles:
-            await ctx.author.remove_roles(role)
-        else:
-            await ctx.author.add_roles(role)
-        return await ctx.message.add_reaction("\N{OK HAND SIGN}")
-
-    @announcements.error
-    async def announce_error(self, ctx: commands.Context, error: Exception):
-        """ Local error handler for command. """
-        if isinstance(error, commands.CommandOnCooldown):
-            return await ctx.send(f"Sorry this command is currently on cooldown for you. Try again in {error.seconds} seconds.")
-
     @commands.group(aliases=['Event'], hidden=True)
     @checks.mod_or_permissions(manage_message=True)
     async def event(self, ctx: commands.Context):
