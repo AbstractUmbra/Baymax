@@ -46,7 +46,7 @@ def requires_reactionroles():
         cog = ctx.bot.get_cog("ReactionRoles")
 
         ctx.reactionroles = await cog.get_reactionroles_config(ctx.guild.id)
-        if ctx.reactionroles.channel is None:
+        if not ctx.reactionroles.channel:
             raise ReactionRoleError(
                 "\N{WARNING SIGN} reactionroles have not been set up for this guild.")
 
@@ -65,6 +65,8 @@ class ReactionRolesConfig:
         if record:
             self.channel_id = record['channel_id']
             self.message_id = record['message_id']
+        else:
+            self.channel_id = None
 
     @property
     def channel(self):
@@ -155,7 +157,7 @@ class ReactionRoles(commands.Cog):
         if not reactionrole_deets:
             return
         reactionrole_config = await self.get_reactionroles_config(payload.guild_id)
-        if not reactionrole_config:
+        if not reactionrole_config or not reactionrole_config.channel:
             return
         if payload.channel_id != reactionrole_config.channel.id:
             return
@@ -222,6 +224,8 @@ class ReactionRoles(commands.Cog):
         if not reactionrole_deets:
             return
         reactionrole_config = await self.get_reactionroles_config(payload.guild_id)
+        if not reactionrole_config or not reactionrole_config.channel:
+            return
         if payload.channel_id != reactionrole_config.channel.id:
             return
         if member.guild.owner_id == member.id:
@@ -263,8 +267,8 @@ class ReactionRoles(commands.Cog):
         await ctx.message.add_reaction("\N{OK HAND SIGN}")
 
     @requires_reactionroles()
-    @commands.has_guild_permissions(manage_roles=True)
     @reactrole.command(name="add")
+    @commands.has_guild_permissions(manage_roles=True)
     async def rrole_add(self,
                         ctx: commands.Context,
                         role: discord.Role,
@@ -309,11 +313,13 @@ class ReactionRoles(commands.Cog):
                 await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), False)
             elif isinstance(emoji, discord.PartialEmoji):
                 await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), False)
+        await message.edit(content=f"{message.content}\n{emoji} -- {role.mention}")
         await message.add_reaction(emoji)
         return await ctx.send("\N{OK HAND SIGN}")
 
     @requires_reactionroles()
     @reactrole.command(name="remove")
+    @commands.has_guild_permissions(manage_roles=True)
     async def rrole_remove(self, ctx: commands.Context, record_id: int = None):
         """ Remove a reaction role configuration. """
         if not record_id:
@@ -322,7 +328,7 @@ class ReactionRoles(commands.Cog):
         query = """ SELECT guild_id FROM reactionroles WHERE id = $1; """
         results = await ctx.db.fetchrow(query, record_id)
         if results['guild_id'] != ctx.guild.id:
-            return await ctx.send("Invalid reactionroles ID. It must belong to your ")
+            return await ctx.send("Invalid reactionroles ID. It must belong to your guild.")
         delete_query = """DELETE FROM reactionroles WHERE id = $1 RETURNING role_id, role_emoji;"""
         deletion = await ctx.db.fetchrow(delete_query, record_id)
         if deletion:
@@ -339,11 +345,12 @@ class ReactionRoles(commands.Cog):
         except ValueError:
             # it's a string...
             pass
+        await ctx.send("Done. Just remember to edit the message and remove that reaction!", delete_after=5)
         return await message.remove_reaction(emoji, ctx.me)
 
     @requires_reactionroles()
-    @commands.has_guild_permissions(manage_roles=True)
     @reactrole.command(name="list")
+    @commands.has_guild_permissions(manage_roles=True)
     async def rrole_list(self, ctx: commands.Context):
         """ List the reactions roles for this guild. """
         query = "SELECT * FROM reactionroles WHERE guild_id = $1;"
