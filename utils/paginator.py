@@ -3,8 +3,7 @@ This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
-"""
-"""
+
 The MIT License(MIT)
 
 Copyright(c) 2015 Rapptz
@@ -28,15 +27,13 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-
-
-
 import asyncio
+import math
+
 import discord
 from discord.ext.commands import Paginator as CommandPaginator
 class CannotPaginate(Exception):
     pass
-
 
 class Pages:
     """Implements a paginator that queries the user for the
