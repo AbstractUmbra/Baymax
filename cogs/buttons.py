@@ -111,7 +111,7 @@ class Buttons(commands.Cog):
         """
 
         embed = discord.Embed(title='Feedback', colour=0x738bd7)
-        channel = self.bot.get_channel(695482983272022107)
+        channel = self.bot.get_channel(705501796159848541)
         if channel is None:
             return
 
