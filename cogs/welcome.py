@@ -56,10 +56,6 @@ class Welcome(commands.Cog):
             return await ctx.send("It seems the welcome channel has been deleted.")
         return await ctx.send(f"Message is being sent to {channel.mention}. Message is:\n\n{record['welcome_message']}")
 
-    @commands.command()
-    async def iexist(self, ctx):
-        return await ctx.send("https://www.youtube.com/watch?v=h0QqXurjzD8")
-
 
 def setup(bot):
     bot.add_cog(Welcome(bot))
