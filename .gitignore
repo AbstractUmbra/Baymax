@@ -5,3 +5,4 @@ migrations/
 prefixes.json
 *.log
 config.py
+blacklist.json
