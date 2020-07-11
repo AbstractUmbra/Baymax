@@ -194,10 +194,11 @@ class Snipe(commands.Cog):
         if channel:
             if not ctx.author.guild_permissions.manage_messages:
                 return await ctx.send("Sorry, you need to have 'Manage Messages' to view another channel.")
+        channel = channel or ctx.channel
         query = "SELECT * FROM snipe_deletes WHERE guild_id = $2 AND channel_id = $3 ORDER BY id DESC LIMIT $1;"
-        results = await self.bot.pool.fetch(query, amount, ctx.guild.id, ctx.channel.id)
+        results = await self.bot.pool.fetch(query, amount, ctx.guild.id, channel.id)
         dict_results = [dict(result) for result in results] if results else []
-        local_snipes = [snipe for snipe in self.snipe_deletes if snipe['channel_id'] == ctx.channel.id]
+        local_snipes = [snipe for snipe in self.snipe_deletes if snipe['channel_id'] == channel.id]
         full_results = dict_results + local_snipes
         if not full_results:
             return await ctx.send("No snipes for this channel.")
