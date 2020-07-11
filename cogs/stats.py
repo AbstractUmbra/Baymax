@@ -503,7 +503,7 @@ class Stats(commands.Cog):
                         value=value, inline=False)
         await ctx.send(embed=embed)
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, enabled=False)
     @commands.guild_only()
     @commands.cooldown(1, 30.0, type=commands.BucketType.member)
     async def stats(self, ctx, *, member: discord.Member = None):
