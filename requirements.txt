@@ -1,21 +1,19 @@
 # Discord
-# discord.py
-git+https://github.com/Rapptz/discord.py@master#egg=discord-py
+
+git+https://github.com/Rapptz/discord.py@master#egg=discord.py[voice]
 git+https://github.com/Rapptz/discord-ext-menus@master#egg=discord-ext-menus
-git+https://github.com/XuaTheGrate/Flag-Parsing@master#egg=discord-flags
 jishaku
 
 # Extra nicies
 asyncpg
 psutil
-async_cse
 googletrans
 
 # Useful tools
 click
 parsedatetime
 lru_dict
-python-dateutil
 lxml
-pytz
 pygit2
+pytz
+python-dateutil
