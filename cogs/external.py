@@ -1,6 +1,7 @@
 from datetime import datetime
 import textwrap
 
+from aiohttp import ContentTypeError
 import discord
 from discord.ext import commands
 
@@ -90,6 +91,12 @@ class External(commands.Cog):
                             value=pypi_details.classifiers, inline=False)
         embed.set_footer(text=f"Requested by {ctx.author.display_name}")
         return await ctx.send(embed=embed)
+
+    @pypi.error
+    async def pypi_fucked(self, ctx, error):
+        error = getattr(error, "original", error)
+        if isinstance(error, ContentTypeError):
+            return await ctx.send("That package doesn't exist you clown.")
 
 
 def setup(bot):
