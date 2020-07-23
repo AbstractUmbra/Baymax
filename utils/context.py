@@ -193,8 +193,8 @@ class Context(commands.Context):
 
     def tick(self, opt, label=None):
         lookup = {
-            True: '✔',
-            False: '❌',
+            True: '<:TickYes:735498312861351937>',
+            False: '<:CrossNo:735498453181923377>',
             None: '❔',
         }
         emoji = lookup.get(opt, '❌')

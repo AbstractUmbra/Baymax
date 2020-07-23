@@ -44,7 +44,7 @@ class Welcome(commands.Cog):
         """ Command. Let's remove their welcome messages. """
         query = "DELETE FROM welcome_config WHERE guild_id = $1"
         await self.bot.pool.execute(query, ctx.guild.id)
-        return await ctx.message.add_reaction("<:TickYes:672157420574736386>")
+        return await ctx.message.add_reaction("<:TickYes:735498312861351937>")
 
     @welcome_group.command(name="query")
     async def welcome_query(self, ctx):
