@@ -1,6 +1,7 @@
 __pycache__/
 .vscode/
 __dnk__/
+cogs/testing.py
 migrations/
 prefixes.json
 *.log
