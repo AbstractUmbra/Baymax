@@ -22,14 +22,14 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from collections import Counter, deque
 import datetime
-import logging
 import json
+import logging
 import os
 import sys
 import traceback
 import typing
+from collections import Counter, deque
 
 import aiohttp
 import discord
@@ -38,7 +38,6 @@ from discord.ext import commands
 import config
 from utils import context
 from utils.config import Config
-
 
 DESCRIPTION = """
 Hello! I am a bot written by Umbra#0009 to provide some nice utilities.

@@ -1,19 +1,18 @@
-import sys
-import click
-import logging
 import asyncio
-import asyncpg
-import discord
-import importlib
 import contextlib
-
-from bot import RoboHz, COGS
-from utils.db import Table
-
+import importlib
+import logging
+import sys
+import traceback
 from pathlib import Path
 
+import asyncpg
+import click
+import discord
+
 import config
-import traceback
+from bot import COGS, RoboHz
+from utils.db import Table
 
 try:
     import uvloop
