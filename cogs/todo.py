@@ -72,7 +72,7 @@ class Todo(commands.Cog):
         query = """ INSERT INTO todos (owner_id, content, added_at, jump_url) VALUES ($1, $2, $3, $4) RETURNING id; """
         succeed = await self.bot.pool.fetchrow(query, ctx.author.id, content, datetime.datetime.utcnow(), ctx.message.jump_url)
         if succeed['id']:
-            return await ctx.send(f"<:TickYes:735498312861351937>: created todo #__`{succeed['id']}`__ for you!", delete_after=3)
+            return await ctx.send(f"self.bot.emoji[True]: created todo #__`{succeed['id']}`__ for you!", delete_after=3)
 
     @todo.command(name="delete", aliases=["remove", "Delete", "Remove", "bin"])
     async def todo_delete(self, ctx, todo_id: int):
@@ -117,7 +117,7 @@ class Todo(commands.Cog):
         if not confirm:
             return
         await self.bot.pool.execute(query, ctx.author.id)
-        return await ctx.message.add_reaction("<:TickYes:735498312861351937>")
+        return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @todo_list.error
     @todo_clear.error

@@ -170,7 +170,7 @@ class Admin(commands.Cog):
         except commands.ExtensionError as err:
             await ctx.send(f'{err.__class__.__name__}: {err}')
         else:
-            await ctx.message.add_reaction('<:TickYes:735498312861351937>')
+            await ctx.message.add_reaction(self.bot.emoji[True])
 
     @commands.command(hidden=True)
     async def unload(self, ctx, *, module):
@@ -181,7 +181,7 @@ class Admin(commands.Cog):
         except commands.ExtensionError as err:
             await ctx.send(f'{err.__class__.__name__}: {err}')
         else:
-            await ctx.message.add_reaction('<:TickYes:735498312861351937>')
+            await ctx.message.add_reaction(self.bot.emoji[True])
 
     @commands.group(name='reload', hidden=True, invoke_without_command=True)
     async def _reload(self, ctx, *, module):
@@ -194,7 +194,7 @@ class Admin(commands.Cog):
         except commands.ExtensionNotLoaded:
             return self.bot.load_extension(module)
         else:
-            await ctx.message.add_reaction('<:TickYes:735498312861351937>')
+            await ctx.message.add_reaction(self.bot.emoji[True])
 
     def reload_or_load_extension(self, module):
         """ Reload or load the extension if loaded yet. """
@@ -407,7 +407,7 @@ class Admin(commands.Cog):
         """ Remove a block entry. """
         query = """ DELETE FROM owner_blocked WHERE user_id = $1; """
         await self.bot.pool.execute(query, user_id)
-        return await ctx.message.add_reaction("<:TickYes:735498312861351937>")
+        return await ctx.message.add_reaction(self.bot.emoji[True])
 
 
 def setup(bot):

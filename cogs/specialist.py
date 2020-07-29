@@ -467,7 +467,7 @@ class Specialist(commands.Cog):
         embed.add_field(name="Plan of action",
                         value=f"{message}")
         embed.description = random.choice(specialist.LOTR_QUOTES)
-        current_message: discord.Message = await channel.send(role.mention, embed=embed)
+        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
         await asyncio.sleep(60)
         await role.delete()
@@ -502,7 +502,7 @@ class Specialist(commands.Cog):
         embed.add_field(name="Plan of action",
                         value=f"{message}")
         embed.description = random.choice(specialist.AOE_QUOTES)
-        current_message: discord.Message  = await channel.send(role.mention, embed=embed)
+        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
         await asyncio.sleep(60)
         await role.delete()
@@ -537,7 +537,7 @@ class Specialist(commands.Cog):
         embed.add_field(name="Plan of action",
                         value=f"{message}")
         embed.description = random.choice(specialist.BF2_QUOTES)
-        current_message: discord.Message = await channel.send(role.mention, embed=embed)
+        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
         await asyncio.sleep(60)
         await role.delete()
@@ -572,7 +572,7 @@ class Specialist(commands.Cog):
         embed.add_field(name="Plan of action",
                         value=f"{message}")
         embed.description = random.choice(specialist.COH2_QUOTES)
-        current_message: discord.Message = await channel.send(role.mention, embed=embed)
+        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
         await asyncio.sleep(60)
         await role.delete()
@@ -607,7 +607,7 @@ class Specialist(commands.Cog):
         embed.add_field(name="Plan of action",
                         value=f"{message}")
         embed.description = random.choice(specialist.SWTOR_QUOTES)
-        current_message: discord.Message = await channel.send(role.mention, embed=embed)
+        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
         await asyncio.sleep(60)
         await role.delete()
@@ -641,7 +641,7 @@ class Specialist(commands.Cog):
                             value=", ".join(member_names))
         embed.add_field(name="Plan of action",
                         value=f"{message}")
-        current_message: discord.Message = await channel.send(role.mention, embed=embed)
+        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
         await asyncio.sleep(60)
         await role.delete()

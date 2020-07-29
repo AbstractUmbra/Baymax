@@ -182,7 +182,7 @@ class Time(commands.Cog):
         if not confirm:
             return
         await self.bot.pool.execute(query, ctx.author.id, ctx.guild.id, set_timezone)
-        return await ctx.message.add_reaction("<:TickYes:735498312861351937>")
+        return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @time.command(name="remove")
     @commands.guild_only()
@@ -190,7 +190,7 @@ class Time(commands.Cog):
         """ Remove your timezone from this guild. """
         query = "DELETE FROM tz_store WHERE user_id = $1 and guild_id = $2;"
         await self.bot.pool.execute(query, ctx.author.id, ctx.guild.id)
-        return await ctx.message.add_reaction("<:TickYes:735498312861351937>")
+        return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @time.command(name="clear")
     async def _clear(self, ctx):
@@ -200,7 +200,7 @@ class Time(commands.Cog):
         if not confirm:
             return
         await self.bot.pool.execute(query, ctx.author.id)
-        return await ctx.message.add_reaction("<:TickYes:735498312861351937>")
+        return await ctx.message.add_reaction(self.bot.emoji[True])
 
     async def time_error(self, ctx, error):
         """ Quick error handling for timezones. """

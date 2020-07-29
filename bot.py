@@ -97,7 +97,8 @@ class RoboHz(commands.AutoShardedBot):
                          help_attrs=dict(hidden=True),
                          activity=discord.Game(
                              name="r!help for help."),
-                         status=discord.Status.online)
+                         status=discord.Status.online,
+                         allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False))
 
         self.client_id = config.client_id
         self.bots_key = config.bots_key
@@ -105,6 +106,9 @@ class RoboHz(commands.AutoShardedBot):
         self._prev_events = deque(maxlen=10)
         self.prefixes = Config('prefixes.json')
         self.blacklist = Config('blacklist.json')
+        self.emoji = {True: "<:TickYes:735498312861351937>",
+                      False: "<:CrossNo:735498453181923377>",
+                      None: "<:QuestionMaybe:738038828928860269>"}
 
         # in case of even further spam, add a cooldown mapping
         # for people who excessively spam commands

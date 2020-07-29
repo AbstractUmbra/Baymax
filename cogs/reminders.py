@@ -222,7 +222,7 @@ class Reminder(commands.Cog):
                                         created=ctx.message.created_at,
                                         message_id=ctx.message.id)
         delta = time.human_timedelta(when.dt, source=timer.created_at)
-        await ctx.send(f"Alright {ctx.author.mention}, in {delta}: {when.arg}")
+        await ctx.send(f"Alright {ctx.author.mention}, in {delta}: {when.arg}", allowed_mentions=discord.AllowedMentions(users=True))
 
     @reminder.command(name='list', ignore_extra=False)
     async def reminder_list(self, ctx):

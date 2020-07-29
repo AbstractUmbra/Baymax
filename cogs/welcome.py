@@ -23,7 +23,7 @@ class Welcome(commands.Cog):
         if not results:
             return
         channel = member.guild.get_channel(results['welcome_channel'])
-        return await channel.send(f"Hey {member.mention}\n\n{results['welcome_message']}")
+        return await channel.send(f"Hey {member.mention}\n\n{results['welcome_message']}", allowed_mentions=discord.AllowedMentions(users=True))
 
     @commands.group(name="welcome", invoke_without_command=True)
     async def welcome_group(self, ctx, channel: discord.TextChannel, *, message: str):
@@ -44,7 +44,7 @@ class Welcome(commands.Cog):
         """ Command. Let's remove their welcome messages. """
         query = "DELETE FROM welcome_config WHERE guild_id = $1"
         await self.bot.pool.execute(query, ctx.guild.id)
-        return await ctx.message.add_reaction("<:TickYes:735498312861351937>")
+        return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @welcome_group.command(name="query")
     async def welcome_query(self, ctx):

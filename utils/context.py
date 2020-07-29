@@ -195,7 +195,7 @@ class Context(commands.Context):
         lookup = {
             True: '<:TickYes:735498312861351937>',
             False: '<:CrossNo:735498453181923377>',
-            None: '❔',
+            None: '<:QuestionMaybe:738038828928860269>',
         }
         emoji = lookup.get(opt, '❌')
         if label is not None:
