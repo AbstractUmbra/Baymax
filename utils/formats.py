@@ -29,6 +29,7 @@ DEALINGS IN THE SOFTWARE.
 
 from discord.utils import escape_markdown
 
+
 def group(iterable, page_len=50):
     pages = []
     while iterable:

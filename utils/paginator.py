@@ -32,6 +32,8 @@ import math
 
 import discord
 from discord.ext.commands import Paginator as CommandPaginator
+
+
 class CannotPaginate(Exception):
     pass
 

@@ -31,18 +31,19 @@ DEALINGS IN THE SOFTWARE.
 # This isn't exactly good. It's just good enough for my uses.
 # Also shoddy migration support.
 
-from collections import OrderedDict
-from pathlib import Path
+import asyncio
+import datetime
+import decimal
+import inspect
 import json
+import logging
 import os
 import pydoc
 import uuid
-import datetime
-import inspect
-import decimal
+from collections import OrderedDict
+from pathlib import Path
+
 import asyncpg
-import logging
-import asyncio
 
 log = logging.getLogger(__name__)
 
