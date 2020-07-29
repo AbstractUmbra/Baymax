@@ -1,5 +1,5 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
@@ -37,7 +37,7 @@ import asyncpg
 import discord
 from discord.ext import commands
 
-from utils import db, checks, formats, cache
+from utils import cache, checks, db, formats
 from utils.paginator import Pages
 
 

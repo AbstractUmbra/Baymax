@@ -29,19 +29,19 @@ DEALINGS IN THE SOFTWARE.
 
 import asyncio
 import copy
-from contextlib import redirect_stdout
 import io
 import subprocess
 import textwrap
 import time
 import traceback
+from contextlib import redirect_stdout
 from typing import Optional
 
 import discord
-from discord.ext import commands
 import import_expression
+from discord.ext import commands
 
-from utils import formats, db
+from utils import db, formats
 from utils.paginator import TextPages
 
 

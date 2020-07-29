@@ -33,8 +33,7 @@ class Todo(commands.Cog):
         descs = []
         list_of_records = [records[x:x+10] for x in range(0, len(records), 10)]
         for records in list_of_records:
-            # x is a list...
-            descs.append(discord.Embed(description="\n".join([f"__`{record['id']}`__: {record['content']}" for record in records])))
+            descs.append(discord.Embed(description="\n".join([f"[__`{record['id']}`__]({record['jump_url']}): {record['content']}" for record in records])))
         return descs
 
     @commands.group(invoke_without_command=True)
@@ -72,7 +71,7 @@ class Todo(commands.Cog):
         query = """ INSERT INTO todos (owner_id, content, added_at, jump_url) VALUES ($1, $2, $3, $4) RETURNING id; """
         succeed = await self.bot.pool.fetchrow(query, ctx.author.id, content, datetime.datetime.utcnow(), ctx.message.jump_url)
         if succeed['id']:
-            return await ctx.send(f"self.bot.emoji[True]: created todo #__`{succeed['id']}`__ for you!", delete_after=3)
+            return await ctx.send(f"{self.bot.emoji[True]}: created todo #__`{succeed['id']}`__ for you!", delete_after=3)
 
     @todo.command(name="delete", aliases=["remove", "Delete", "Remove", "bin"])
     async def todo_delete(self, ctx, todo_id: int):

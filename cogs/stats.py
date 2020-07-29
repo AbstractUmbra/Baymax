@@ -29,28 +29,28 @@ DEALINGS IN THE SOFTWARE.
 
 import asyncio
 import codecs
-from collections import Counter, defaultdict
 import datetime
 import gc
 import io
 import itertools
-import logging
 import json
-import pathlib
-import pkg_resources
+import logging
 import os
-import psutil
-import pygit2
+import pathlib
 import re
 import textwrap
 import traceback
 import typing
+from collections import Counter, defaultdict
 
 import asyncpg
 import discord
+import pkg_resources
+import psutil
+import pygit2
 from discord.ext import commands, tasks
 
-from utils import checks, db, time, formats
+from utils import checks, db, formats, time
 from utils.paginator import CannotPaginate
 
 log = logging.getLogger(__name__)

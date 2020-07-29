@@ -1,5 +1,5 @@
 """
-This utility and all contents are responsibly sourced from 
+This utility and all contents are responsibly sourced from
 RoboDanny discord bot and author
 (https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
 RoboDanny licensing below:
@@ -27,20 +27,23 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import asyncio
 import argparse
-from collections import Counter, defaultdict
+import asyncio
 import datetime
 import enum
 import io
 import logging
 import re
 import shlex
+from collections import Counter, defaultdict
+
 import asyncpg
 import discord
 from discord.ext import commands, tasks
-from utils import checks, db, time, cache
+
+from utils import cache, checks, db, time
 from utils.formats import plural
+
 log = logging.getLogger(__name__)
 
 # Misc utilities

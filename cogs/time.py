@@ -22,12 +22,12 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from datetime import datetime
 import random
+from datetime import datetime
 
 import discord
-from discord.ext import commands, menus
 import pytz
+from discord.ext import commands, menus
 
 from utils import db
 

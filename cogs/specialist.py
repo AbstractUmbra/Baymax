@@ -31,7 +31,7 @@ import textwrap
 import discord
 from discord.ext import commands
 
-from utils import checks, time, specialist
+from utils import checks, specialist, time
 
 SPTV_GUILD_ID = 690566307409821697
 

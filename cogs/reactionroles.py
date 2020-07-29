@@ -22,14 +22,14 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-from asyncio import TimeoutError as AsynTimeOut
 import typing
+from asyncio import TimeoutError as AsynTimeOut
 
 import asyncpg
 import discord
 from discord.ext import commands
 
-from utils import db, cache
+from utils import cache, db
 
 
 class ReactionRoleError(commands.CheckFailure):

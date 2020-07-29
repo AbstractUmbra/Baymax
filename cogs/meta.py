@@ -28,13 +28,13 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-from collections import Counter
 import inspect
 import itertools
 import os
 import textwrap
-from typing import Union
 import unicodedata
+from collections import Counter
+from typing import Union
 
 import discord
 from discord.ext import commands

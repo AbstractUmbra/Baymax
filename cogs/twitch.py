@@ -24,14 +24,8 @@ DEALINGS IN THE SOFTWARE.
 
 import datetime
 import traceback
-# import typing
 from collections import deque
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Union,
-)
+from typing import Dict, List, Optional, Union
 
 import asyncpg
 import discord

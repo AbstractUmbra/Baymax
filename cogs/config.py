@@ -35,7 +35,7 @@ import asyncpg
 import discord
 from discord.ext import commands
 
-from utils import db, checks, cache
+from utils import cache, checks, db
 from utils.paginator import Pages
 
 
