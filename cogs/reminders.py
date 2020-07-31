@@ -355,7 +355,7 @@ class Reminder(commands.Cog):
             msg = f'{msg}\n\n<https://discordapp.com/channels/{guild_id}/{channel.id}/{message_id}>'
 
         try:
-            await channel.send(msg)
+            await channel.send(msg, allowed_mentions=discord.AllowedMentions(users=True))
         except discord.HTTPException:
             return
 
