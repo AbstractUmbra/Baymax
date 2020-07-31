@@ -89,12 +89,12 @@ class Twitch(commands.Cog):
         self.get_clips.start()
         self.streamer_limit = 5
 
-    async def _get_streamers(self, name: str, guild_id: int) -> asyncpg.Record:
+    async def _get_streamers(self, name: str, guild_id: int) -> List[asyncpg.Record]:
         """ To get all streamers in the db. """
         query = """ SELECT * FROM twitchtable WHERE streamer_name = $1 AND guild_id = $2; """
         return await self.bot.pool.fetch(query, name, guild_id)
 
-    async def _get_clips(self, name: str, guild_id: int) -> asyncpg.Record:
+    async def _get_clips(self, name: str, guild_id: int) -> List[asyncpg.Record]:
         """ To get all streamers in the db. """
         query = """ SELECT * FROM twitchcliptable WHERE streamer_name = $1 AND guild_id = $2; """
         return await self.bot.pool.fetch(query, name, guild_id)
@@ -121,7 +121,7 @@ class Twitch(commands.Cog):
         return await self.bot.pool.execute(query, auth_token, now, expire_date)
 
     @cache.cache()
-    async def _gen_headers(self) -> dict:
+    async def _gen_headers(self) -> Dict:
         """ Let's use this to create the Headers. """
         base = self.bot.config.twitch_headers
         query = "SELECT secret from twitchsecrettable WHERE id = 1;"
@@ -130,7 +130,7 @@ class Twitch(commands.Cog):
         base['Authorization'] = f"Bearer {new_token}"
         return base
 
-    async def _get_streamer_guilds(self, guild_id: int) -> asyncpg.Record:
+    async def _get_streamer_guilds(self, guild_id: int) -> List[asyncpg.Record]:
         """ Return records for matched guild_ids. """
         query = """ SELECT * FROM twitchtable WHERE guild_id = $1; """
         return await self.bot.pool.fetch(query, guild_id)
@@ -181,7 +181,7 @@ class Twitch(commands.Cog):
 
     @twitch.command(name="add")
     @commands.has_guild_permissions(manage_channels=True)
-    async def add_streamer(self, ctx, name: str, channel: discord.TextChannel = None) -> Union[discord.Reaction, discord.Message]:
+    async def add_streamer(self, ctx: commands.Context, name: str, channel: discord.TextChannel = None) -> Union[discord.Reaction, discord.Message]:
         """ Add a streamer to the database for polling. """
         channel = channel or ctx.channel
         results = await self._get_streamers(name, ctx.guild.id)
@@ -192,7 +192,7 @@ class Twitch(commands.Cog):
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @add_streamer.before_invoke
-    async def stream_notification_check(self, ctx) -> None:
+    async def stream_notification_check(self, ctx: commands.Context) -> None:
         """ We're gonna check if they have X streams already. """
         query = "SELECT * FROM twitchtable WHERE guild_id = $1;"
         results = await self.bot.pool.fetch(query, ctx.guild.id)
@@ -202,7 +202,7 @@ class Twitch(commands.Cog):
 
     @twitch.command(name="remove")
     @commands.has_guild_permissions(manage_channels=True)
-    async def remove_streamer(self, ctx, name: str) -> Union[discord.Reaction, discord.Message]:
+    async def remove_streamer(self, ctx: commands.Context, name: str) -> Union[discord.Reaction, discord.Message]:
         """ Add a streamer to the database for polling. """
         results = await self._get_streamers(name, ctx.guild.id)
         if not results:
@@ -213,7 +213,7 @@ class Twitch(commands.Cog):
 
     @twitch.command(name="clear")
     @commands.has_guild_permissions(manage_channels=True)
-    async def clear_streams(self, ctx, channel: discord.TextChannel = None) -> Union[discord.Reaction, discord.Message]:
+    async def clear_streams(self, ctx: commands.Context, channel: discord.TextChannel = None) -> Union[discord.Reaction, discord.Message]:
         """ Clears all streams for the context channel or passed channel. """
         channel = channel or ctx.channel
         query = "DELETE FROM twitchtable WHERE channel_id = $1 AND guild_id = $2;"
@@ -259,7 +259,7 @@ class Twitch(commands.Cog):
 
     @twitch_clips.command(name="clear")
     @commands.has_guild_permissions(manage_channels=True)
-    async def clear_clips(self, ctx, channel: discord.TextChannel = None) -> discord.Reaction:
+    async def clear_clips(self, ctx: commands.Context, channel: discord.TextChannel = None) -> discord.Reaction:
         """ Clear the clips, let's check for approval though. """
         channel = channel or ctx.channel
         response = await ctx.prompt(f"Are you sure you wish to clear the clip monitoring for {channel.mention}?")
@@ -273,7 +273,7 @@ class Twitch(commands.Cog):
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @add_clips.before_invoke
-    async def clip_notification_check(self, ctx) -> None:
+    async def clip_notification_check(self, ctx: commands.Context) -> None:
         """ We're gonna check if they have X streams already. """
         query = "SELECT * FROM twitchcliptable WHERE guild_id = $1;"
         results = await self.bot.pool.fetch(query, ctx.guild.id)
@@ -326,10 +326,6 @@ class Twitch(commands.Cog):
                 item['streamer_last_datetime']
             if ((stream_json['data'][0]['title'] != item['streamer_last_game'])
                     or (current_stream.seconds >= 7200)):
-                cur_time = datetime.datetime.strptime(
-                    f"{stream_json['data'][0]['started_at']}", "%Y-%m-%dT%H:%M:%SZ")
-                localtime = cur_time.replace(tzinfo=pytz.timezone(
-                    "Europe/London")).astimezone(tz=None)
                 embed = discord.Embed(
                     title=f"{item['streamer_name']} is live with: {stream_json['data'][0]['title']}",
                     colour=discord.Colour.blurple(),
@@ -353,14 +349,12 @@ class Twitch(commands.Cog):
                                 value=f"{stream_json['data'][0]['viewer_count']}", inline=True)
                 embed.set_image(url=stream_json['data'][0]['thumbnail_url'].replace(
                     "{width}", "600").replace("{height}", "400"))
-                embed.set_footer(
-                    text=f"Stream started at: {localtime.strftime('%b %d %Y - %H:%M')} | Currently: {datetime.datetime.now().strftime('%b %d %Y - %H:%M')}")
-                message = await channel.send(f"{role.mention if role else None}\n\n{item['streamer_name']} is now live!", embed=embed)
+                message = await channel.send(f"{role.mention if role else None}\n\n{item['streamer_name']} is now live!", embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
                 insert_query = """ UPDATE twitchtable SET streamer_last_game = $1, streamer_last_datetime = $2 WHERE streamer_name = $3; """
                 await self.bot.pool.execute(insert_query, stream_json['data'][0]['title'], message.created_at, item['streamer_name'])
 
     @tasks.loop(minutes=2)
-    async def get_clips(self):
+    async def get_clips(self) -> None:
         """ Let's check every 2 minutes for clips, eh? """
         headers = await self._gen_headers()
         query = """ SELECT * FROM twitchcliptable; """
@@ -407,13 +401,13 @@ class Twitch(commands.Cog):
 
     @get_streamers.before_loop
     @get_clips.before_loop
-    async def twitch_before(self):
+    async def twitch_before(self) -> None:
         """ Quickly before the loop... """
         await self.bot.wait_until_ready()
 
     @get_streamers.after_loop
     @get_clips.after_loop
-    async def streamers_error(self):
+    async def streamers_error(self) -> Union[discord.Message, str]:
         """ On task.loop exception. """
         stats = self.bot.get_cog("Stats")
         if self.get_streamers.failed():
@@ -434,12 +428,12 @@ class Twitch(commands.Cog):
             await webhook.send(embed=embed)
 
 
-def cog_unload(self):
+def cog_unload(self) -> None:
     """ When the cog is unloaded, we wanna kill the task. """
     self.get_streamers.cancel()
     self.get_clips.cancel()
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     """ Setup the cog & extension. """
     bot.add_cog(Twitch(bot))
