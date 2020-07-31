@@ -74,12 +74,13 @@ class Todo(commands.Cog):
             return await ctx.send(f"{self.bot.emoji[True]}: created todo #__`{succeed['id']}`__ for you!", delete_after=3)
 
     @todo.command(name="delete", aliases=["remove", "Delete", "Remove", "bin"])
-    async def todo_delete(self, ctx, todo_id: int):
+    async def todo_delete(self, ctx, todo_ids: commands.Greedy[int]):
         """ Delete my todo thanks, since I did it already. """
         query = """ DELETE FROM todos WHERE owner_id = $1 AND id = $2 RETURNING id; """
-        success = await self.bot.pool.fetchrow(query, ctx.author.id, todo_id)
-        if success['id']:
-            return await ctx.send(f"Okay well done. I deleted todo #__`{success['id']}`__ for you.", delete_after=3)
+        iterable = [(ctx.author.id, td) for td in todo_ids]
+        success = await self.bot.pool.executemany(query, iterable)
+        if success:
+            return await ctx.send(f"Okay well done. I deleted todo #__`{todo_ids}`__ for you.", delete_after=3)
 
     @todo.command(name="edit")
     async def todo_edit(self, ctx, todo_id: int, *, content):
