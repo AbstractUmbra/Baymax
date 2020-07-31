@@ -27,7 +27,15 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+import codecs
+import re
+import sys
+import unicodedata
+
 from discord.utils import escape_markdown
+
+CONTROL_CHARS = re.compile('[%s]' % re.escape(''.join(chr(i) for i in range(
+    sys.maxunicode) if unicodedata.category(chr(i)).startswith('C'))))
 
 
 def group(iterable, page_len=50):
@@ -127,3 +135,75 @@ def format_codeblock(content, language='py', replace_existing=True, escape_md=Tr
     if escape_md:
         content = escape_markdown(content)
     return f'```{language}\n{content}\n```'
+
+
+def escape_invis(decode_error):
+    decode_error.end = decode_error.start + 1
+    if CONTROL_CHARS.match(decode_error.object[decode_error.start:decode_error.end]):
+        return codecs.backslashreplace_errors(decode_error)
+    return decode_error.object[decode_error.start:decode_error.end].encode('utf-8'), decode_error.end
+
+
+codecs.register_error('escape-invis', escape_invis)
+
+
+def escape_invis_chars(content):
+    """Escape invisible/control characters."""
+    return content.encode('ascii', 'escape-invis').decode('utf-8')
+
+
+def clean_emojis(line):
+    """Escape custom emojis."""
+    return re.sub(r'<(a)?:([a-zA-Z0-9_]+):([0-9]+)>', '<\u200b\\1:\\2:\\3>', line)
+
+def clean_single_backtick(line):
+    """Clean string for insertion in single backtick code section.
+    Clean backticks so we don't accidentally escape, and escape custom emojis
+    that would be discordified.
+    """
+    if re.search('[^`]`[^`]', line) is not None:
+        return "`%s`" % clean_double_backtick(line)
+    if (line[:2] == '``'):
+        line = '\u200b' + line
+    if (line[-1] == '`'):
+        line = line + '\u200b'
+    return clean_emojis(line)
+
+
+def clean_double_backtick(line):
+    """Clean string for isnertion in double backtick code section.
+    Clean backticks so we don't accidentally escape, and escape custom emojis
+    that would be discordified.
+    """
+    line.replace('``', '`\u200b`')
+    if (line[0] == '`'):
+        line = '\u200b' + line
+    if (line[-1] == '`'):
+        line = line + '\u200b'
+
+    return clean_emojis(line)
+
+
+def clean_triple_backtick(line):
+    """Clean string for insertion in triple backtick code section.
+    Clean backticks so we don't accidentally escape, and escape custom emojis
+    that would be discordified.
+    """
+    if not line:
+        return line
+
+    i = 0
+    n = 0
+    while i < len(line):
+        if (line[i]) == '`':
+            n += 1
+        if n == 3:
+            line = line[:i] + '\u200b' + line[i:]
+            n = 1
+            i += 1
+        i += 1
+
+    if line[-1] == '`':
+        line += '\n'
+
+    return clean_emojis(line)

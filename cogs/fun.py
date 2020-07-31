@@ -23,13 +23,14 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
+import json
 import textwrap
 from string import ascii_lowercase
 
 import discord
 from discord.ext import commands, tasks
 
-from utils import db, lang
+from utils import db, formats, lang
 
 
 class StatisticsTable(db.Table, table_name="statistics"):
@@ -193,6 +194,17 @@ class Fun(commands.Cog):
         embed.add_field(name="**Guilds**", value=textwrap.dedent(guild_str), inline=False)
         embed.set_footer(text=f"I have also run {command_count:,} commands!")
         await ctx.send(embed=embed)
+
+    @commands.command(name="msgraw", aliases=["msgr", "rawm"])
+    async def raw_message(self, ctx, message_id: int):
+        """ Quickly return the raw content of the specific message. """
+        try:
+            msg = await ctx.bot.http.get_message(ctx.channel.id, message_id)
+        except discord.NotFound:
+            raise commands.BadArgument(f"Message with the ID of {message_id} cannot be found in {ctx.channel.mention}.")
+
+        await ctx.send(f"```json\n{formats.clean_triple_backtick(formats.escape_invis_chars(json.dumps(msg, indent=2, ensure_ascii=False, sort_keys=True)))}\n```")
+
 
 
 def setup(bot):
