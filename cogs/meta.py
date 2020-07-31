@@ -381,7 +381,7 @@ class Meta(commands.Cog):
         or by spaces.
         """
         source_url = 'https://github.com/AbstractUmbra/Robo-Hz'
-        branch = 'rewrite'
+        branch = 'master'
         if command is None:
             return await ctx.send(source_url)
 
