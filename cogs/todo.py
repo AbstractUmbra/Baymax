@@ -51,12 +51,12 @@ class Todo(commands.Cog):
     @commands.cooldown(1, 15, commands.BucketType.user)
     async def todo_list(self, ctx):
         """ A list of todos for you. """
-        query  = """ SELECT * FROM todos WHERE owner_id = $1 LIMIT 100; """
+        query  = """ SELECT * FROM todos WHERE owner_id = $1 ORDER BY id ASC LIMIT 100; """
         records = await self.bot.pool.fetch(query, ctx.author.id)
 
         if not records:
             return await ctx.send("You appear to have no active todos, look at how productive you are.")
-        embeds = self._gen_todos(records) ##TODO monitor for errors?
+        embeds = self._gen_todos(records)
         pages = menus.MenuPages(source=TodoPageSource(range(0, len(embeds)), embeds), delete_message_after=True)
         await pages.start(ctx)
 
