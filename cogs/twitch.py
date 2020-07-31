@@ -56,6 +56,7 @@ class TwitchTable(db.Table):
     streamer_last_datetime = db.Column(db.Datetime())
 
 class TwitchClipTable(db.Table):
+    """ Creates the Clip table for storing clip following data. """
     id = db.PrimaryKeyColumn()
 
     guild_id = db.Column(db.Integer(big=True))
@@ -138,8 +139,8 @@ class Twitch(commands.Cog):
         """ Helper to get the streamer data based on name. """
         headers = await self._gen_headers()
         async with self.bot.session.get(self.user_endpoint,
-                                                      headers=headers,
-                                                      params={"login": broadcaster}) as resp:
+                                        headers=headers,
+                                        params={"login": broadcaster}) as resp:
             broadcaster_data = await resp.json()
         return broadcaster_data['data'][0]
 
@@ -163,12 +164,15 @@ class Twitch(commands.Cog):
         """ Debug for me. """
         query = """SELECT * FROM twitchtable; """
         oauth_query = """ SELECT edited_at, expires_at FROM twitchsecrettable;"""
+        clips_query = """ SELECT * FROM twitchcliptable; """
         results = await self.bot.pool.fetch(query)
         oauth_results = await self.bot.pool.fetchrow(oauth_query)
+        clip_results = await self.bot.pool.fetch(clips_query)
         embed = discord.Embed(title="Streamer details",
                               colour=discord.Colour.blurple())
         embed.description = "\n".join(
             f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}" for item in results)
+        embed.description += "\n".join(f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['broadcaster_id']}" for item in clip_results)
         embed.add_field(name="OAuth Edited at", value=oauth_results['edited_at'].strftime(
             "%d-%m-%Y %H:%M:%S"))
         embed.add_field(name="OAuth Expires at", value=oauth_results['expires_at'].strftime(
@@ -283,7 +287,8 @@ class Twitch(commands.Cog):
     @add_clips.error
     @remove_clips.error
     @clear_clips.error
-    async def twitch_error(self, ctx, error):
+    async def twitch_error(self, ctx: commands.Context, error: Exception) -> discord.Message:
+        """ Local error handler for primary Twitch commands. """
         error = getattr(error, "original", error)
         if isinstance(error, commands.MissingPermissions):
             return await ctx.send("Doesn't look like you can manage channels there bub.")
@@ -306,6 +311,8 @@ class Twitch(commands.Cog):
                     datetime.datetime.utcnow() - datetime.timedelta(hours=3))
             guild = self.bot.get_guild(item['guild_id'])
             channel = guild.get_channel(item['channel_id'])
+            if item['role_id']:
+                role = guild.get_role(item['role_id'])
             async with self.bot.session.get(self.stream_endpoint,
                                             params={
                                                 "user_login": f"{item['streamer_name']}"},
@@ -348,7 +355,7 @@ class Twitch(commands.Cog):
                     "{width}", "600").replace("{height}", "400"))
                 embed.set_footer(
                     text=f"Stream started at: {localtime.strftime('%b %d %Y - %H:%M')} | Currently: {datetime.datetime.now().strftime('%b %d %Y - %H:%M')}")
-                message = await channel.send(f"{item['streamer_name']} is now live!", embed=embed)
+                message = await channel.send(f"{role.mention if role else None}\n\n{item['streamer_name']} is now live!", embed=embed)
                 insert_query = """ UPDATE twitchtable SET streamer_last_game = $1, streamer_last_datetime = $2 WHERE streamer_name = $3; """
                 await self.bot.pool.execute(insert_query, stream_json['data'][0]['title'], message.created_at, item['streamer_name'])
 
@@ -408,13 +415,21 @@ class Twitch(commands.Cog):
     @get_clips.after_loop
     async def streamers_error(self):
         """ On task.loop exception. """
+        stats = self.bot.get_cog("Stats")
         if self.get_streamers.failed():
-            stats = self.bot.get_cog("Stats")
             if not stats:
                 return traceback.print_exc()
             webhook = stats.webhook
             embed = discord.Embed(title="Streamer error", colour=0xffffff)
             embed.description = f"```py\n{self.get_streamers.get_task().exception()}```"
+            embed.timestamp = datetime.datetime.utcnow()
+            await webhook.send(embed=embed)
+        elif self.get_clips.failed():
+            if not stats:
+                return traceback.print_exc()
+            webhook = stats.webhook
+            embed = discord.Embed(title="Clips error", colour=0xfffffe)
+            embed.description = f"```py\n{self.get_clips.get_task().exception()}\n```"
             embed.timestamp = datetime.datetime.utcnow()
             await webhook.send(embed=embed)
 
