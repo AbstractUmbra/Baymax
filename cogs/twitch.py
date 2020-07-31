@@ -55,6 +55,14 @@ class TwitchTable(db.Table):
     streamer_last_game = db.Column(db.String())
     streamer_last_datetime = db.Column(db.Datetime())
 
+class TwitchClipTable(db.Table):
+    id = db.PrimaryKeyColumn()
+
+    guild_id = db.Column(db.Integer(big=True))
+    channel_id = db.Column(db.Integer(big=True))
+    broadcaster_id = db.Column(db.String())
+    last_5_clips = db.Column(db.Array(db.String()))
+
 
 class TwitchSecretTable(db.Table):
     """ Creates the database for storing the OAuth secret. """
