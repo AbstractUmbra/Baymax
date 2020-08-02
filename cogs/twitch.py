@@ -309,8 +309,8 @@ class Twitch(commands.Cog):
             if not item['streamer_last_datetime']:
                 item['streamer_last_datetime'] = (
                     datetime.datetime.utcnow() - datetime.timedelta(hours=3))
-            guild = self.bot.get_guild(item['guild_id'])
-            channel = guild.get_channel(item['channel_id'])
+            guild: discord.Guild = self.bot.get_guild(item['guild_id'])
+            channel: discord.TextChannel = guild.get_channel(item['channel_id'])
             if item['role_id']:
                 role = guild.get_role(item['role_id'])
             async with self.bot.session.get(self.stream_endpoint,
