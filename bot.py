@@ -49,6 +49,7 @@ os.environ["JISHAKU_NO_UNDERSCORE"] = "True"
 os.environ["JISHAKU_NO_DM_TRACEBACK"] = "True"
 os.environ["JISHAKU_HIDE"] = "True"
 os.environ["JISHAKU_RETAIN"] = "True"
+os.environ["PY_PRETTIFY_EXC"] = "True"
 
 COGS = (
     'jishaku',

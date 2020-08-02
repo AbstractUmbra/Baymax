@@ -6,8 +6,9 @@ jishaku
 
 # Extra nicies
 asyncpg
-psutil
 googletrans
+psutil
+git+https://github.com/ShineyDev/prettify.py@master#egg=prettify.py
 
 # Useful tools
 click
