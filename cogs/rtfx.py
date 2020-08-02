@@ -150,6 +150,9 @@ class RTFX(commands.Cog):
             'latest-jp': 'https://discordpy.readthedocs.io/ja/latest',
             'python': 'https://docs.python.org/3',
             'python-jp': 'https://docs.python.org/ja/3',
+            'asyncpg': 'https://magicstack.github.io/asyncpg/current/',
+            'twitchio': 'https://twitchio.readthedocs.io/en/rewrite/',
+            'aiohttp': 'https://docs.aiohttp.org/en/stable/'
         }
 
         if obj is None:
@@ -207,6 +210,18 @@ class RTFX(commands.Cog):
     async def rtfm_python_jp(self, ctx, *, obj: str = None):
         """Gives you a documentation link for a Python entity (Japanese)."""
         await self.do_rtfm(ctx, 'python-jp', obj)
+
+    @rtfm.command(name="asyncpg")
+    async def rtfm_asyncpg(self, ctx, *, obj: str = None):
+        await self.do_rtfm(ctx, 'asyncpg', obj)
+
+    @rtfm.command(name="twitchio")
+    async def rtfm_twitchio(self, ctx, *, obj: str = None):
+        await self.do_rtfm(ctx, 'twitchio', obj)
+
+    @rtfm.command(name="aiohttp")
+    async def rtfm_aiohttp(self, ctx, *, obj: str = None):
+        await self.do_rtfm(ctx, 'aiohttp', obj)
 
     async def _member_stats(self, ctx, member, total_uses):
         e = discord.Embed(title='RTFM Stats')
