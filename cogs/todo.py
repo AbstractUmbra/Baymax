@@ -51,7 +51,7 @@ class Todo(commands.Cog):
     @commands.cooldown(1, 15, commands.BucketType.user)
     async def todo_list(self, ctx):
         """ A list of todos for you. """
-        query  = """ SELECT * FROM todos WHERE owner_id = $1 ORDER BY id ASC LIMIT 100; """
+        query = """ SELECT * FROM todos WHERE owner_id = $1 ORDER BY id ASC LIMIT 100; """
         records = await self.bot.pool.fetch(query, ctx.author.id)
 
         if not records:
@@ -78,9 +78,12 @@ class Todo(commands.Cog):
         """ Delete my todo thanks, since I did it already. """
         query = """ DELETE FROM todos WHERE owner_id = $1 AND id = $2 RETURNING id; """
         iterable = [(ctx.author.id, td) for td in todo_ids]
-        success = await self.bot.pool.executemany(query, iterable)
-        if success:
-            return await ctx.send(f"Okay well done. I deleted todo #__`{todo_ids}`__ for you.", delete_after=3)
+        try:
+            await self.bot.pool.executemany(query, iterable)
+        except Exception as error:
+            raise error
+        finally:
+            await ctx.send(f"Okay well done. I removed the __**`#{'`**__, __**`#'.join(str(tid) for tid in todo_ids)}`**__ todo{'s' if len(todo_ids) > 1 else ''} for you.", delete_after=3)
 
     @todo.command(name="edit")
     async def todo_edit(self, ctx, todo_id: int, *, content):
