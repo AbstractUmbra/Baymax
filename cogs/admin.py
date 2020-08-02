@@ -124,7 +124,7 @@ class Admin(commands.Cog):
         self.bot = bot
         self._last_result = None
         self.sessions = set()
-        self.my_guilds = {705500489248145459, 658130291315048448}
+        self.my_guilds = {174702278673039360, 705500489248145459}
 
     async def run_process(self, command):
         """ Runs a shell process. """
