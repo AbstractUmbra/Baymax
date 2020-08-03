@@ -183,8 +183,9 @@ class RTFX(commands.Cog):
         e = discord.Embed(colour=discord.Colour.blurple())
         if len(matches) == 0:
             return await ctx.send('Could not find anything. Sorry.')
-
+        e.title = f"RTFM for {key}: {obj}"
         e.description = '\n'.join(f'[`{key}`]({url})' for key, url in matches)
+        e.set_footer(text=f"{len(matches)} possible results.")
         await ctx.send(embed=e)
 
     @commands.group(aliases=['rtfd'], invoke_without_command=True)
