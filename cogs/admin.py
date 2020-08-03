@@ -124,7 +124,9 @@ class Admin(commands.Cog):
         self.bot = bot
         self._last_result = None
         self.sessions = set()
-        self.my_guilds = {174702278673039360, 705500489248145459}
+        self.my_guilds = {174702278673039360,
+                          705500489248145459,
+                          721420825764429874}
 
     async def run_process(self, command):
         """ Runs a shell process. """
@@ -189,10 +191,10 @@ class Admin(commands.Cog):
         module = f"cogs.{module}"
         try:
             self.bot.reload_extension(module)
-        except commands.ExtensionError as err:
-            await ctx.send(f'{err.__class__.__name__}: {err}')
         except commands.ExtensionNotLoaded:
             return self.bot.load_extension(module)
+        except commands.ExtensionError as err:
+            await ctx.send(f'{err.__class__.__name__}: {err}')
         else:
             await ctx.message.add_reaction(self.bot.emoji[True])
 
