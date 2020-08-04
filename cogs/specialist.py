@@ -72,32 +72,20 @@ class Specialist(commands.Cog):
                 reacted_list.append(member)
         return reacted_list
 
-    async def member_in_multiple(self, member: discord.Member, event_type: str):
-        """ Non-generic. Checks if member is in multiple gaming event for same type. """
-        query = """SELECT *
-                   FROM reminders
-                   WHERE event = $1
-                """
-        records = await self.bot.pool.fetch(query, event_type)
-        count = 0
-        for record in records:
-            channel = member.guild.get_channel(int(record['extra']['args'][1]))
-            event_message = await channel.fetch_message(int(record['extra']['kwargs']['message_id']))
-            reacts = await self.get_reacts(event_message.reactions)
-            if member in reacts:
-                count += 1
-        if count > 1:
-            return True
-        return False
+    async def event_cleanup(self, *, role: discord.Role, message: discord.Message, delay: float=3600.0) -> None:
+        """ Let's task off the role deletion. """
+        await asyncio.sleep(delay)
+        await message.delete()
+        await role.delete()
 
-    @commands.group(invoke_without_command=True, aliases=["Specialist"], hidden=True)
+    @commands.group(invoke_without_command=True, aliases=["Specialist"])
     async def specialist(self, ctx: commands.Context):
         """ Top level command for SpecialistTV commands. See the help for more details on subcommands! """
         if not ctx.invoked_subcommand:
             await ctx.send("This command requires a subcommand!")
             return await ctx.send_help("specialist")
 
-    @commands.group(aliases=['Event'], hidden=True)
+    @commands.group(aliases=['Event'])
     @checks.mod_or_permissions(manage_message=True)
     async def event(self, ctx: commands.Context):
         """ Primary command for events. """
@@ -157,7 +145,7 @@ class Specialist(commands.Cog):
         await message.edit(content="", embed=embed)
         return await ctx.message.delete()
 
-    @event.command(aliases=['aoe', 'AOE', 'AOE2'], usage="<when>", invoke_without_command=True)
+    @event.command(aliases=['aoe', 'AOE', 'AOE2'], usage="<when>", invoke_without_command=True, enabled=False)
     async def aoe2(self, ctx: commands.Context, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
         """ Create an AOE2 event. """
         reminder = self.bot.get_cog("Reminder")
@@ -239,7 +227,7 @@ class Specialist(commands.Cog):
         await message.edit(content="", embed=embed)
         return await ctx.message.delete()
 
-    @event.command(aliases=['coh', 'COH', 'COH2'], usage="<when>", invoke_without_command=True)
+    @event.command(aliases=['coh', 'COH', 'COH2'], usage="<when>", invoke_without_command=True, enabled=False)
     async def coh2(self, ctx: commands.Context, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
         """ Create a COH2 event. """
         reminder = self.bot.get_cog("Reminder")
@@ -510,26 +498,26 @@ class Specialist(commands.Cog):
         return await ctx.send("Deleted event.")
 
     # @commands.Cog.listener()
-    # async def on_event_check_timer_complete(self, event):
-    #     """ On 'event_check' complete. """
-    #     _, channel_id, message = event.args
+    async def on_event_check_timer_complete(self, event):
+        """ On 'event_check' complete. """
+        _, channel_id, message = event.args
 
-    #     try:
-    #         channel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
-    #     except discord.HTTPException:
-    #         return
+        try:
+            channel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
+        except discord.HTTPException:
+            return
 
-    #     message_id = event.kwargs.get("message_id")
-    #     prev_message = await channel.fetch_message(int(message_id))
-    #     reacted_list = await self.get_reacts(prev_message.reactions)
-    #     members = {member.id for member in reacted_list}
-    #     if len(members) < 3:
-    #         await prev_message.clear_reactions()
-    #         del_query = """DELETE FROM reminders
-    #                     WHERE extra #>> '{kwargs,message_id}' = $1;
-    #                     """
-    #         await self.bot.pool.execute(del_query, str(event.kwargs['message_id']))
-    #         return await prev_message.delete()
+        message_id = event.kwargs.get("message_id")
+        prev_message = await channel.fetch_message(int(message_id))
+        reacted_list = await self.get_reacts(prev_message.reactions)
+        members = {member.id for member in reacted_list}
+        if len(members) < 3:
+            await prev_message.clear_reactions()
+            del_query = """DELETE FROM reminders
+                        WHERE extra #>> '{kwargs,message_id}' = $1;
+                        """
+            await self.bot.pool.execute(del_query, str(event.kwargs['message_id']))
+            return await prev_message.delete()
 
     @commands.Cog.listener()
     async def on_bfme2_timer_complete(self, event):
@@ -562,11 +550,9 @@ class Specialist(commands.Cog):
         embed.description = random.choice(specialist.LOTR_QUOTES)
         current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
-        await asyncio.sleep(60)
-        await role.delete()
-        return await current_message.delete(delay=900)
+        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
 
-    @commands.Cog.listener()
+    # @commands.Cog.listener()
     async def on_aoe2_timer_complete(self, event):
         """ On 'aoe2' event timer complete. """
         author_id, channel_id, message = event.args
@@ -599,7 +585,7 @@ class Specialist(commands.Cog):
         await prev_message.delete()
         await asyncio.sleep(60)
         await role.delete()
-        return await current_message.delete(delay=900)
+        return await current_message.delete(delay=60*60*1)
 
     @commands.Cog.listener()
     async def on_bf2_timer_complete(self, event):
@@ -632,11 +618,10 @@ class Specialist(commands.Cog):
         embed.description = random.choice(specialist.BF2_QUOTES)
         current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
-        await asyncio.sleep(60)
-        await role.delete()
-        return await current_message.delete(delay=900)
+        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
 
-    @commands.Cog.listener()
+
+    # @commands.Cog.listener()
     async def on_coh2_timer_complete(self, event):
         """ On 'aoe2' event timer complete. """
         author_id, channel_id, message = event.args
@@ -667,9 +652,8 @@ class Specialist(commands.Cog):
         embed.description = random.choice(specialist.COH2_QUOTES)
         current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
-        await asyncio.sleep(60)
-        await role.delete()
-        return await current_message.delete(delay=900)
+        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
+
 
     @commands.Cog.listener()
     async def on_swtor_timer_complete(self, event):
@@ -702,13 +686,12 @@ class Specialist(commands.Cog):
         embed.description = random.choice(specialist.SWTOR_QUOTES)
         current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
-        await asyncio.sleep(60)
-        await role.delete()
-        return await current_message.delete(delay=900)
+        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
+
 
     @commands.Cog.listener()
     async def on_gtfo_timer_complete(self, event):
-        """ On 'swtor' event timer complete. """
+        """ On 'gtfo' event timer complete. """
         author_id, channel_id, message = event.args
 
         try:
@@ -736,9 +719,8 @@ class Specialist(commands.Cog):
                         value=f"{message}")
         current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
-        await asyncio.sleep(60)
-        await role.delete()
-        return await current_message.delete(delay=900)
+        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
+
 
     @commands.Cog.listener()
     async def on_dow3_timer_complete(self, event):
@@ -770,9 +752,8 @@ class Specialist(commands.Cog):
                         value=f"{message}")
         current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
-        await asyncio.sleep(60)
-        await role.delete()
-        return await current_message.delete(delay=900)
+        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
+
 
     @commands.Cog.listener()
     async def on_ih_timer_complete(self, event):
@@ -804,9 +785,8 @@ class Specialist(commands.Cog):
                         value=f"{message}")
         current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
-        await asyncio.sleep(60)
-        await role.delete()
-        return await current_message.delete(delay=900)
+        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
+
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
