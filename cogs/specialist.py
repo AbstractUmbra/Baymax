@@ -56,6 +56,11 @@ class Specialist(commands.Cog):
             return ctx.guild.id == 690566307409821697
         return False
 
+    def gen_role_str(self) -> str:
+        """ Quickly make a string, for role creation. """
+        return "".join(random.choice(
+            string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+
     async def cog_command_error(self, ctx: commands.Context, error: Exception) -> discord.Message:
         """ This is a cog error handler. """
         if isinstance(error, commands.BadArgument):
@@ -72,7 +77,7 @@ class Specialist(commands.Cog):
                 reacted_list.append(member)
         return reacted_list
 
-    async def event_cleanup(self, *, role: discord.Role, message: discord.Message, delay: float=3600.0) -> None:
+    async def event_cleanup(self, *, role: discord.Role, message: discord.Message, delay: float = 3600.0) -> None:
         """ Let's task off the role deletion. """
         await asyncio.sleep(delay)
         await message.delete()
@@ -80,7 +85,9 @@ class Specialist(commands.Cog):
 
     @commands.group(invoke_without_command=True, aliases=["Specialist"])
     async def specialist(self, ctx: commands.Context):
-        """ Top level command for SpecialistTV commands. See the help for more details on subcommands! """
+        """ Top level command for SpecialistTV commands.
+            See the help for more details on subcommands!
+        """
         if not ctx.invoked_subcommand:
             await ctx.send("This command requires a subcommand!")
             return await ctx.send_help("specialist")
@@ -108,8 +115,7 @@ class Specialist(commands.Cog):
         when.dt = when.dt - datetime.timedelta(hours=1)
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = "".join(random.choice(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+        role_str = self.gen_role_str()
         role = await ctx.guild.create_role(name=f"BFME2-{role_str}", colour=discord.Colour(0xcbe029),
                                            reason="Event creation.", mentionable=False)
         await reminder.create_timer(event_trigger, 'bfme2', ctx.author.id,
@@ -155,8 +161,7 @@ class Specialist(commands.Cog):
         when.dt = when.dt - datetime.timedelta(hours=1)
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = "".join(random.choice(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+        role_str = self.gen_role_str()
         role = await ctx.guild.create_role(name=f"AOE2-{role_str}", colour=discord.Colour(0xcbe029),
                                            reason="Event creation.", mentionable=False)
         await reminder.create_timer(event_trigger, 'aoe2', ctx.author.id,
@@ -196,8 +201,7 @@ class Specialist(commands.Cog):
         when.dt = when.dt - datetime.timedelta(hours=1)
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = "".join(random.choice(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+        role_str = self.gen_role_str()
         role = await ctx.guild.create_role(name=f"BF2-{role_str}", colour=discord.Colour(0xcbe029),
                                            reason="Event creation.", mentionable=False)
         await reminder.create_timer(event_trigger, 'bf2', ctx.author.id,
@@ -237,8 +241,7 @@ class Specialist(commands.Cog):
         when.dt = when.dt - datetime.timedelta(hours=1)
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = "".join(random.choice(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+        role_str = self.gen_role_str()
         role = await ctx.guild.create_role(name=f"COH2-{role_str}", colour=discord.Colour(0xcbe029),
                                            reason="Event creation.", mentionable=False)
         await reminder.create_timer(event_trigger, 'coh2', ctx.author.id,
@@ -278,8 +281,7 @@ class Specialist(commands.Cog):
         when.dt = when.dt - datetime.timedelta(hours=1)
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = "".join(random.choice(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+        role_str = self.gen_role_str()
         role = await ctx.guild.create_role(name=f"SWTOR-{role_str}", colour=discord.Colour(0xcbe029),
                                            reason="Event creation.", mentionable=False)
         await reminder.create_timer(event_trigger, 'swtor', ctx.author.id,
@@ -319,8 +321,7 @@ class Specialist(commands.Cog):
         when.dt = when.dt - datetime.timedelta(hours=1)
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = "".join(random.choice(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+        role_str = self.gen_role_str()
         role = await ctx.guild.create_role(name=f"GTFO-{role_str}", colour=discord.Colour(0xcbe029),
                                            reason="Event creation.", mentionable=False)
         await reminder.create_timer(event_trigger, 'gtfo', ctx.author.id,
@@ -360,8 +361,7 @@ class Specialist(commands.Cog):
         when.dt = when.dt - datetime.timedelta(hours=1)
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = "".join(random.choice(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+        role_str = self.gen_role_str()
         role = await ctx.guild.create_role(name=f"DOW3-{role_str}", colour=discord.Colour(0xcbe029),
                                            reason="Event creation.", mentionable=False)
         await reminder.create_timer(event_trigger, 'dow3', ctx.author.id,
@@ -401,8 +401,7 @@ class Specialist(commands.Cog):
         when.dt = when.dt - datetime.timedelta(hours=1)
         event_trigger = when.dt - datetime.timedelta(minutes=15)
         cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = "".join(random.choice(
-            string.ascii_uppercase + string.ascii_lowercase + string.digits) for _ in range(5))
+        role_str = self.gen_role_str()
         role = await ctx.guild.create_role(name=f"IH-{role_str}", colour=discord.Colour(0xcbe029),
                                            reason="Event creation.", mentionable=False)
         await reminder.create_timer(event_trigger, 'ih', ctx.author.id,
@@ -500,7 +499,7 @@ class Specialist(commands.Cog):
     # @commands.Cog.listener()
     async def on_event_check_timer_complete(self, event):
         """ On 'event_check' complete. """
-        _, channel_id, message = event.args
+        _, channel_id, _ = event.args
 
         try:
             channel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
