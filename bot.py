@@ -64,6 +64,7 @@ COGS = (
     'cogs.reactionroles',
     'cogs.reddit',
     'cogs.reminders',
+    'cogs.rng',
     'cogs.rtfx',
     'cogs.snipe',
     'cogs.specialist',
