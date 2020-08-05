@@ -1,12 +1,14 @@
 """ Todos cog! """
 import datetime
 import typing
+from textwrap import shorten
 
 import asyncpg
 import discord
 from discord.ext import commands, menus
 
 from utils import db
+
 
 class TodoTable(db.Table, table_name="todos"):
     id = db.PrimaryKeyColumn()
@@ -33,7 +35,7 @@ class Todo(commands.Cog):
         descs = []
         list_of_records = [records[x:x+10] for x in range(0, len(records), 10)]
         for records in list_of_records:
-            descs.append(discord.Embed(description="\n".join([f"[__`{record['id']}`__]({record['jump_url']}): {record['content']}" for record in records])))
+            descs.append(discord.Embed(description="\n".join([f"[__`{record['id']}`__]({record['jump_url']}): {shorten(record['content'], width=100)}" for record in records])).set_footer(text="Use todo info ## for more details."))
         return descs
 
     @commands.group(invoke_without_command=True)
