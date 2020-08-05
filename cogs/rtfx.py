@@ -205,7 +205,7 @@ class RTFX(commands.Cog):
     @rtfm.command(name='python', aliases=['py'])
     async def rtfm_python(self, ctx, *, obj: str = None):
         """Gives you a documentation link for a Python entity."""
-        await self.do_rtfm(ctx, "latest", obj)
+        await self.do_rtfm(ctx, "python", obj)
 
     @rtfm.command(name='py-jp', aliases=['py-ja'])
     async def rtfm_python_jp(self, ctx, *, obj: str = None):
