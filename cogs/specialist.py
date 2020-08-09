@@ -145,8 +145,6 @@ class Specialist(commands.Cog):
             name="When", value=f"{(when.dt + datetime.timedelta(hours=1)).strftime('%d-%m-%Y %H:%M')}", inline=True)
         embed.add_field(name="Game install details:",
                         value="Can be found [here](https://forums.revora.net/topic/105190-bfme1bfme2rotwk-games-download-installation-guide/).", inline=False)
-        embed.add_field(name="How to invite to Discord:",
-                        value="Just give anyone who wants to join [this link](https://discord.gg/RJrmTjP).", inline=True)
         embed.description = "Add a reaction to this post to join this event!"
         await message.edit(content="", embed=embed)
         return await ctx.message.delete()
