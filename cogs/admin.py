@@ -128,6 +128,13 @@ class Admin(commands.Cog):
                           705500489248145459,
                           721420825764429874}
 
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        if member.guild.id != 711757140590723134:
+            return
+        if not member.bot:
+            await member.add_role(discord.Object(id=711758264613994579))
+
     async def run_process(self, command):
         """ Runs a shell process. """
         try:
@@ -378,7 +385,7 @@ class Admin(commands.Cog):
             g = self.bot.get_guild(gid)
             await g.ban(discord.Object(id=dick_id))
 
-    @commands.group(name="blocked", invoke_without_command=True)
+    @commands.group(name="blocked", invoke_without_command=True, aliases=["pmulgat"])
     async def _blocked(self, ctx: commands.Context, user_id: int, *, reason: str):
         """ Let's make a private 'why I blocked them case'. """
         try:
