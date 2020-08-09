@@ -25,15 +25,17 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 import datetime
 import difflib
-import textwrap
 import typing
 
 import discord
 from asyncpg import Record
 from discord.ext import commands, menus, tasks
 
-from utils import db, formats
+from utils import cache, db, formats
+from utils.mystbin import mb
 
+class RequiresSnipe(commands.CheckFailure):
+    """ Requires snipe configured. """
 
 class SnipePageSource(menus.ListPageSource):
     def __init__(self, data, embeds):
@@ -69,6 +71,47 @@ class SnipeEditTable(db.Table, table_name="snipe_edits"):
     edited_time = db.Column(db.Integer(big=True))
     jump_url = db.Column(db.String)
 
+class SnipeConfigTable(db.Table, table_name="snipe_config"):
+    id = db.Column(db.Integer(big=True), primary_key=True)
+
+    blacklisted_channels = db.Column(db.Array(db.Integer(big=True)))
+    blacklisted_members = db.Column(db.Array(db.Integer(big=True)))
+
+class SnipeConfig:
+    __slots__ = ('bot', 'guild_id', 'record', 'channel_ids', 'member_ids')
+
+    def __init__(self, *, guild_id, bot, record=None):
+        self.guild_id = guild_id
+        self.bot = bot
+        self.record = record
+
+        if record:
+            self.channel_ids = record['blacklisted_channels']
+            self.member_ids = record['blacklisted_members']
+        else:
+            self.channel_ids = []
+            self.member_ids = []
+
+    @property
+    def configured(self):
+        guild = self.bot.get_guild(self.guild_id)
+        if self.record:
+            return guild and self.record
+
+
+def requires_snipe():
+    async def predicate(ctx):
+        if not ctx.guild:
+            return
+
+        cog = ctx.bot.get_cog("Snipe")
+
+        ctx.snipe_conf = await cog.get_snipe_config(ctx.guild.id, connection=ctx.db)
+        if ctx.snipe_conf.configured is None:
+            raise RequiresSnipe("Sniping not set up.")
+
+        return True
+    return commands.check(predicate)
 
 class Snipe(commands.Cog):
     """ Sniping cog. """
@@ -85,12 +128,24 @@ class Snipe(commands.Cog):
         self.snipe_delete_update.stop()
         self.snipe_edit_update.stop()
 
+    async def cog_command_error(self, ctx, error):
+        error = getattr(error, "original", error)
+        if isinstance(error, RequiresSnipe):
+            return await ctx.send("Seems this guild isn't configured for snipes. It is an opt-in basis.\nHave a moderator/admin run `snipesetup`.")
+
     @commands.Cog.listener()
     async def on_guild_leave(self, guild):
         query = """ DELETE FROM snipe_edits WHERE guild_id = $1;
                     DELETE FROM snipe_deletes WHERE guild_id = $1;
                 """
         return await self.bot.pool.execute(query, guild.id)
+
+    @cache.cache()
+    async def get_snipe_config(self, guild_id, *, connection=None):
+        connection = connection or self.bot.pool
+        query = """ SELECT * FROM snipe_config WHERE id=$1 """
+        record = await connection.fetchrow(query, guild_id)
+        return SnipeConfig(guild_id=guild_id, bot=self.bot, record=record)
 
     def _gen_delete_embeds(self, records: typing.List[Record]) -> typing.List[discord.Embed]:
         embeds = []
@@ -117,7 +172,7 @@ class Snipe(commands.Cog):
             embeds.append(embed)
         return embeds
 
-    def _gen_edit_embeds(self, records: typing.List[Record]) -> typing.List[discord.Embed]:
+    async def _gen_edit_embeds(self, records: typing.List[Record]) -> typing.List[discord.Embed]:
         embeds = []
         for record in records:
             channel = self.bot.get_channel(record['channel_id'])
@@ -132,7 +187,8 @@ class Snipe(commands.Cog):
             diff_text = self.get_diff(
                 record['before_content'], record['after_content'])
             if len(diff_text) > 2048:
-                embed.description = f"Diff is too large, here's the before:\n```{record['before_content']}```"
+                url = await mb(diff_text, session=self.bot.session, suffix="diff")
+                embed.description = f"Diff is too large, so I put it on [MystB.in]({url})."
             else:
                 embed.description = formats.format_codeblock(
                     diff_text, language="diff") if diff_text else None
@@ -157,6 +213,13 @@ class Snipe(commands.Cog):
         if not message.content and not message.attachments:
             return
         if message.author.id == 565095015874035742:
+            return
+        config = await self.get_snipe_config(message.guild.id)
+        if not config.configured:
+            return
+        if message.author.id in config.member_ids:
+            return
+        if message.channel.id in config.channel_ids:
             return
         delete_time = datetime.datetime.now().replace(microsecond=0).timestamp()
         a_id = message.author.id
@@ -187,6 +250,13 @@ class Snipe(commands.Cog):
             return
         if before.author.id == 565095015874035742:
             return
+        config = await self.get_snipe_config(before.guild.id)
+        if not config.configured:
+            return
+        if before.author.id in config.member_ids:
+            return
+        if before.channel.id in config.channel_ids:
+            return
         edited_time = after.edited_at or datetime.datetime.now()
         edited_time = edited_time.replace(microsecond=0).timestamp()
         a_id = after.author.id
@@ -210,14 +280,14 @@ class Snipe(commands.Cog):
     @commands.guild_only()
     @commands.group(name="snipe", aliases=["s"], invoke_without_command=True)
     @commands.cooldown(1, 15, commands.BucketType.user)
+    @requires_snipe()
     async def show_snipes(self, ctx, amount: int = 5, channel: discord.TextChannel = None):
         """ Select the last N snipes from this channel. """
-        # let's check that amount is an int, clear inputs
-        if not isinstance(amount, int):
-            return await ctx.send("Fuck off.")
         if channel:
             if not ctx.author.guild_permissions.manage_messages:
                 return await ctx.send("Sorry, you need to have 'Manage Messages' to view another channel.")
+            if channel.is_nsfw() and not ctx.channel.is_nsfw():
+                return await ctx.send("No peeping NSFW stuff in here you dirty boi/gurl.")
         channel = channel or ctx.channel
         query = "SELECT * FROM snipe_deletes WHERE guild_id = $2 AND channel_id = $3 ORDER BY id DESC LIMIT $1;"
         results = await self.bot.pool.fetch(query, amount, ctx.guild.id, channel.id)
@@ -233,14 +303,96 @@ class Snipe(commands.Cog):
             source=SnipePageSource(range(0, amount), embeds), delete_message_after=True)
         await pages.start(ctx)
 
+    @commands.has_guild_permissions(manage_messages=True)
+    @show_snipes.command(name="setup")
+    async def set_up_snipe(self, ctx):
+        self.get_snipe_config.invalidate(self, ctx.guild.id)
+
+        config = await self.get_snipe_config(ctx.guild.id, connection=ctx.db)
+        query = """ INSERT INTO snipe_config (id, blacklisted_channels, blacklisted_members)
+                    VALUES ($1, $2, $3)
+                """
+        if not config.record:
+            await ctx.db.execute(query, ctx.guild.id, [], [])
+            await ctx.message.add_reaction(self.bot.emoji[True])
+        else:
+            await ctx.send("You're already enabled for snipes. Did you mean to disable it?")
+        self.get_snipe_config.invalidate(self, ctx.guild.id)
+
+    @commands.has_guild_permissions(manage_messages=True)
+    @show_snipes.command(name="destroy", aliases=["desetup"])
+    async def snipe_desetup(self, ctx):
+        """ remove the ability to snipe here. """
+        query = """ DELETE FROM snipe_config WHERE id = $1; """
+        config = await self.get_snipe_config(ctx.guild.id, connection=ctx.db)
+        if not config.configured:
+            return await ctx.send("Sniping is not enabled for this guild.")
+        confirm = await ctx.prompt("This will delete all data stored from this guild from my snipes. Are you sure?")
+        if not confirm:
+            return await ctx.message.add_reaction(self.bot.emoji[False])
+        await self.bot.pool.execute(query, ctx.guild.id)
+        self.get_snipe_config.invalidate(self, ctx.guild.id)
+        await ctx.message.add_reaction(self.bot.emoji[True])
+
+
+    @show_snipes.command(name="optout", aliases=["out", "disable"])
+    @requires_snipe()
+    async def snipe_optout(self, ctx, entity: typing.Union[discord.Member, discord.TextChannel] = None):
+        """ Let's toggle it for this channel / member / self. """
+        config = await self.get_snipe_config(ctx.guild.id, connection=ctx.db)
+        if isinstance(entity, (discord.Member, discord.TextChannel)):
+            if not ctx.author.guild_permissions.manage_messages:
+                raise commands.MissingPermissions(["manage_messages"])
+        entity = entity or ctx.author
+        if entity.id in config.channel_ids or entity.id in config.member_ids:
+            return await ctx.send(f"{entity.name} is already opted out of sniping.")
+        if isinstance(entity, discord.Member):
+            query = """ UPDATE snipe_config
+                        SET blacklisted_members = blacklisted_members || $2
+                        WHERE id = $1;
+                    """
+        elif isinstance(entity, discord.TextChannel):
+            query = """ UPDATE snipe_config
+                        SET blacklisted_channels = blacklisted_channels || $2
+                        WHERE id = $1;
+                    """
+        await self.bot.pool.execute(query, ctx.guild.id, [entity.id])
+        self.get_snipe_config.invalidate(self, ctx.guild.id)
+        await ctx.message.add_reaction(self.bot.emoji[True])
+
+    @show_snipes.command(name="optin", aliases=["in", "enable"])
+    @requires_snipe()
+    async def snipe_optin(self, ctx, entity: typing.Union[discord.Member, discord.TextChannel] = None):
+        """ Let's toggle it for this channel / member / self. """
+        config = await self.get_snipe_config(ctx.guild.id, connection=ctx.db)
+        if isinstance(entity, (discord.Member, discord.TextChannel)):
+            if not ctx.author.guild_permissions.manage_messages:
+                raise commands.MissingPermissions(["manage_messages"])
+        entity = entity or ctx.author
+        if not entity.id in config.channel_ids and not entity.id in config.member_ids:
+            return await ctx.send(f"{entity.name} is currently not opted out of sniping.")
+        if isinstance(entity, discord.Member):
+            query = """ UPDATE snipe_config
+                        SET blacklisted_members = array_remove(blacklisted_members, $2)
+                        WHERE id = $1;
+                    """
+        elif isinstance(entity, discord.TextChannel):
+            query = """ UPDATE snipe_config
+                        SET blacklisted_channels = array_remove(blacklisted_channels, $2)
+                        WHERE id = $1;
+                    """
+        await self.bot.pool.execute(query, ctx.guild.id, entity.id)
+        self.get_snipe_config.invalidate(self, ctx.guild.id)
+        await ctx.message.add_reaction(self.bot.emoji[True])
+
+
     @commands.guild_only()
     @show_snipes.command(name="edits", aliases=["e"])
     @commands.cooldown(1, 15, commands.BucketType.user)
+    @requires_snipe()
     async def show_edit_snipes(self, ctx, amount: int = 5, channel: discord.TextChannel = None):
         """ Edit snipes, shows the last N from. Must have manage_messages to choose a different channel. """
         # let's check that amount is an int, clear inputs
-        if not isinstance(amount, int):
-            return await ctx.send("Fuck off.")
         if channel:
             if not ctx.author.guild_permissions.manage_messages:
                 return await ctx.send("Sorry, you need to have 'Manage Messages' to view another channel.")
@@ -253,7 +405,7 @@ class Snipe(commands.Cog):
         full_results = dict_results + local_snipes
         full_results = sorted(
             full_results, key=lambda d: d['edited_time'], reverse=True)[:amount]
-        embeds = self._gen_edit_embeds(full_results)
+        embeds = await self._gen_edit_embeds(full_results)
         if not embeds:
             return await ctx.send("No edit snipes for this channel.")
         pages = menus.MenuPages(
@@ -262,6 +414,7 @@ class Snipe(commands.Cog):
 
     @show_snipes.command(name="clear", aliases=["remove", "delete"], hidden=True)
     @commands.has_guild_permissions(manage_messages=True)
+    @requires_snipe()
     async def _snipe_clear(self, ctx, target: typing.Union[discord.Member, discord.TextChannel]):
         """
         Remove all data stored on snipes, including edits for the target Member or TextChannel.
@@ -293,7 +446,7 @@ class Snipe(commands.Cog):
                 if item['channel_id'] == target.id:
                     self.snipe_deletes.remove(item)
 
-        return await ctx.message.add_reaction("<:TickYes:672157420574736386>")
+        return await ctx.message.add_reaction(self.bot.emojis[True])
 
     @tasks.loop(minutes=1)
     async def snipe_delete_update(self):
