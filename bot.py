@@ -72,7 +72,6 @@ COGS = (
     'cogs.tags',
     'cogs.time',
     'cogs.todo',
-    'cogs.token',
     'cogs.twitch',
     'cogs.welcome',
 )
