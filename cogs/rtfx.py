@@ -146,8 +146,8 @@ class RTFX(commands.Cog):
 
     async def do_rtfm(self, ctx, key, obj):
         page_types = {
-            'latest': 'https://discordpy.readthedocs.io/en/latest',
-            'latest-jp': 'https://discordpy.readthedocs.io/ja/latest',
+            'discord.py': 'https://discordpy.readthedocs.io/en/latest',
+            'discord.py-jp': 'https://discordpy.readthedocs.io/ja/latest',
             'python': 'https://docs.python.org/3',
             'python-jp': 'https://docs.python.org/ja/3',
             'asyncpg': 'https://magicstack.github.io/asyncpg/current/',
@@ -166,7 +166,7 @@ class RTFX(commands.Cog):
         obj = re.sub(
             r'^(?:discord\.(?:ext\.)?)?(?:commands\.)?(.+)', r'\1', obj)
 
-        if key.startswith('latest'):
+        if key.startswith('discord.'):
             # point the abc.Messageable types properly:
             q = obj.lower()
             for name in dir(discord.abc.Messageable):
@@ -183,7 +183,7 @@ class RTFX(commands.Cog):
         e = discord.Embed(colour=discord.Colour.blurple())
         if len(matches) == 0:
             return await ctx.send('Could not find anything. Sorry.')
-        e.title = f"RTFM for {key}: {obj}"
+        e.title = f"RTFM for __**`{key}`**__: {obj}"
         e.description = '\n'.join(f'[`{key}`]({url})' for key, url in matches)
         e.set_footer(text=f"{len(matches)} possible results.")
         await ctx.send(embed=e)
@@ -195,12 +195,12 @@ class RTFX(commands.Cog):
         Events, objects, and functions are all supported through a
         a cruddy fuzzy algorithm.
         """
-        await self.do_rtfm(ctx, "latest", obj)
+        await self.do_rtfm(ctx, "discord.py", obj)
 
     @rtfm.command(name='jp')
     async def rtfm_jp(self, ctx, *, obj: str = None):
         """Gives you a documentation link for a discord.py entity (Japanese)."""
-        await self.do_rtfm(ctx, 'latest-jp', obj)
+        await self.do_rtfm(ctx, 'discord.py-jp', obj)
 
     @rtfm.command(name='python', aliases=['py'])
     async def rtfm_python(self, ctx, *, obj: str = None):
