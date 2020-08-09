@@ -14,7 +14,7 @@ As such, the setup of my config file is not public.
 Nevertheless; installation steps are below.
 
 ### Installation
-1. Install Python 3.6.1 or higher.
+1. Install Python 3.7.0 or higher.
 2. Set up a venv (of any flavour)
 3. Install required dependencies
 4. Create the database in PostgreSQL
