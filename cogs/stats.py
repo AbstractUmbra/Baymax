@@ -314,12 +314,6 @@ class Stats(commands.Cog):
 
         # statistics
         total_members = 0
-        total_online = 0
-        offline = discord.Status.offline
-        for member in self.bot.get_all_members():
-            total_members += 1
-            if member.status is not offline:
-                total_online += 1
 
         total_unique = len(self.bot.users)
 
@@ -328,6 +322,7 @@ class Stats(commands.Cog):
         guilds = 0
         for guild in self.bot.guilds:
             guilds += 1
+            total_members += guild.member_count
             for channel in guild.channels:
                 if isinstance(channel, discord.TextChannel):
                     text += 1
@@ -335,7 +330,7 @@ class Stats(commands.Cog):
                     voice += 1
 
         embed.add_field(
-            name='Members', value=f'{total_members} total\n{total_unique} unique\n{total_online} unique online')
+            name='Members', value=f'{total_members} total\n{total_unique} unique')
         embed.add_field(
             name='Channels', value=f'{text + voice} total\n{text} text\n{voice} voice')
 
