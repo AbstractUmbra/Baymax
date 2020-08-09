@@ -125,8 +125,7 @@ class Admin(commands.Cog):
         self._last_result = None
         self.sessions = set()
         self.my_guilds = {174702278673039360,
-                          705500489248145459,
-                          721420825764429874}
+                          705500489248145459}
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
