@@ -16,6 +16,7 @@ Nevertheless; installation steps are below.
 ### Installation
 1. Install Python 3.7.0 or higher.
 2. Set up a venv (of any flavour)
+    1. I use `poetry` hence the `pyproject.toml` and `poetry.lock`
 3. Install required dependencies
 4. Create the database in PostgreSQL
    ```sql
