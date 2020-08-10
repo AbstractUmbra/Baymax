@@ -62,7 +62,7 @@ class TwitchClipTable(db.Table):
     guild_id = db.Column(db.Integer(big=True))
     channel_id = db.Column(db.Integer(big=True))
     broadcaster_id = db.Column(db.String())
-    last_5_clips = db.Column(db.Array(db.String()))
+    last_25_clips = db.Column(db.Array(db.String()))
 
 
 class TwitchSecretTable(db.Table):
@@ -236,7 +236,7 @@ class Twitch(commands.Cog):
         broadcaster_data = await self._get_streamer_data(broadcaster)
         if not broadcaster_data:
             raise InvalidBroadcaster(broadcaster)
-        query = """INSERT INTO twitchcliptable (guild_id, channel_id, broadcaster_id, last_5_clips)
+        query = """INSERT INTO twitchcliptable (guild_id, channel_id, broadcaster_id, last_25_clips)
                    VALUES ($1, $2, $3, $4)
                 """
         await self.bot.pool.execute(query, ctx.guild.id, ctx.channel.id, broadcaster_data['id'], [])
@@ -362,7 +362,7 @@ class Twitch(commands.Cog):
         for item in results:
             guild = self.bot.get_guild(item['guild_id'])
             channel = guild.get_channel(item['channel_id'])
-            last_clips = item['last_5_clips'] or []
+            last_clips = item['last_25_clips'] or []
             clip_ids = deque(last_clips)
             async with self.bot.session.get(self.clip_endpoint,
                                             params={"broadcaster_id": item['broadcaster_id'],
@@ -380,7 +380,7 @@ class Twitch(commands.Cog):
                 continue
             for clip_dict in clip_data:
                 # Now we have the real data.
-                if len(clip_ids) >= 5:
+                if len(clip_ids) >= 25:
                     clip_ids.popleft()
                 clip_ids.append(clip_dict['id'])
                 clip_author = clip_dict['creator_name']
@@ -396,7 +396,7 @@ class Twitch(commands.Cog):
                 embed.description = f"{title}\n\n- New clip created by {clip_author}."
                 embed.timestamp = timestamp
                 await channel.send(embed=embed)
-            query = "UPDATE twitchcliptable SET last_5_clips = $1 WHERE broadcaster_id = $2 AND guild_id = $3 AND channel_id = $4;"
+            query = "UPDATE twitchcliptable SET last_25_clips = $1 WHERE broadcaster_id = $2 AND guild_id = $3 AND channel_id = $4;"
             await self.bot.pool.execute(query, list(clip_ids), item['broadcaster_id'], guild.id, channel.id)
 
     @get_streamers.before_loop
@@ -405,28 +405,19 @@ class Twitch(commands.Cog):
         """ Quickly before the loop... """
         await self.bot.wait_until_ready()
 
-    @get_streamers.after_loop
-    @get_clips.after_loop
-    async def streamers_error(self) -> Union[discord.Message, str]:
+    @get_streamers.error
+    @get_clips.error
+    async def streamers_error(self, error) -> Union[discord.Message, str]:
         """ On task.loop exception. """
         stats = self.bot.get_cog("Stats")
-        if self.get_streamers.failed():
-            if not stats:
-                return traceback.print_exc()
-            webhook = stats.webhook
-            embed = discord.Embed(title="Streamer error", colour=0xffffff)
-            embed.description = f"```py\n{self.get_streamers.get_task().exception()}```"
-            embed.timestamp = datetime.datetime.utcnow()
-            await webhook.send(embed=embed)
-        elif self.get_clips.failed():
-            if not stats:
-                return traceback.print_exc()
-            webhook = stats.webhook
-            embed = discord.Embed(title="Clips error", colour=0xfffffe)
-            embed.description = f"```py\n{self.get_clips.get_task().exception()}\n```"
-            embed.timestamp = datetime.datetime.utcnow()
-            await webhook.send(embed=embed)
-
+        tb_str = "".join(traceback.format_exception(type(error), error, error.__traceback__, 4))
+        if not stats:
+            return tb_str
+        webhook = stats.webhook
+        embed = discord.Embed(title="Streamer error", colour=0xffffff)
+        embed.description = f"```py\n{tb_str}```"
+        embed.timestamp = datetime.datetime.utcnow()
+        await webhook.send(embed=embed)
 
 def cog_unload(self) -> None:
     """ When the cog is unloaded, we wanna kill the task. """
