@@ -81,9 +81,10 @@ def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> typing.List[str
     user_id = bot.user.id
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
     if msg.guild is None:
-        base.append('r!')
+        base.append('p!')
+        base.append('P!')
     else:
-        base.extend(bot.prefixes.get(msg.guild.id, ['r!']))
+        base.extend(bot.prefixes.get(msg.guild.id, ['p!', 'P!']))
     return base
 
 
@@ -96,7 +97,7 @@ class Penumbra(commands.AutoShardedBot):
                          pm_help=None,
                          help_attrs=dict(hidden=True),
                          activity=discord.Game(
-                             name="r!help for help."),
+                             name="p!help for help."),
                          status=discord.Status.online,
                          allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False))
 
@@ -155,7 +156,7 @@ class Penumbra(commands.AutoShardedBot):
 
     def get_raw_guild_prefixes(self, guild_id):
         """ The raw prefixes. """
-        return self.prefixes.get(guild_id, ['r!', 'R!'])
+        return self.prefixes.get(guild_id, ['p!', 'P!'])
 
     async def set_guild_prefixes(self, guild, prefixes):
         """ Set the prefixes. """
