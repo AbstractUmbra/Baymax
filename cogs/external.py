@@ -82,7 +82,7 @@ class External(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.headers = {"User-Agent": "Robo-Hz Discord bot."}
+        self.headers = {"User-Agent": "Penumbra Discord bot."}
 
     @commands.command()
     @commands.cooldown(1, 10, commands.BucketType.user)

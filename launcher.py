@@ -11,7 +11,7 @@ import click
 import discord
 
 import config
-from bot import COGS, RoboHz
+from bot import COGS, Penumbra
 from utils.db import Table
 
 try:
@@ -32,7 +32,7 @@ def setup_logging():
         log = logging.getLogger()
         log.setLevel(logging.INFO)
         handler = logging.FileHandler(
-            filename='robo-hz.log', encoding='utf-8', mode='w')
+            filename='penumbra.log', encoding='utf-8', mode='w')
         dt_fmt = '%Y-%m-%d %H:%M:%S'
         fmt = logging.Formatter(
             '[{asctime}] [{levelname:<7}] {name}: {message}', dt_fmt, style='{')
@@ -60,7 +60,7 @@ def run_bot():
         log.exception('Could not set up PostgreSQL. Exiting.')
         return
 
-    bot = RoboHz()
+    bot = Penumbra()
     bot.pool = pool
     bot.run()
 

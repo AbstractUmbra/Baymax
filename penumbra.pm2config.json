@@ -1,14 +1,14 @@
 {
     "apps": [
         {
-            "name": "Robo-Hz",
-            "cwd": "/home/robohz/Robo-Hz/",
+            "name": "Penumbra",
+            "cwd": "/home/penumbra/Penumbra/",
             "script": "launcher.py",
             "wait_ready": true,
             "autorestart": true,
             "max_restart": 5,
             "instances": 1,
-            "interpreter": "/home/robohz/.poetry/bin/poetry",
+            "interpreter": "/home/penumbra/.poetry/bin/poetry",
             "interpreter_args": ["run", "python"],
             "log_date_format": "DD-MM-YYYY HH:mm:ss"
         }

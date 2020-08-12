@@ -380,7 +380,7 @@ class Meta(commands.Cog):
         periods, e.g. tag.create for the create subcommand of the tag command
         or by spaces.
         """
-        source_url = 'https://github.com/AbstractUmbra/Robo-Hz'
+        source_url = 'https://github.com/AbstractUmbra/Penumbra'
         branch = 'master'
         if command is None:
             return await ctx.send(source_url)

@@ -87,7 +87,7 @@ def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> typing.List[str
     return base
 
 
-class RoboHz(commands.AutoShardedBot):
+class Penumbra(commands.AutoShardedBot):
     """ The actual robot himself! """
 
     def __init__(self):

@@ -1,4 +1,4 @@
-# Robo-Hz
+# Penumbra
 
 A personal bot for Discord, written with love and fun.
 
@@ -20,8 +20,8 @@ Nevertheless; installation steps are below.
 3. Install required dependencies
 4. Create the database in PostgreSQL
    ```sql
-   CREATE ROLE robohz WITH LOGIN PASSWORD 'mypasswd';
-   CREATE DATABASE robohz OWNER robohz;
+   CREATE ROLE penumbra WITH LOGIN PASSWORD 'mypasswd';
+   CREATE DATABASE penumbra OWNER penumbra;
    CREATE EXTENSION pg_trgm;
     ```
 5. Set up configuration.
