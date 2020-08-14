@@ -1,7 +1,7 @@
 [tool.poetry]
-name = "robo-hz"
-version = "0.1.0"
-description = ""
+name = "Baymax"
+version = "0.1.1"
+description = "A general purpose and fun Discord bot."
 authors = ["AbstractUmbra <Umbra@AbstractUmbra.xyz>"]
 license = "MIT"
 

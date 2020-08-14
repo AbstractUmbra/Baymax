@@ -7,3 +7,4 @@ prefixes.json
 *.log
 config.py
 blacklist.json
+cogs/private.py

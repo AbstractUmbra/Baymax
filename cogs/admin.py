@@ -132,7 +132,7 @@ class Admin(commands.Cog):
         if member.guild.id != 711757140590723134:
             return
         if not member.bot:
-            await member.add_role(discord.Object(id=711758264613994579))
+            await member.add_roles(discord.Object(id=711758264613994579))
 
     async def run_process(self, command):
         """ Runs a shell process. """

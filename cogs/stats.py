@@ -270,7 +270,7 @@ class Stats(commands.Cog):
         # [`hash`](url) message (offset)
         offset = time.human_timedelta(commit_time.astimezone(
             datetime.timezone.utc).replace(tzinfo=None), accuracy=1)
-        return f'[`{short_sha2}`](https://github.com/AbstractUmbra/Penumbra/commit/{commit.hex}) {short} ({offset})'
+        return f'[`{short_sha2}`](https://github.com/AbstractUmbra/Baymax/commit/{commit.hex}) {short} ({offset})'
 
     def get_last_commits(self, count=3):
         repo = pygit2.Repository('.git')
@@ -294,7 +294,7 @@ class Stats(commands.Cog):
                             else:
                                 pylines += 1
         embed = discord.Embed(colour=discord.Colour.red(
-        ), description="Total source line count for Penumbra.")
+        ), description="Total source line count for Baymax.")
         embed.set_footer(
             text=f"{pyfiles} files with a total of {pylines} lines of code.")
         return await ctx.send(embed=embed)

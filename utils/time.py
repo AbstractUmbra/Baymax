@@ -288,3 +288,14 @@ def human_timedelta(dt, *, source=None, accuracy=3, brief=False, suffix=True):
             return human_join(output, final='and') + suffix
         else:
             return ' '.join(output) + suffix
+
+def hf_time(dt: datetime.datetime):
+    if dt.day in [1, 21, 31]:
+        date_modif = "st"
+    elif dt.day in [2, 22]:
+        date_modif = "nd"
+    elif dt.day in [3, 23]:
+        date_modif = "rd"
+    else:
+        date_modif = "th"
+    return dt.strftime(f"%A %-d{date_modif} of %B %Y @ %H:%M %Z%z")

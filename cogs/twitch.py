@@ -365,8 +365,7 @@ class Twitch(commands.Cog):
             last_clips = item['last_25_clips'] or []
             clip_ids = deque(last_clips)
             async with self.bot.session.get(self.clip_endpoint,
-                                            params={"broadcaster_id": item['broadcaster_id'],
-                                                    "first": 5},
+                                            params={"broadcaster_id": item['broadcaster_id']},
                                             headers=headers) as resp:
                 clips_json = await resp.json()
             if "error" in clips_json:
@@ -380,7 +379,7 @@ class Twitch(commands.Cog):
                 continue
             for clip_dict in clip_data:
                 # Now we have the real data.
-                if len(clip_ids) >= 25:
+                if len(clip_ids) >= 100:
                     clip_ids.popleft()
                 clip_ids.append(clip_dict['id'])
                 clip_author = clip_dict['creator_name']

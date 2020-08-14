@@ -1,8 +1,8 @@
 {
     "apps": [
         {
-            "name": "Penumbra",
-            "cwd": "/home/penumbra/Penumbra/",
+            "name": "Baymax",
+            "cwd": "/home/penumbra/Baymax/",
             "script": "launcher.py",
             "wait_ready": true,
             "autorestart": true,

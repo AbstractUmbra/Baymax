@@ -173,7 +173,7 @@ class Fun(commands.Cog):
         channel_deletes = stat_record['channel_deletes'] + self.channel_deletes
         channel_creates = stat_record['channel_creates'] + self.channel_creates
         command_count = stat_record['command_count'] + self.command_count
-        embed = discord.Embed(title="Penumbra Stats")
+        embed = discord.Embed(title="Baymax Stats")
         embed.description = "Hello! Since 6th of July, 2020, I have witnessed the following events."
         message_str = f"""
         ```prolog

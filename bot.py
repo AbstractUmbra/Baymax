@@ -54,13 +54,13 @@ os.environ["PY_PRETTIFY_EXC"] = "True"
 COGS = (
     'jishaku',
     'cogs.admin',
-    'cogs.botspw',
     'cogs.buttons',
     'cogs.config',
     'cogs.external',
     'cogs.fun',
     'cogs.meta',
     'cogs.mod',
+    'cogs.private',
     'cogs.reactionroles',
     'cogs.reddit',
     'cogs.reminders',
@@ -72,6 +72,7 @@ COGS = (
     'cogs.tags',
     'cogs.time',
     'cogs.todo',
+    'cogs.token',
     'cogs.twitch',
     'cogs.welcome',
 )
@@ -81,14 +82,14 @@ def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> typing.List[str
     user_id = bot.user.id
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
     if msg.guild is None:
-        base.append('p!')
-        base.append('P!')
+        base.append('b!')
+        base.append('B!')
     else:
-        base.extend(bot.prefixes.get(msg.guild.id, ['p!', 'P!']))
+        base.extend(bot.prefixes.get(msg.guild.id, ['b!', 'B!']))
     return base
 
 
-class Penumbra(commands.AutoShardedBot):
+class Baymax(commands.AutoShardedBot):
     """ The actual robot himself! """
 
     def __init__(self):
@@ -97,7 +98,7 @@ class Penumbra(commands.AutoShardedBot):
                          pm_help=None,
                          help_attrs=dict(hidden=True),
                          activity=discord.Game(
-                             name="p!help for help."),
+                             name="b!help for help."),
                          status=discord.Status.online,
                          allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False))
 
@@ -156,7 +157,7 @@ class Penumbra(commands.AutoShardedBot):
 
     def get_raw_guild_prefixes(self, guild_id):
         """ The raw prefixes. """
-        return self.prefixes.get(guild_id, ['p!', 'P!'])
+        return self.prefixes.get(guild_id, ['b!', 'B!'])
 
     async def set_guild_prefixes(self, guild, prefixes):
         """ Set the prefixes. """
