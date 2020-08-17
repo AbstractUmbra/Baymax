@@ -244,25 +244,21 @@ class RTFX(commands.Cog):
 
     @commands.command()
     async def rtfs(self, ctx, *, search: str):
-        strs = []
         embed = discord.Embed(
             title="Read the f*ckin source",
             colour=discord.Colour.gold()
         )
         async with self.bot.session.get(f"https://rtfs.eviee.me/dpy?search={search}") as resp:
             results = await resp.json()
-        if results:
-            for result in results:
-                strs.append(
-                    f"[`{result['module']}.{result['object']}`]({result['url']})")
-            strs = strs[:10]
+        if not results:
+            embed.title = "Couldn't find anything."
+        else:
             embed.title = f"RTFS for '{search}'"
-            embed.description = '\n'.join(x for x in strs)
+            embed.description = '\n'.join(
+                f"[`{result['module']}.{result['object']}`]({result['url']})" for result in results[:10])
             eviee = self.bot.get_user(402159684724719617)
             embed.set_footer(
                 text=f"Requested by {ctx.author} | Thanks to {eviee} for the API.")
-        else:
-            embed.title = "Couldn't find anything."
         return await ctx.send(embed=embed)
 
 
