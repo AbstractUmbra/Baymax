@@ -261,11 +261,6 @@ class Meta(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send(error)
 
-    @commands.command(hidden=True)
-    async def hello(self, ctx):
-        """Displays my intro message."""
-        await ctx.send('Hello! I\'m a robot! Umbra#5443 made me.')
-
     @commands.command()
     async def charinfo(self, ctx, *, characters: str):
         """Shows you information about a number of characters.
