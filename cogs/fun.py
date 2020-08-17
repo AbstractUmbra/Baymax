@@ -60,7 +60,7 @@ class Fun(commands.Cog):
         self.bulk_update.start()
 
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def iexist(self, ctx):
         return await ctx.send("https://www.youtube.com/watch?v=h0QqXurjzD8")
 
@@ -196,6 +196,7 @@ class Fun(commands.Cog):
         await ctx.send(embed=embed)
 
     @commands.command(name="msgraw", aliases=["msgr", "rawm"])
+    @commands.cooldown(1, 15, commands.BucketType.user)
     async def raw_message(self, ctx, message_id: int):
         """ Quickly return the raw content of the specific message. """
         try:
@@ -205,7 +206,11 @@ class Fun(commands.Cog):
 
         await ctx.send(f"```json\n{formats.clean_triple_backtick(formats.escape_invis_chars(json.dumps(msg, indent=2, ensure_ascii=False, sort_keys=True)))}\n```")
 
-
+    @raw_message.error
+    async def mgsr_error(self, ctx, error):
+        error = getattr(error, "original", error)
+        if isinstance(error, discord.HTTPException):
+            return await ctx.send("The specified message's content is too long to repeat.")
 
 def setup(bot):
     bot.add_cog(Fun(bot))
