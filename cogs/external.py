@@ -43,8 +43,12 @@ class PypiObject:
         self.release_time = pypi_dict['releases'][str(
             self.module_latest_ver)][0]['upload_time']
         self.module_description = pypi_dict['info']['summary'] or None
-        self.urls = pypi_dict['info']['project_urls']
+        self.pypi_urls = pypi_dict['info']['project_urls']
         self.raw_classifiers = pypi_dict['info']['classifiers'] or None
+
+    @property
+    def urls(self) -> str:
+        return self.pypi_urls or "No URLs listed."
 
     @property
     def minimum_ver(self) -> str:
@@ -104,8 +108,11 @@ class External(commands.Cog):
                         value=pypi_details.release_datetime, inline=True)
         embed.add_field(name="Minimum Python ver",
                         value=pypi_details.minimum_ver, inline=False)
-        urls = "\n".join(
-            [f"[{key}]({value})" for key, value in pypi_details.urls.items()])
+        if isinstance(pypi_details.urls, str):
+            urls = pypi_details.urls
+        elif isinstance(pypi_details.urls, dict):
+            urls = "\n".join(
+                [f"[{key}]({value})" for key, value in pypi_details.urls.items()])
         embed.add_field(name="Relevant URLs", value=urls)
         embed.add_field(
             name="License", value=pypi_details.module_licese)
