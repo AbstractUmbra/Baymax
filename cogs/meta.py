@@ -494,6 +494,7 @@ class Meta(commands.Cog):
         secret_member = Secret()
         secret_member.id = 0
         secret_member.roles = [guild.default_role]
+        secret_member._roles = discord.utils.SnowflakeList(map(int, [guild.default_role.id]))
 
         # figure out what channels are 'secret'
         secret = Counter()
@@ -511,14 +512,14 @@ class Meta(commands.Cog):
 
         e = discord.Embed()
         e.title = guild.name
-        e.description = f"**ID**: {guild.id}\n**Owner**: {guild.owner}"
+        e.description = f'**ID**: {guild.id}\n**Owner**: {guild.owner}'
         if guild.icon:
             e.set_thumbnail(url=guild.icon_url)
 
         channel_info = []
         key_to_emoji = {
-            discord.TextChannel: '<:TextChannel:672157505358528524>',
-            discord.VoiceChannel: '<:VoiceChannel:672157538145402889>',
+            discord.TextChannel: '<:TextChannel:745076999160070296>',
+            discord.VoiceChannel: '<:VoiceChannel:745077018080575580>',
         }
         for key, total in totals.items():
             secrets = secret[key]
@@ -538,13 +539,11 @@ class Meta(commands.Cog):
             'PARTNERED': 'Partnered',
             'VERIFIED': 'Verified',
             'DISCOVERABLE': 'Server Discovery',
-            'PUBLIC': 'Server Discovery/Public',
             'COMMUNITY': 'Community Server',
             'WELCOME_SCREEN_ENABLED': 'Welcome Screen',
             'INVITE_SPLASH': 'Invite Splash',
             'VIP_REGIONS': 'VIP Voice Servers',
             'VANITY_URL': 'Vanity Invite',
-            'MORE_EMOJI': 'More Emoji',
             'COMMERCE': 'Commerce',
             'LURKABLE': 'Lurkable',
             'NEWS': 'News Channels',
@@ -563,39 +562,38 @@ class Meta(commands.Cog):
 
         if guild.premium_tier != 0:
             boosts = f'Level {guild.premium_tier}\n{guild.premium_subscription_count} boosts'
-            last_boost = max(
-                guild.members, key=lambda m: m.premium_since or guild.created_at)
+            last_boost = max(guild.members, key=lambda m: m.premium_since or guild.created_at)
             if last_boost.premium_since is not None:
                 boosts = f'{boosts}\nLast Boost: {last_boost} ({time.human_timedelta(last_boost.premium_since, accuracy=2)})'
             e.add_field(name='Boosts', value=boosts, inline=False)
 
         bots = sum(m.bot for m in guild.members)
-        fmt = f'<:online:672157495908630538> {member_by_status["online"]} ' \
-              f'<:idle:672157477898289152> {member_by_status["idle"]} ' \
-              f'<:dnd:672157452468224030> {member_by_status["dnd"]} ' \
-              f'<:offline:672157486710652937> {member_by_status["offline"]}\n' \
+        fmt = f'<:Online:745077502740791366> {member_by_status["online"]} ' \
+              f'<:Idle:745077548379013193> {member_by_status["idle"]} ' \
+              f'<:DnD:745077524446314507> {member_by_status["dnd"]} ' \
+              f'<:Offline:745077513826467991> {member_by_status["offline"]}\n' \
               f'Total: {guild.member_count} ({formats.plural(bots):bot})'
 
         e.add_field(name='Members', value=fmt, inline=False)
-        e.add_field(name='Roles', value=", ".join(roles) if len(roles) < 10 else f"{len(roles)} roles")
+        e.add_field(name='Roles', value=', '.join(roles) if len(roles) < 10 else f'{len(roles)} roles')
 
         emoji_stats = Counter()
         for emoji in guild.emojis:
             if emoji.animated:
                 emoji_stats['animated'] += 1
-                emoji_stats['aniated_disabled'] += not emoji.available
+                emoji_stats['animated_disabled'] += not emoji.available
             else:
                 emoji_stats['regular'] += 1
                 emoji_stats['disabled'] += not emoji.available
 
-        fmt = f"Regular: {emoji_stats['regular']}/{guild.emoji_limit}\n" \
-              f"Animated: {emoji_stats['animated']}/{guild.emoji_limit}\n" \
+        fmt = f'Regular: {emoji_stats["regular"]}/{guild.emoji_limit}\n' \
+              f'Animated: {emoji_stats["animated"]}/{guild.emoji_limit}\n' \
 
         if emoji_stats['disabled'] or emoji_stats['animated_disabled']:
-            fmt = f"{fmt}Disabled: {emoji_stats['disabled']} regular, {emoji_stats['animated_disabled']} animated\n"
+            fmt = f'{fmt}Disabled: {emoji_stats["disabled"]} regular, {emoji_stats["animated_disabled"]} animated\n'
 
-        fmt = f"{fmt}Total Emoji: {len(guild.emojis)}/{guild.emoji_limit*2}"
-        e.add_field(name="Emoji", value=fmt, inline=False)
+        fmt = f'{fmt}Total Emoji: {len(guild.emojis)}/{guild.emoji_limit*2}'
+        e.add_field(name='Emoji', value=fmt, inline=False)
         e.set_footer(text='Created').timestamp = guild.created_at
         await ctx.send(embed=e)
 

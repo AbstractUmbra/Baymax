@@ -33,6 +33,7 @@ import io
 import discord
 from discord.ext import commands
 
+from utils import mystbin
 
 class _ContextDBAcquire:
     __slots__ = ('ctx', 'timeout')
@@ -253,18 +254,17 @@ class Context(commands.Context):
         command = command or self.command.qualified_name
         await self.invoke(cmd, command=command)
 
-    async def safe_send(self, content, *, escape_mentions=True, **kwargs):
+    async def safe_send(self, content, *, escape_mentions=True, suffix: str = None, **kwargs):
         """Same as send except with some safe guards.
 
-        1) If the message is too long then it sends a file with the results instead.
+        1) If the message is too long then it posts it to Mystb.in and sends the url.
         2) If ``escape_mentions`` is ``True`` then it escapes mentions.
         """
         if escape_mentions:
             content = discord.utils.escape_mentions(content)
 
         if len(content) > 2000:
-            fp = io.BytesIO(content.encode())
-            kwargs.pop('file', None)
-            return await self.send(file=discord.File(fp, filename='message_too_long.txt'), **kwargs)
+            link = await mystbin.mb(content, session=self.bot.session, suffix=suffix)
+            return await self.send(f"Output too long, here it is on Mystb.in: {link}.", **kwargs)
         else:
             return await self.send(content)

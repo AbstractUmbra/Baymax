@@ -39,16 +39,16 @@ class Baymax(commands.Cog):
         jsk = self.bot.get_command("jishaku shell")
         await jsk(ctx, argument=body)
 
-    @baymax.command()
+    @baymax.command(aliases=["sauce"])
     @commands.is_owner()
     async def source(self, ctx: commands.Context, *, command: str):
         """ Show Baymax system code. """
         jsk = self.bot.get_command("jishaku source")
         await jsk(ctx, command_name=command)
 
-    @baymax.command()
+    @baymax.command(aliases=["debug"])
     @commands.is_owner()
-    async def disagnose(self, ctx: commands.Context, *, command_name: str):
+    async def diagnose(self, ctx: commands.Context, *, command_name: str):
         """ Diagnose Baymax features. """
         jsk = self.bot.get_command("jishaku debug")
         await jsk(ctx, command_string=command_name)
