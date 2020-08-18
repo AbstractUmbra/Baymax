@@ -1,10 +1,15 @@
 """
-The MIT License (MIT)
+This utility and some contents are responsibly sourced from
+RoboDanny discord bot and author
+(https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
+RoboDanny licensing below:
 
-Copyright (c) 2020 AbstractUmbra
+The MIT License(MIT)
+
+Copyright(c) 2015 Rapptz
 
 Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
+copy of this software and associated documentation files(the "Software"),
 to deal in the Software without restriction, including without limitation
 the rights to use, copy, modify, merge, publish, distribute, sublicense,
 and/or sell copies of the Software, and to permit persons to whom the
@@ -146,8 +151,8 @@ class RTFX(commands.Cog):
 
     async def do_rtfm(self, ctx, key, obj):
         page_types = {
-            'discord.py': 'https://discordpy.readthedocs.io/en/latest',
-            'discord.py-jp': 'https://discordpy.readthedocs.io/ja/latest',
+            'discord.py': 'https://discordpy.readthedocs.io/en/neo-docs/',
+            'discord.py-jp': 'https://discordpy.readthedocs.io/ja/latest/',
             'python': 'https://docs.python.org/3',
             'python-jp': 'https://docs.python.org/ja/3',
             'asyncpg': 'https://magicstack.github.io/asyncpg/current/',
