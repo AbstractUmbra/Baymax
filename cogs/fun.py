@@ -195,22 +195,5 @@ class Fun(commands.Cog):
         embed.set_footer(text=f"I have also run {command_count:,} commands!")
         await ctx.send(embed=embed)
 
-    @commands.command(name="msgraw", aliases=["msgr", "rawm"])
-    @commands.cooldown(1, 15, commands.BucketType.user)
-    async def raw_message(self, ctx, message_id: int):
-        """ Quickly return the raw content of the specific message. """
-        try:
-            msg = await ctx.bot.http.get_message(ctx.channel.id, message_id)
-        except discord.NotFound:
-            raise commands.BadArgument(f"Message with the ID of {message_id} cannot be found in {ctx.channel.mention}.")
-
-        await ctx.send(f"```json\n{formats.clean_triple_backtick(formats.escape_invis_chars(json.dumps(msg, indent=2, ensure_ascii=False, sort_keys=True)))}\n```")
-
-    @raw_message.error
-    async def mgsr_error(self, ctx, error):
-        error = getattr(error, "original", error)
-        if isinstance(error, discord.HTTPException):
-            return await ctx.send("The specified message's content is too long to repeat.")
-
 def setup(bot):
     bot.add_cog(Fun(bot))
