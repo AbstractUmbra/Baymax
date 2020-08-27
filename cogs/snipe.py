@@ -31,8 +31,7 @@ import discord
 from asyncpg import Record
 from discord.ext import commands, menus, tasks
 
-from utils import cache, db, formats
-from utils.mystbin import mb
+from utils import cache, db, formats, mystbin
 
 class RequiresSnipe(commands.CheckFailure):
     """ Requires snipe configured. """
@@ -187,7 +186,7 @@ class Snipe(commands.Cog):
             diff_text = self.get_diff(
                 record['before_content'], record['after_content'])
             if len(diff_text) > 2048:
-                url = await mb(diff_text, session=self.bot.session, suffix="diff")
+                url = await mystbin.post(diff_text, session=self.bot.session, suffix="diff")
                 embed.description = f"Diff is too large, so I put it on [MystB.in]({url})."
             else:
                 embed.description = formats.format_codeblock(

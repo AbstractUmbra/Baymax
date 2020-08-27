@@ -264,7 +264,14 @@ class Context(commands.Context):
             content = discord.utils.escape_mentions(content)
 
         if len(content) > 2000:
-            link = await mystbin.mb(content, session=self.bot.session, suffix=suffix)
+            link = await mystbin.post(content, session=self.bot.session, suffix=suffix)
             return await self.send(f"Output too long, here it is on Mystb.in: {link}.", **kwargs)
         else:
             return await self.send(content)
+
+    async def send(self, content=None, **kwargs):
+        """ Let's try and override default send. """
+        if content and len(content) > 2000:
+            link = await mystbin.post(content, session=self.bot.session, suffix="text")
+            return await super().send(f"Output too long, here it is on Mystb.in: {link}.")
+        return await super().send(content=content, **kwargs)
