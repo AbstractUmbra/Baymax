@@ -104,5 +104,11 @@ class Token(commands.Cog):
         embed.set_footer(text=user.name, icon_url=user.avatar_url)
         await ctx.send(embed=embed)
 
+    @parse.error
+    async def token_parsing_error(self, ctx, error):
+        error = getattr(error, "original", error)
+        if isinstance(error, ValueError):
+            return await ctx.send(f"`{ctx.kwargs['token'].split('.')[0]}` doesn't seem to be a valid token encoding.")
+
 def setup(bot):
     bot.add_cog(Token(bot))
