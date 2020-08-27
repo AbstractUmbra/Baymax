@@ -38,8 +38,10 @@ from utils import cache, db
 class TooManyAlerts(Exception):
     """ There are too many twitch alerts for this guild. """
 
+
 class InvalidBroadcaster(Exception):
     """ Wrong streamer. """
+
     def __init__(self, broadcaster, message="Invalid streamer"):
         self.broadcaster = broadcaster
         super().__init__(message)
@@ -54,6 +56,7 @@ class TwitchTable(db.Table):
     streamer_name = db.Column(db.String)
     streamer_last_game = db.Column(db.String())
     streamer_last_datetime = db.Column(db.Datetime())
+
 
 class TwitchClipTable(db.Table):
     """ Creates the Clip table for storing clip following data. """
@@ -172,7 +175,8 @@ class Twitch(commands.Cog):
                               colour=discord.Colour.blurple())
         embed.description = "\n".join(
             f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}" for item in results)
-        embed.description += "\n".join(f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['broadcaster_id']}" for item in clip_results)
+        embed.description += "\n".join(
+            f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['broadcaster_id']}" for item in clip_results)
         embed.add_field(name="OAuth Edited at", value=oauth_results['edited_at'].strftime(
             "%d-%m-%Y %H:%M:%S"))
         embed.add_field(name="OAuth Expires at", value=oauth_results['expires_at'].strftime(
@@ -310,7 +314,8 @@ class Twitch(commands.Cog):
                 item['streamer_last_datetime'] = (
                     datetime.datetime.utcnow() - datetime.timedelta(hours=3))
             guild: discord.Guild = self.bot.get_guild(item['guild_id'])
-            channel: discord.TextChannel = guild.get_channel(item['channel_id'])
+            channel: discord.TextChannel = guild.get_channel(
+                item['channel_id'])
             if item['role_id']:
                 role = guild.get_role(item['role_id'])
             async with self.bot.session.get(self.stream_endpoint,
@@ -365,7 +370,8 @@ class Twitch(commands.Cog):
             last_clips = item['last_25_clips'] or []
             clip_ids = deque(last_clips)
             async with self.bot.session.get(self.clip_endpoint,
-                                            params={"broadcaster_id": item['broadcaster_id']},
+                                            params={
+                                                "broadcaster_id": item['broadcaster_id']},
                                             headers=headers) as resp:
                 clips_json = await resp.json()
             if "error" in clips_json:
@@ -409,7 +415,8 @@ class Twitch(commands.Cog):
     async def streamers_error(self, error) -> Union[discord.Message, str]:
         """ On task.loop exception. """
         stats = self.bot.get_cog("Stats")
-        tb_str = "".join(traceback.format_exception(type(error), error, error.__traceback__, 4))
+        tb_str = "".join(traceback.format_exception(
+            type(error), error, error.__traceback__, 4))
         if not stats:
             return tb_str
         webhook = stats.webhook
@@ -417,6 +424,7 @@ class Twitch(commands.Cog):
         embed.description = f"```py\n{tb_str}```"
         embed.timestamp = datetime.datetime.utcnow()
         await webhook.send(embed=embed)
+
 
 def cog_unload(self) -> None:
     """ When the cog is unloaded, we wanna kill the task. """
