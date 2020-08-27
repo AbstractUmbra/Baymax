@@ -35,7 +35,7 @@ import asyncpg
 import discord
 from discord.ext import commands
 
-from utils import cache, checks, db
+from utils import cache, checks, db, mystbin
 from utils.paginator import Pages
 
 
@@ -557,11 +557,7 @@ class Config(commands.Cog):
         disabled = resolved.get_blocked_commands(channel.id)
 
         if len(disabled) > 15:
-            async with self.bot.session.post('https://hastebin.com/documents', data='\n'.join(disabled)) as resp:
-                if resp.status != 200:
-                    return await ctx.send('Sorry, failed to post data to hastebin.')
-                js = await resp.json()
-                value = f'Too long... Check: https://hastebin.com/{js["key"]}.txt'
+            value = await mystbin.post('\n'.join(disabled), session=self.bot.session, suffix="txt")
         else:
             value = '\n'.join(disabled) or 'None!'
         await ctx.send(f'In {channel.mention} the following commands are disabled:\n{value}')
