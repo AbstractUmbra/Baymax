@@ -131,7 +131,7 @@ class Snipe(commands.Cog):
     async def cog_command_error(self, ctx, error):
         error = getattr(error, "original", error)
         if isinstance(error, RequiresSnipe):
-            return await ctx.send("Seems this guild isn't configured for snipes. It is an opt-in basis.\nHave a moderator/admin run `snipesetup`.")
+            return await ctx.send("Seems this guild isn't configured for snipes. It is an opt-in basis.\nHave a moderator/admin run `snipe setup`.")
 
     @commands.Cog.listener()
     async def on_guild_leave(self, guild):
