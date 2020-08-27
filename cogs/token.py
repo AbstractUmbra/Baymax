@@ -3,10 +3,11 @@ from base64 import b64decode
 from textwrap import dedent
 
 import yarl
+
 import discord
 from discord.ext import commands
-
 from utils.time import hf_time
+
 
 class GithubError(commands.CommandError):
     pass
@@ -14,6 +15,7 @@ class GithubError(commands.CommandError):
 
 class Token(commands.Cog):
     """ For handling and parsing tokens. """
+
     def __init__(self, bot):
         self.bot = bot
         self._req_lock = asyncio.Lock(loop=self.bot.loop)
@@ -109,6 +111,7 @@ class Token(commands.Cog):
         error = getattr(error, "original", error)
         if isinstance(error, ValueError):
             return await ctx.send(f"`{ctx.kwargs['token'].split('.')[0]}` doesn't seem to be a valid token encoding.")
+
 
 def setup(bot):
     bot.add_cog(Token(bot))

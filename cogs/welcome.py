@@ -20,8 +20,10 @@ class Welcome(commands.Cog):
         """ On member joins... let's check for a welcome message. """
         query = "SELECT * FROM welcome_config WHERE guild_id = $1"
         results = await self.bot.pool.fetchrow(query, member.guild.id)
+
         if not results:
             return
+
         channel = member.guild.get_channel(results['welcome_channel'])
         return await channel.send(f"Hey {member.mention}\n\n{results['welcome_message']}", allowed_mentions=discord.AllowedMentions(users=True))
 
@@ -30,7 +32,9 @@ class Welcome(commands.Cog):
         """ Group. If no subcommand then create a welcome message. """
         if ctx.invoked_subcommand:
             pass
+
         channel = channel or ctx.channel
+
         query = """INSERT INTO welcome_config (guild_id, welcome_channel, welcome_message)
                    VALUES ($1, $2, $3)
                    ON CONFLICT (guild_id)
@@ -52,8 +56,10 @@ class Welcome(commands.Cog):
         query = "SELECT * FROM welcome_config WHERE guild_id = $1"
         record = await self.bot.pool.fetchrow(query, ctx.guild.id)
         channel = ctx.guild.get_channel(record['welcome_channel'])
+
         if not channel:
             return await ctx.send("It seems the welcome channel has been deleted.")
+            
         return await ctx.send(f"Message is being sent to {channel.mention}. Message is:\n\n{record['welcome_message']}")
 
 

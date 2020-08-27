@@ -27,7 +27,6 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import inspect
 import io
 import os
 import re
@@ -35,7 +34,6 @@ import zlib
 
 import discord
 from discord.ext import commands
-
 from utils import fuzzy
 
 

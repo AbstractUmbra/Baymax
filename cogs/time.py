@@ -25,10 +25,10 @@ DEALINGS IN THE SOFTWARE.
 import random
 from datetime import datetime
 
-import discord
 import pytz
-from discord.ext import commands, menus
 
+import discord
+from discord.ext import commands, menus
 from utils import db
 
 

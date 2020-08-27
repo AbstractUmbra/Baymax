@@ -26,9 +26,9 @@ import typing
 from asyncio import TimeoutError as AsynTimeOut
 
 import asyncpg
+
 import discord
 from discord.ext import commands
-
 from utils import cache, db
 
 
@@ -116,6 +116,8 @@ class ReactionRoles(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_channel_delete(self, channel: typing.Union[discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel]):
+        if not isinstance(channel, discord.TextChannel):
+            return
         conf_query = "DELETE FROM reactionroles_config WHERE channel_id = $1 RETURNING guild_id;"
         role_query = "DELETE FROM reactionroles WHERE guild_id = $1;"
         guild_id = await self.bot.pool.fetchrow(conf_query, channel.id)
@@ -230,7 +232,7 @@ class ReactionRoles(commands.Cog):
             return
         if member.guild.owner_id == member.id:
             # guild owner
-            return await reactionrole_config.channel.send("Can't edit the guild owner lmao.", delete_after=3)
+            return await reactionrole_config.channel.send("Can't edit the guild owner.", delete_after=3)
         reaction_message = await reactionrole_config.channel.fetch_message(reactionrole_config.message_id)
         if getattr(payload.emoji, "id") is not None:
             for record in reactionrole_deets:

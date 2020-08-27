@@ -23,14 +23,15 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import json
+import re
 import textwrap
 from string import ascii_lowercase
 
 import discord
 from discord.ext import commands, tasks
+from utils import db, lang
 
-from utils import db, formats, lang
+ABT_REG = "~([a-zA-Z]+)~"
 
 
 class StatisticsTable(db.Table, table_name="statistics"):
@@ -44,8 +45,10 @@ class StatisticsTable(db.Table, table_name="statistics"):
     channel_creates = db.Column(db.Integer(big=True))
     command_count = db.Column(db.Integer(big=True))
 
+
 class Fun(commands.Cog):
     """ Some fun stuff, not fleshed out yet. """
+
     def __init__(self, bot):
         self.bot = bot
         self.lock = asyncio.Lock()
@@ -59,24 +62,19 @@ class Fun(commands.Cog):
         self.command_count = 0
         self.bulk_update.start()
 
-
-    @commands.command(hidden=True)
-    async def iexist(self, ctx):
-        return await ctx.send("https://www.youtube.com/watch?v=h0QqXurjzD8")
-
     @commands.group(invoke_without_command=True, skip_extra=False)
-    async def abt(self, ctx, *, tr_input: str):
+    async def abt(self, ctx, *, content: commands.clean_content):
         """ I love this language. """
-        new_str = ""
-        br = True
-        for char in tr_input:
-            if char == "~":
-                br = not br
-            elif br and (char.lower() in ascii_lowercase):
-                new_str += lang.ab_charmap.get(char.lower())
-            else:
-                new_str += char
-        return await ctx.send(new_str.replace("~", "").capitalize())
+        keep = re.findall(ABT_REG, content)
+
+        def trans(m):
+            get = m.group(0)
+            if get.isupper():
+                return lang.ab_charmap[get.lower()].upper()
+            return lang.ab_charmap[get]
+        repl = re.sub("[a-zA-Z]", trans, content)
+        fin = re.sub(ABT_REG, lambda m: keep.pop(0), repl)
+        await ctx.send(fin)
 
     @abt.command(name="r", aliases=["reverse"])
     async def abt_reverse(self, ctx, *, tr_input: str):
@@ -92,7 +90,6 @@ class Fun(commands.Cog):
             else:
                 new_str += char
         await ctx.send(new_str.replace("~", "").capitalize())
-
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
@@ -164,6 +161,7 @@ class Fun(commands.Cog):
     async def statistics(self, ctx):
         query = "SELECT * FROM statistics LIMIT 1;"
         stat_record = await self.bot.pool.fetchrow(query)
+
         message_deletes = stat_record['message_deletes'] + self.message_deletes
         bulk_message_deletes = stat_record['bulk_message_deletes'] + \
             self.bulk_message_deletes
@@ -173,6 +171,7 @@ class Fun(commands.Cog):
         channel_deletes = stat_record['channel_deletes'] + self.channel_deletes
         channel_creates = stat_record['channel_creates'] + self.channel_creates
         command_count = stat_record['command_count'] + self.command_count
+
         embed = discord.Embed(title="Baymax Stats")
         embed.description = "Hello! Since 6th of July, 2020, I have witnessed the following events."
         message_str = f"""
@@ -190,10 +189,14 @@ class Fun(commands.Cog):
         Channel Deletion     : {channel_deletes:,}
         ```
         """
-        embed.add_field(name="**Messages**", value=textwrap.dedent(message_str), inline=False)
-        embed.add_field(name="**Guilds**", value=textwrap.dedent(guild_str), inline=False)
+        embed.add_field(name="**Messages**",
+                        value=textwrap.dedent(message_str), inline=False)
+        embed.add_field(name="**Guilds**",
+                        value=textwrap.dedent(guild_str), inline=False)
         embed.set_footer(text=f"I have also run {command_count:,} commands!")
+
         await ctx.send(embed=embed)
+
 
 def setup(bot):
     bot.add_cog(Fun(bot))

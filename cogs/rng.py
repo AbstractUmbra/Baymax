@@ -32,7 +32,6 @@ from collections import Counter
 from typing import Optional
 
 from discord.ext import commands
-
 from utils.formats import plural
 
 
@@ -63,13 +62,6 @@ class RNG(commands.Cog):
             return await ctx.send('This server has no tags.')
 
         await ctx.send(f'Random tag found: {tag["name"]}\n{tag["content"]}')
-
-    @random.command()
-    async def mode(self, ctx):
-        """Displays a random Splatoon mode."""
-        mode = rng.choice(['Turf War', 'Splat Zones',
-                           'Clam Blitz', 'Rainmaker', 'Tower Control'])
-        await ctx.send(mode)
 
     @random.command()
     async def number(self, ctx, minimum=0, maximum=100):

@@ -37,10 +37,10 @@ import traceback
 from contextlib import redirect_stdout
 from typing import Optional
 
-import discord
 import import_expression
-from discord.ext import commands
 
+import discord
+from discord.ext import commands
 from utils import db, formats
 from utils.paginator import TextPages
 
@@ -127,19 +127,6 @@ class Admin(commands.Cog):
         self.my_guilds = {174702278673039360,
                           705500489248145459}
 
-    async def run_process(self, command):
-        """ Runs a shell process. """
-        try:
-            process = await asyncio.create_subprocess_shell(
-                command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            result = await process.communicate()
-        except NotImplementedError:
-            process = subprocess.Popen(
-                command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-            result = await self.bot.loop.run_in_executor(None, process.communicate)
-
-        return [output.decode() for output in result]
-
     def cleanup_code(self, content):
         """Automatically removes code blocks from the code."""
         # remove ```py\n```
@@ -166,6 +153,7 @@ class Admin(commands.Cog):
     async def load(self, ctx, *, module):
         """Loads a module."""
         module = f"cogs.{module}"
+
         try:
             self.bot.load_extension(module)
         except commands.ExtensionError as err:
@@ -177,6 +165,7 @@ class Admin(commands.Cog):
     async def unload(self, ctx, *, module):
         """Unloads a module."""
         module = f"cogs.{module}"
+
         try:
             self.bot.unload_extension(module)
         except commands.ExtensionError as err:
@@ -188,6 +177,7 @@ class Admin(commands.Cog):
     async def _reload(self, ctx, *, module):
         """Reloads a module."""
         module = f"cogs.{module}"
+
         try:
             self.bot.reload_extension(module)
         except commands.ExtensionNotLoaded:
@@ -196,59 +186,6 @@ class Admin(commands.Cog):
             await ctx.send(f'{err.__class__.__name__}: {err}')
         else:
             await ctx.message.add_reaction(self.bot.emoji[True])
-
-    def reload_or_load_extension(self, module):
-        """ Reload or load the extension if loaded yet. """
-        try:
-            self.bot.reload_extension(module)
-        except commands.ExtensionNotLoaded:
-            self.bot.load_extension(module)
-
-    @commands.command(name="eval", hidden=True)
-    async def _eval(self, ctx, *, body: str):
-        """Evaluates a code"""
-
-        env = {
-            'bot': self.bot,
-            'ctx': ctx,
-            'channel': ctx.channel,
-            'author': ctx.author,
-            'guild': ctx.guild,
-            'message': ctx.message,
-            '_': self._last_result
-        }
-        env.update(globals())
-
-        body = self.cleanup_code(body)
-        stdout = io.StringIO()
-
-        to_compile = f'async def func():\n{textwrap.indent(body, "  ")}'
-
-        result = None
-
-        try:
-            import_expression.exec(to_compile, env)
-        except Exception as err:
-            return await ctx.send(f'```py\n{err.__class__.__name__}: {err}\n```')
-        evaluated_func = env['func']
-        try:
-            with redirect_stdout(stdout):
-                result = await evaluated_func() or None
-        except Exception:
-            value = stdout.getvalue()
-            await ctx.send(f'```py\n{value}{traceback.format_exc()}\n```')
-        else:
-            value = stdout.getvalue() or None
-            self._last_result = result
-            # to_return = f"{value}{result}"
-            to_return = f"{result}"
-        if result:
-            pages = formats.group(to_return, 1000)
-            pages = [ctx.codeblock(page, 'py') for page in pages]
-            pages = TextPages(ctx, to_return, prefix="```py")
-            await pages.paginate()
-        else:
-            return ctx.message.add_reaction("\N{CROSS MARK}")
 
     @commands.command(hidden=True)
     async def sql(self, ctx, *, query: str):
@@ -322,23 +259,6 @@ class Admin(commands.Cog):
         await self.bot.invoke(new_ctx)
 
     @commands.command(hidden=True)
-    async def shell(self, ctx, *, command):
-        """Runs a shell command."""
-        async with ctx.typing():
-            stdout, stderr = await self.run_process(command)
-
-        if stderr:
-            text = f'stdout:\n{stdout}\nstderr:\n{stderr}'
-        else:
-            text = stdout
-
-        try:
-            pages = TextPages(ctx, text)
-            await pages.paginate()
-        except Exception as err:
-            await ctx.send(str(err))
-
-    @commands.command(hidden=True)
     async def perf(self, ctx, *, command):
         """Checks the timing of a command, attempting to suppress HTTP and DB calls."""
 
@@ -399,8 +319,10 @@ class Admin(commands.Cog):
     async def _blocked_query(self, ctx, user_id: int):
         query = """ SELECT reason FROM owner_blocked WHERE user_id = $1; """
         result = await self.bot.pool.fetchrow(query, user_id)
+
         if not result:
             return await ctx.send("Huh, you've not complained about them yet.")
+
         embed = discord.Embed(description=result['reason'])
         msg = await ctx.send(embed=embed)
         return await msg.add_reaction("<:tomatomad:712995196215885835>")

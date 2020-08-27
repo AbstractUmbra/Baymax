@@ -277,7 +277,7 @@ class Snipe(commands.Cog):
             })
 
     @commands.guild_only()
-    @commands.group(name="snipe", aliases=["s"], invoke_without_command=True)
+    @commands.group(name="snipe", aliases=["s"], invoke_without_command=True, cooldown_after_parsing=True)
     @commands.cooldown(1, 15, commands.BucketType.user)
     @requires_snipe()
     async def show_snipes(self, ctx, amount: int = 5, channel: discord.TextChannel = None):
@@ -482,7 +482,7 @@ class Snipe(commands.Cog):
     async def snipe_error(self, ctx, error):
         error = getattr(error, "original", error)
         if isinstance(error, commands.CommandOnCooldown):
-            return await ctx.send(f"Ha! Snipes are on cooldown for {error.retry_after}s.")
+            return await ctx.send(f"Ha! Snipes are on cooldown for {error.retry_after:.02f}s.")
 
 def setup(bot):
     bot.add_cog(Snipe(bot))

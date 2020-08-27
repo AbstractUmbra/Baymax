@@ -34,9 +34,9 @@ import re
 import traceback
 
 import asyncpg
+
 import discord
 from discord.ext import commands
-
 from utils import cache, checks, db, formats
 from utils.paginator import Pages
 

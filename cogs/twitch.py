@@ -28,10 +28,10 @@ from collections import deque
 from typing import Dict, List, Optional, Union
 
 import asyncpg
-import discord
 import pytz
-from discord.ext import commands, tasks
 
+import discord
+from discord.ext import commands, tasks
 from utils import cache, db
 
 
@@ -107,14 +107,17 @@ class Twitch(commands.Cog):
         async with self.bot.session.post(self.oauth_get_endpoint,
                                          params=self.bot.config.twitch_oauth_headers) as oa_resp:
             oauth_json = await oa_resp.json()
+
         if "error" in oauth_json:
             stats = self.bot.get_cog("Stats")
             if not stats:
                 raise commands.BadArgument("Twitch API is locking you out.")
             webhook = stats.webhook
             return await webhook.send("**Can't seem to refresh OAuth on the Twitch API.**")
+
         auth_token = oauth_json['access_token']
         expire_secs = int(oauth_json['expires_in'])
+
         query = """INSERT INTO twitchsecrettable (id, secret, edited_at, expires_at)
                    VALUES (1, $1, $2, $3)
                    ON CONFLICT (id)
@@ -171,16 +174,21 @@ class Twitch(commands.Cog):
         results = await self.bot.pool.fetch(query)
         oauth_results = await self.bot.pool.fetchrow(oauth_query)
         clip_results = await self.bot.pool.fetch(clips_query)
+
         embed = discord.Embed(title="Streamer details",
                               colour=discord.Colour.blurple())
         embed.description = "\n".join(
             f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['streamer_name']} -> {(datetime.datetime.utcnow() - item['streamer_last_datetime']).seconds}" for item in results)
+
         embed.description += "\n".join(
             f"{item['guild_id']} -> <#{item['channel_id']}> -> {item['broadcaster_id']}" for item in clip_results)
+
         embed.add_field(name="OAuth Edited at", value=oauth_results['edited_at'].strftime(
             "%d-%m-%Y %H:%M:%S"))
+
         embed.add_field(name="OAuth Expires at", value=oauth_results['expires_at'].strftime(
             "%d-%m-%Y %H:%M:%S"))
+
         await ctx.send(embed=embed)
 
     @twitch.command(name="add")
@@ -189,8 +197,10 @@ class Twitch(commands.Cog):
         """ Add a streamer to the database for polling. """
         channel = channel or ctx.channel
         results = await self._get_streamers(name, ctx.guild.id)
+
         if results:
             return await ctx.send("This streamer is already monitored.")
+
         query = """ INSERT INTO twitchtable(guild_id, channel_id, streamer_name, streamer_last_datetime) VALUES($1, $2, $3, $4); """
         await self.bot.pool.execute(query, ctx.guild.id, channel.id, name, (datetime.datetime.utcnow() - datetime.timedelta(hours=3)))
         return await ctx.message.add_reaction(self.bot.emoji[True])
@@ -200,6 +210,7 @@ class Twitch(commands.Cog):
         """ We're gonna check if they have X streams already. """
         query = "SELECT * FROM twitchtable WHERE guild_id = $1;"
         results = await self.bot.pool.fetch(query, ctx.guild.id)
+
         if len(results) >= self.streamer_limit:
             raise TooManyAlerts(
                 "There are too many alerts for this guild already configured.")
@@ -211,6 +222,7 @@ class Twitch(commands.Cog):
         results = await self._get_streamers(name, ctx.guild.id)
         if not results:
             return await ctx.send("This streamer is not in the monitored list.")
+
         query = """ DELETE FROM twitchtable WHERE streamer_name = $1; """
         await self.bot.pool.execute(query, name)
         return await ctx.message.add_reaction(self.bot.emoji[True])
@@ -222,9 +234,11 @@ class Twitch(commands.Cog):
         channel = channel or ctx.channel
         query = "DELETE FROM twitchtable WHERE channel_id = $1 AND guild_id = $2;"
         confirm = await ctx.prompt(f"This will remove all streams notifications for {channel.mention}. Are you sure?", reacquire=False)
+
         if confirm:
             await self.bot.pool.execute(query, channel.id, ctx.guild.id)
             return await ctx.message.add_reaction(self.bot.emoji[True])
+
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @twitch.group(name="clips", aliases=["clip"], invoke_without_command=True)
@@ -240,9 +254,11 @@ class Twitch(commands.Cog):
         broadcaster_data = await self._get_streamer_data(broadcaster)
         if not broadcaster_data:
             raise InvalidBroadcaster(broadcaster)
+
         query = """INSERT INTO twitchcliptable (guild_id, channel_id, broadcaster_id, last_25_clips)
                    VALUES ($1, $2, $3, $4)
                 """
+
         await self.bot.pool.execute(query, ctx.guild.id, ctx.channel.id, broadcaster_data['id'], [])
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
@@ -251,8 +267,10 @@ class Twitch(commands.Cog):
     async def remove_clips(self, ctx: commands.Context, *, broadcaster: str) -> discord.Reaction:
         """ Remove clips from monitoring. """
         broadcaster_data = await self._get_streamer_data(broadcaster)
+
         if not broadcaster_data:
             raise InvalidBroadcaster(broadcaster)
+
         query = """ DELETE FROM twitchcliptable
                     WHERE guild_id = $1
                     AND channel_id = $2
@@ -267,8 +285,10 @@ class Twitch(commands.Cog):
         """ Clear the clips, let's check for approval though. """
         channel = channel or ctx.channel
         response = await ctx.prompt(f"Are you sure you wish to clear the clip monitoring for {channel.mention}?")
+
         if not response:
             return
+
         query = """ DELETE FROM twitchcliptable
                     WHERE guild_id = $1
                     AND channel_id = $2
@@ -309,6 +329,7 @@ class Twitch(commands.Cog):
         headers = await self._gen_headers()
         query = """ SELECT * FROM twitchtable; """
         results = await self.bot.pool.fetch(query)
+
         for item in results:
             if not item['streamer_last_datetime']:
                 item['streamer_last_datetime'] = (
@@ -316,35 +337,43 @@ class Twitch(commands.Cog):
             guild: discord.Guild = self.bot.get_guild(item['guild_id'])
             channel: discord.TextChannel = guild.get_channel(
                 item['channel_id'])
+
             if item['role_id']:
                 role = guild.get_role(item['role_id'])
+
             async with self.bot.session.get(self.stream_endpoint,
                                             params={
                                                 "user_login": f"{item['streamer_name']}"},
                                             headers=headers) as resp:
                 stream_json = await resp.json()
+
             if "error" in stream_json:
                 await self._refresh_oauth()
             if not stream_json['data']:
                 continue
+
             current_stream = datetime.datetime.utcnow() - \
                 item['streamer_last_datetime']
+
             if ((stream_json['data'][0]['title'] != item['streamer_last_game'])
                     or (current_stream.seconds >= 7200)):
                 embed = discord.Embed(
                     title=f"{item['streamer_name']} is live with: {stream_json['data'][0]['title']}",
                     colour=discord.Colour.blurple(),
                     url=f"https://twitch.tv/{item['streamer_name']}")
+
                 async with self.bot.session.get(self.game_endpoint,
                                                 params={
                                                     "id": f"{stream_json['data'][0]['game_id']}"},
                                                 headers=headers) as game_resp:
                     game_json = await game_resp.json()
+
                 async with self.bot.session.get(self.user_endpoint,
                                                 params={
                                                     "id": stream_json['data'][0]['user_id']},
                                                 headers=headers) as user_resp:
                     user_json = await user_resp.json()
+
                 embed.set_author(name=stream_json['data'][0]['user_name'])
                 embed.set_thumbnail(
                     url=f"{user_json['data'][0]['profile_image_url']}")
@@ -354,6 +383,7 @@ class Twitch(commands.Cog):
                                 value=f"{stream_json['data'][0]['viewer_count']}", inline=True)
                 embed.set_image(url=stream_json['data'][0]['thumbnail_url'].replace(
                     "{width}", "600").replace("{height}", "400"))
+
                 message = await channel.send(f"{role.mention if role else None}\n\n{item['streamer_name']} is now live!", embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
                 insert_query = """ UPDATE twitchtable SET streamer_last_game = $1, streamer_last_datetime = $2 WHERE streamer_name = $3; """
                 await self.bot.pool.execute(insert_query, stream_json['data'][0]['title'], message.created_at, item['streamer_name'])
@@ -364,29 +394,35 @@ class Twitch(commands.Cog):
         headers = await self._gen_headers()
         query = """ SELECT * FROM twitchcliptable; """
         results = await self.bot.pool.fetch(query)
+
         for item in results:
             guild = self.bot.get_guild(item['guild_id'])
             channel = guild.get_channel(item['channel_id'])
             last_clips = item['last_25_clips'] or []
             clip_ids = deque(last_clips)
+
             async with self.bot.session.get(self.clip_endpoint,
                                             params={
                                                 "broadcaster_id": item['broadcaster_id']},
                                             headers=headers) as resp:
                 clips_json = await resp.json()
+
             if "error" in clips_json:
                 await self._refresh_oauth()
             if not clips_json['data']:
                 continue
+
             clip_data = clips_json['data']  # List of dicts
             clip_data = [
                 c_dict for c_dict in clip_data if c_dict['id'] not in clip_ids]
             if not clip_data:
                 continue
+
             for clip_dict in clip_data:
                 # Now we have the real data.
                 if len(clip_ids) >= 100:
                     clip_ids.popleft()
+
                 clip_ids.append(clip_dict['id'])
                 clip_author = clip_dict['creator_name']
                 thumbnail = clip_dict['thumbnail_url']
@@ -395,12 +431,14 @@ class Twitch(commands.Cog):
                 timestamp = datetime.datetime.strptime(
                     clip_dict['created_at'], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=pytz.timezone("UTC"))
                 broadcaster_name = clip_dict['broadcaster_name']
+
                 embed = discord.Embed(
                     title=f"{broadcaster_name}'s new clip!", url=url)
                 embed.set_thumbnail(url=thumbnail)
                 embed.description = f"{title}\n\n- New clip created by {clip_author}."
                 embed.timestamp = timestamp
                 await channel.send(embed=embed)
+
             query = "UPDATE twitchcliptable SET last_25_clips = $1 WHERE broadcaster_id = $2 AND guild_id = $3 AND channel_id = $4;"
             await self.bot.pool.execute(query, list(clip_ids), item['broadcaster_id'], guild.id, channel.id)
 
@@ -417,8 +455,10 @@ class Twitch(commands.Cog):
         stats = self.bot.get_cog("Stats")
         tb_str = "".join(traceback.format_exception(
             type(error), error, error.__traceback__, 4))
+
         if not stats:
             return tb_str
+
         webhook = stats.webhook
         embed = discord.Embed(title="Streamer error", colour=0xffffff)
         embed.description = f"```py\n{tb_str}```"

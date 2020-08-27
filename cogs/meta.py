@@ -30,6 +30,7 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 import inspect
 import itertools
+import json
 import os
 import textwrap
 import unicodedata
@@ -38,7 +39,6 @@ from typing import Union
 
 import discord
 from discord.ext import commands
-
 from utils import checks, formats, time
 from utils.paginator import Pages
 
@@ -46,9 +46,11 @@ from utils.paginator import Pages
 class Prefix(commands.Converter):
     async def convert(self, ctx, argument):
         user_id = ctx.bot.user.id
+
         if argument.startswith((f'<@{user_id}>', f'<@!{user_id}>')):
             raise commands.BadArgument(
                 'That is a reserved prefix already in use.')
+
         return argument
 
 
@@ -56,6 +58,7 @@ class FetchedUser(commands.Converter):
     async def convert(self, ctx, argument):
         if not argument.isdigit():
             raise commands.BadArgument('Not a valid user ID.')
+
         try:
             return await ctx.bot.fetch_user(argument)
         except discord.NotFound:
@@ -273,9 +276,7 @@ class Meta(commands.Cog):
             name = unicodedata.name(c, 'Name not found.')
             return f'`\\U{digit:>08}`: {name} - {c} \N{EM DASH} <http://www.fileformat.info/info/unicode/char/{digit}>'
         msg = '\n'.join(map(to_string, characters))
-        if len(msg) > 2000:
-            return await ctx.send('Output too long to display.')
-        await ctx.send(msg)
+        return await ctx.send(msg)
 
     @commands.group(name='prefix', invoke_without_command=True)
     async def prefix(self, ctx):
@@ -407,12 +408,6 @@ class Meta(commands.Cog):
         final_url = f'<{source_url}/blob/{branch}/{location}#L{firstlineno}-L{firstlineno + len(lines) - 1}>'
         await ctx.send(final_url)
 
-    @commands.command(name='quit', hidden=True)
-    @commands.is_owner()
-    async def _quit(self, ctx):
-        """Quits the bot."""
-        await self.bot.logout()
-
     @commands.command()
     async def avatar(self, ctx, *, user: Union[discord.Member, FetchedUser] = None):
         """Shows a user's enlarged avatar(if possible)."""
@@ -494,7 +489,8 @@ class Meta(commands.Cog):
         secret_member = Secret()
         secret_member.id = 0
         secret_member.roles = [guild.default_role]
-        secret_member._roles = discord.utils.SnowflakeList(map(int, [guild.default_role.id]))
+        secret_member._roles = discord.utils.SnowflakeList(
+            map(int, [guild.default_role.id]))
 
         # figure out what channels are 'secret'
         secret = Counter()
@@ -562,7 +558,8 @@ class Meta(commands.Cog):
 
         if guild.premium_tier != 0:
             boosts = f'Level {guild.premium_tier}\n{guild.premium_subscription_count} boosts'
-            last_boost = max(guild.members, key=lambda m: m.premium_since or guild.created_at)
+            last_boost = max(
+                guild.members, key=lambda m: m.premium_since or guild.created_at)
             if last_boost.premium_since is not None:
                 boosts = f'{boosts}\nLast Boost: {last_boost} ({time.human_timedelta(last_boost.premium_since, accuracy=2)})'
             e.add_field(name='Boosts', value=boosts, inline=False)
@@ -575,7 +572,8 @@ class Meta(commands.Cog):
               f'Total: {guild.member_count} ({formats.plural(bots):bot})'
 
         e.add_field(name='Members', value=fmt, inline=False)
-        e.add_field(name='Roles', value=', '.join(roles) if len(roles) < 10 else f'{len(roles)} roles')
+        e.add_field(name='Roles', value=', '.join(roles)
+                    if len(roles) < 10 else f'{len(roles)} roles')
 
         emoji_stats = Counter()
         for emoji in guild.emojis:
@@ -603,6 +601,7 @@ class Meta(commands.Cog):
         avatar = member.avatar_url_as(static_format='png')
         e.set_author(name=str(member), url=avatar)
         allowed, denied = [], []
+
         for name, value in permissions:
             name = name.replace('_', ' ').replace('guild', 'server').title()
             if value:
@@ -625,6 +624,7 @@ class Meta(commands.Cog):
         the info returned will be yours.
         """
         channel = channel or ctx.channel
+
         if member is None:
             member = ctx.author
 
@@ -720,6 +720,7 @@ class Meta(commands.Cog):
         error = getattr(error, "original", error)
         if isinstance(error, discord.HTTPException):
             return await ctx.send("The specified message's content is too long to repeat.")
+
 
 def setup(bot):
     bot.add_cog(Meta(bot))

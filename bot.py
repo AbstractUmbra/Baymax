@@ -105,10 +105,12 @@ class Baymax(commands.AutoShardedBot):
 
         self.client_id = config.client_id
         self.bots_key = config.bots_key
+
         self.session = aiohttp.ClientSession(loop=self.loop)
         self._prev_events = deque(maxlen=10)
         self.prefixes = Config('prefixes.json')
         self.blacklist = Config('blacklist.json')
+        
         self.emoji = {True: "<:TickYes:735498312861351937>",
                       False: "<:CrossNo:735498453181923377>",
                       None: "<:QuestionMaybe:738038828928860269>"}

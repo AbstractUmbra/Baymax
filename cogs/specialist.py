@@ -30,7 +30,6 @@ import textwrap
 
 import discord
 from discord.ext import commands
-
 from utils import checks, specialist, time
 
 SPTV_GUILD_ID = 690566307409821697
@@ -316,6 +315,7 @@ class Specialist(commands.Cog):
         if not reminder:
             return await ctx.send("Sorry, this functionality is currently unavailable.", delete_after=5)
         responses = {}
+
         def check(message):
             return message.author == ctx.author and message.channel == ctx.channel
         await ctx.send("Okay, and the event name?", delete_after=60)
@@ -467,12 +467,13 @@ class Specialist(commands.Cog):
 
         message_id: int = event.kwargs.get('message_id')
         prev_message: discord.Message = await channel.fetch_message(int(message_id))
-        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
+        role: discord.Role = channel.guild.get_role(
+            event.kwargs.get('role_id'))
         await role.edit(mentionable=True)
         reacted_list: list = await self.get_reacts(prev_message.reactions)
         member_names: set = {member.display_name for member in reacted_list}
         embed: discord.Embed = discord.Embed(title="**BFME 2 Event time**",
-                              colour=discord.Colour.gold())
+                                             colour=discord.Colour.gold())
         event_author: discord.Member = channel.guild.get_member(author_id)
         embed.set_author(name=event_author.display_name,
                          icon_url=event_author.avatar_url)
@@ -500,12 +501,14 @@ class Specialist(commands.Cog):
 
         message_id: int = event.kwargs.get('message_id')
         prev_message: discord.Message = await channel.fetch_message(message_id)
-        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
+        role: discord.Role = channel.guild.get_role(
+            event.kwargs.get('role_id'))
         await role.edit(mentionable=True)
         reacted_list: list = await self.get_reacts(prev_message.reactions)
-        member_names: set = set([member.display_name for member in reacted_list])
+        member_names: set = set(
+            [member.display_name for member in reacted_list])
         embed: discord.Embed = discord.Embed(title="**BF2 Event time**",
-                              colour=discord.Colour.red())
+                                             colour=discord.Colour.red())
         event_author: discord.Member = channel.guild.get_member(author_id)
         embed.set_author(name=event_author.display_name,
                          icon_url=event_author.avatar_url)
@@ -533,10 +536,12 @@ class Specialist(commands.Cog):
 
         message_id: int = event.kwargs.get('message_id')
         prev_message: discord.Message = await channel.fetch_message(message_id)
-        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
+        role: discord.Role = channel.guild.get_role(
+            event.kwargs.get('role_id'))
         await role.edit(mentionable=True)
         reacted_list: list = await self.get_reacts(prev_message.reactions)
-        member_names: set = set([member.display_name for member in reacted_list])
+        member_names: set = set(
+            [member.display_name for member in reacted_list])
         embed = discord.Embed(title="**SWTOR Event time**",
                               colour=discord.Colour.red())
         event_author: discord.Member = channel.guild.get_member(author_id)
@@ -554,7 +559,6 @@ class Specialist(commands.Cog):
         await prev_message.delete()
         await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
 
-
     @commands.Cog.listener()
     async def on_gtfo_timer_complete(self, event):
         """ On 'gtfo' event timer complete. """
@@ -567,12 +571,14 @@ class Specialist(commands.Cog):
 
         message_id: int = event.kwargs.get('message_id')
         prev_message: discord.Message = await channel.fetch_message(message_id)
-        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
+        role: discord.Role = channel.guild.get_role(
+            event.kwargs.get('role_id'))
         await role.edit(mentionable=True)
         reacted_list: list = await self.get_reacts(prev_message.reactions)
-        member_names: set = set([member.display_name for member in reacted_list])
+        member_names: set = set(
+            [member.display_name for member in reacted_list])
         embed: discord.Embed = discord.Embed(title="**GTFO Event time**",
-                              colour=discord.Colour.red())
+                                             colour=discord.Colour.red())
         event_author: discord.Member = channel.guild.get_member(author_id)
         embed.set_author(name=event_author.display_name,
                          icon_url=event_author.avatar_url)
@@ -599,12 +605,14 @@ class Specialist(commands.Cog):
 
         message_id: int = event.kwargs.get('message_id')
         prev_message: discord.Message = await channel.fetch_message(message_id)
-        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
+        role: discord.Role = channel.guild.get_role(
+            event.kwargs.get('role_id'))
         await role.edit(mentionable=True)
         reacted_list: list = await self.get_reacts(prev_message.reactions)
-        member_names: set = set([member.display_name for member in reacted_list])
+        member_names: set = set(
+            [member.display_name for member in reacted_list])
         embed: discord.Embed = discord.Embed(title="**Iron Harvest Event time**",
-                              colour=discord.Colour.red())
+                                             colour=discord.Colour.red())
         event_author: discord.Member = channel.guild.get_member(author_id)
         embed.set_author(name=event_author.display_name,
                          icon_url=event_author.avatar_url)
@@ -631,12 +639,14 @@ class Specialist(commands.Cog):
 
         message_id: int = event.kwargs.get('message_id')
         prev_message: discord.Message = await channel.fetch_message(message_id)
-        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
+        role: discord.Role = channel.guild.get_role(
+            event.kwargs.get('role_id'))
         await role.edit(mentionable=True)
         reacted_list: list = await self.get_reacts(prev_message.reactions)
-        member_names: set = set([member.display_name for member in reacted_list])
+        member_names: set = set(
+            [member.display_name for member in reacted_list])
         embed: discord.Embed = discord.Embed(title=f"**{event.kwargs.get('event_name')} Event time**",
-                              colour=discord.Colour.red())
+                                             colour=discord.Colour.red())
         event_author: discord.Member = channel.guild.get_member(author_id)
         embed.set_author(name=event_author.display_name,
                          icon_url=event_author.avatar_url)
@@ -650,7 +660,6 @@ class Specialist(commands.Cog):
         current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
         await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
-
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):

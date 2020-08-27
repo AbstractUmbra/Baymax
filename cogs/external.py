@@ -25,8 +25,9 @@ DEALINGS IN THE SOFTWARE.
 import textwrap
 from datetime import datetime
 
-import discord
 from aiohttp import ContentTypeError
+
+import discord
 from discord.ext import commands
 
 
@@ -95,40 +96,47 @@ class External(commands.Cog):
         async with self.bot.session.get(f"https://pypi.org/pypi/{package_name}/json", headers=self.headers) as pypi_resp:
             pypi_json = await pypi_resp.json()
         pypi_details = PypiObject(pypi_json)
+
         embed = discord.Embed(title=f"{pypi_details.module_name} on PyPi",
                               colour=discord.Colour(0x000000))
         embed.set_author(name=pypi_details.module_author)
         embed.description = pypi_details.description
+
         if pypi_details.module_author_email:
             embed.add_field(name="Author Contact",
                             value=f"[Email]({pypi_details.module_author_email})")
+
         embed.add_field(name="Latest released ver",
                         value=pypi_details.module_latest_ver, inline=True)
         embed.add_field(name="Released at",
                         value=pypi_details.release_datetime, inline=True)
         embed.add_field(name="Minimum Python ver",
                         value=pypi_details.minimum_ver, inline=False)
+
         if isinstance(pypi_details.urls, str):
             urls = pypi_details.urls
         elif isinstance(pypi_details.urls, dict):
             urls = "\n".join(
                 [f"[{key}]({value})" for key, value in pypi_details.urls.items()])
+
         embed.add_field(name="Relevant URLs", value=urls)
         embed.add_field(
             name="License", value=pypi_details.module_licese)
+
         if pypi_details.raw_classifiers:
             print(pypi_details.raw_classifiers)
             embed.add_field(name="Classifiers",
                             value=pypi_details.classifiers, inline=False)
+
         embed.set_footer(text=f"Requested by {ctx.author.display_name}")
         return await ctx.send(embed=embed)
 
     @pypi.error
-    async def pypi_fucked(self, ctx, error):
+    async def pypi_error(self, ctx, error):
         error = getattr(error, "original", error)
         if isinstance(error, ContentTypeError):
             error.handled = True
-            return await ctx.send("That package doesn't exist you clown.")
+            return await ctx.send("That package doesn't exist on PyPi.")
 
 
 def setup(bot):

@@ -32,9 +32,9 @@ from itertools import accumulate
 from typing import Optional
 
 import asyncpg
+
 import discord
 from discord.ext import commands
-
 from utils import cache, checks, db, mystbin
 from utils.paginator import Pages
 

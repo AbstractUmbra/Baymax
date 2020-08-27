@@ -1,12 +1,35 @@
-""" Todos cog! """
+"""
+The MIT License (MIT)
+
+Copyright (c) 2020 AbstractUmbra
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
+
 import datetime
 import typing
 from textwrap import shorten
 
 import asyncpg
+
 import discord
 from discord.ext import commands, menus
-
 from utils import db
 
 
@@ -18,6 +41,7 @@ class TodoTable(db.Table, table_name="todos"):
     added_at = db.Column(db.Datetime)
     jump_url = db.Column(db.String)
 
+
 class TodoPageSource(menus.ListPageSource):
     def __init__(self, data, embeds):
         self.data = data
@@ -27,6 +51,7 @@ class TodoPageSource(menus.ListPageSource):
     async def format_page(self, menu, entries):
         return self.embeds[entries]
 
+
 class Todo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -35,7 +60,8 @@ class Todo(commands.Cog):
         descs = []
         list_of_records = [records[x:x+10] for x in range(0, len(records), 10)]
         for records in list_of_records:
-            descs.append(discord.Embed(description="\n".join([f"[__`{record['id']}`__]({record['jump_url']}): {shorten(record['content'], width=100)}" for record in records])).set_footer(text="Use todo info ## for more details."))
+            descs.append(discord.Embed(description="\n".join(
+                [f"[__`{record['id']}`__]({record['jump_url']}): {shorten(record['content'], width=100)}" for record in records])).set_footer(text="Use todo info ## for more details."))
         return descs
 
     @commands.group(invoke_without_command=True)
@@ -46,7 +72,6 @@ class Todo(commands.Cog):
                 return await ctx.send_help(ctx.command)
             else:
                 return await self.todo_add(ctx, content=content)
-
 
     @todo.command(name="list", cooldown_after_parsing=True)
     @commands.max_concurrency(1, commands.BucketType.user)
@@ -59,9 +84,9 @@ class Todo(commands.Cog):
         if not records:
             return await ctx.send("You appear to have no active todos, look at how productive you are.")
         embeds = self._gen_todos(records)
-        pages = menus.MenuPages(source=TodoPageSource(range(0, len(embeds)), embeds), delete_message_after=True)
+        pages = menus.MenuPages(source=TodoPageSource(
+            range(0, len(embeds)), embeds), delete_message_after=True)
         await pages.start(ctx)
-
 
     @commands.command(name="todos")
     async def alt_todo_list(self, ctx):
@@ -112,7 +137,6 @@ class Todo(commands.Cog):
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
         return await ctx.send(embed=embed)
 
-
     @todo.command(name="clear")
     @commands.cooldown(1, 60, commands.BucketType.user)
     async def todo_clear(self, ctx):
@@ -133,6 +157,7 @@ class Todo(commands.Cog):
             return await ctx.send("Whoa, I know you're eager but close your active list first!")
         elif isinstance(error, commands.CommandOnCooldown):
             return await ctx.send(f"Goodness, didn't you just view try this? Try again in {error.retry_after:.2f} seconds.")
+
 
 def setup(bot):
     bot.add_cog(Todo(bot))
