@@ -4,7 +4,6 @@
             "name": "Baymax",
             "cwd": "/home/penumbra/Baymax/",
             "script": "launcher.py",
-            "wait_ready": true,
             "autorestart": true,
             "max_restart": 5,
             "instances": 1,
