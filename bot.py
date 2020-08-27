@@ -54,6 +54,7 @@ os.environ["PY_PRETTIFY_EXC"] = "True"
 COGS = (
     'jishaku',
     'cogs.admin',
+    'cogs.baymax',
     'cogs.buttons',
     'cogs.config',
     'cogs.external',
