@@ -127,13 +127,6 @@ class Admin(commands.Cog):
         self.my_guilds = {174702278673039360,
                           705500489248145459}
 
-    @commands.Cog.listener()
-    async def on_member_join(self, member):
-        if member.guild.id != 711757140590723134:
-            return
-        if not member.bot:
-            await member.add_roles(discord.Object(id=711758264613994579))
-
     async def run_process(self, command):
         """ Runs a shell process. """
         try:
@@ -387,10 +380,6 @@ class Admin(commands.Cog):
     @commands.group(name="blocked", invoke_without_command=True, aliases=["pmulgat"])
     async def _blocked(self, ctx: commands.Context, user_id: int, *, reason: str):
         """ Let's make a private 'why I blocked them case'. """
-        try:
-            await ctx.message.delete()
-        except discord.Forbidden:
-            pass
         query = """ INSERT INTO owner_blocked (user_id, reason)
                     VALUES ($1, $2)
                     ON CONFLICT (user_id)
@@ -398,7 +387,13 @@ class Admin(commands.Cog):
                 """
         await self.bot.pool.execute(query, user_id, reason)
         await self.ban_all(user_id)
-        return await ctx.message.add_reaction("<:tomatomad:712995196215885835>")
+        config = self.bot.get_cog("Config")
+        if config:
+            await config.global_block(ctx, user_id)
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            return await ctx.message.add_reaction("<:tomatomad:712995196215885835>")
 
     @_blocked.command(name="query", aliases=["q"])
     async def _blocked_query(self, ctx, user_id: int):
