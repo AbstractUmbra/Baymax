@@ -127,6 +127,7 @@ class External(commands.Cog):
     async def pypi_fucked(self, ctx, error):
         error = getattr(error, "original", error)
         if isinstance(error, ContentTypeError):
+            error.handled = True
             return await ctx.send("That package doesn't exist you clown.")
 
 
