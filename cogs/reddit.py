@@ -22,6 +22,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+import re
 import typing
 from textwrap import shorten
 
@@ -165,7 +166,10 @@ class Reddit(commands.Cog):
     @commands.cooldown(5, 300, commands.BucketType.user)
     async def _reddit(self, ctx: commands.Context, subreddit: str, sort_by: str = "hot"):
         """ Main Reddit command, subcommands to be added. """
-        subreddit = subreddit.strip("/r/")
+        sub_re = re.compile(r"(/?r/(?P<subname>.*))")
+        sub_search = sub_re.search(subreddit)
+        if sub_search and "subname" in sub_search:
+            subreddit = sub_search['subname']
         embeds = await self._perform_search(str(ctx.author), ctx.channel, subreddit, sort_by)
         if not embeds:
             raise commands.BadArgument("Bad subreddit.", subreddit)
