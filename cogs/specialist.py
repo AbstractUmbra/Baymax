@@ -149,46 +149,6 @@ class Specialist(commands.Cog):
         await message.edit(content="", embed=embed)
         return await ctx.message.delete()
 
-    @event.command(aliases=['aoe', 'AOE', 'AOE2'], usage="<when>", invoke_without_command=True, enabled=False)
-    async def aoe2(self, ctx: commands.Context, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
-        """ Create an AOE2 event. """
-        reminder = self.bot.get_cog("Reminder")
-        if not reminder:
-            return await ctx.send("Sorry, this functionality is currently unavailable.")
-        message = await ctx.send("Placeholder")
-        when.dt = when.dt - datetime.timedelta(hours=1)
-        event_trigger = when.dt - datetime.timedelta(minutes=15)
-        cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = self.gen_role_str()
-        role = await ctx.guild.create_role(name=f"AOE2-{role_str}", colour=discord.Colour(0xcbe029),
-                                           reason="Event creation.", mentionable=False)
-        await reminder.create_timer(event_trigger, 'aoe2', ctx.author.id,
-                                    ctx.channel.id,
-                                    when.arg,
-                                    connection=ctx.db,
-                                    created=ctx.message.created_at,
-                                    message_id=message.id,
-                                    role_id=role.id)
-        await reminder.create_timer(cancellation_trigger, 'event_check', ctx.author.id,
-                                    ctx.channel.id,
-                                    when.arg,
-                                    connection=ctx.db,
-                                    created=ctx.message.created_at,
-                                    message_id=message.id,
-                                    role_id=role.id)
-        embed = discord.Embed(title="AOE2 Event Prep!",
-                              colour=discord.Colour.red())
-        embed.set_image(
-            url=self.image_urls['aoe2'])
-        embed.set_author(name=ctx.guild.owner.name,
-                         icon_url=ctx.guild.owner.avatar_url)
-        embed.add_field(name="Plan of action", value=f"{when.arg}")
-        embed.add_field(
-            name="When", value=f"{(when.dt + datetime.timedelta(hours=1)).strftime('%d-%m-%Y %H:%M')}")
-        embed.description = "Add a reaction to this post to join this event!"
-        await message.edit(content="", embed=embed)
-        return await ctx.message.delete()
-
     @event.command(aliases=['bf', 'BF2', 'BF'], usage="<when>", invoke_without_command=True)
     async def bf2(self, ctx: commands.Context, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
         """ Create an AOE2 event. """
@@ -220,46 +180,6 @@ class Specialist(commands.Cog):
                               colour=discord.Colour.red())
         embed.set_image(
             url=self.image_urls['bf2'])
-        embed.set_author(name=ctx.guild.owner.name,
-                         icon_url=ctx.guild.owner.avatar_url)
-        embed.add_field(name="Plan of action", value=f"{when.arg}")
-        embed.add_field(
-            name="When", value=f"{(when.dt + datetime.timedelta(hours=1)).strftime('%d-%m-%Y %H:%M')}")
-        embed.description = "Add a reaction to this post to join this event!"
-        await message.edit(content="", embed=embed)
-        return await ctx.message.delete()
-
-    @event.command(aliases=['coh', 'COH', 'COH2'], usage="<when>", invoke_without_command=True, enabled=False)
-    async def coh2(self, ctx: commands.Context, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
-        """ Create a COH2 event. """
-        reminder = self.bot.get_cog("Reminder")
-        if not reminder:
-            return await ctx.send("Sorry, this functionality is currently unavailable.")
-        message = await ctx.send("Placeholder")
-        when.dt = when.dt - datetime.timedelta(hours=1)
-        event_trigger = when.dt - datetime.timedelta(minutes=15)
-        cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = self.gen_role_str()
-        role = await ctx.guild.create_role(name=f"COH2-{role_str}", colour=discord.Colour(0xcbe029),
-                                           reason="Event creation.", mentionable=False)
-        await reminder.create_timer(event_trigger, 'coh2', ctx.author.id,
-                                    ctx.channel.id,
-                                    when.arg,
-                                    connection=ctx.db,
-                                    created=ctx.message.created_at,
-                                    message_id=message.id,
-                                    role_id=role.id)
-        await reminder.create_timer(cancellation_trigger, 'event_check', ctx.author.id,
-                                    ctx.channel.id,
-                                    when.arg,
-                                    connection=ctx.db,
-                                    created=ctx.message.created_at,
-                                    message_id=message.id,
-                                    role_id=role.id)
-        embed = discord.Embed(title="COH2 Event Prep!",
-                              colour=discord.Colour.red())
-        embed.set_image(
-            url=self.image_urls['coh2'])
         embed.set_author(name=ctx.guild.owner.name,
                          icon_url=ctx.guild.owner.avatar_url)
         embed.add_field(name="Plan of action", value=f"{when.arg}")
@@ -349,46 +269,6 @@ class Specialist(commands.Cog):
         await message.edit(content="", embed=embed)
         return await ctx.message.delete()
 
-    @event.command(aliases=['DOW3'], usage="<when>", invoke_without_command=True)
-    async def dow3(self, ctx: commands.Context, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
-        """ Create a GTFO event. """
-        reminder = self.bot.get_cog("Reminder")
-        if not reminder:
-            return await ctx.send("Sorry, this functionality is currently unavailable.")
-        message = await ctx.send("Placeholder")
-        when.dt = when.dt - datetime.timedelta(hours=1)
-        event_trigger = when.dt - datetime.timedelta(minutes=15)
-        cancellation_trigger = when.dt - datetime.timedelta(hours=2)
-        role_str = self.gen_role_str()
-        role = await ctx.guild.create_role(name=f"DOW3-{role_str}", colour=discord.Colour(0xcbe029),
-                                           reason="Event creation.", mentionable=False)
-        await reminder.create_timer(event_trigger, 'dow3', ctx.author.id,
-                                    ctx.channel.id,
-                                    when.arg,
-                                    connection=ctx.db,
-                                    created=ctx.message.created_at,
-                                    message_id=message.id,
-                                    role_id=role.id)
-        await reminder.create_timer(cancellation_trigger, 'event_check', ctx.author.id,
-                                    ctx.channel.id,
-                                    when.arg,
-                                    connection=ctx.db,
-                                    created=ctx.message.created_at,
-                                    message_id=message.id,
-                                    role_id=role.id)
-        embed = discord.Embed(title="DOW3 Event Prep!",
-                              colour=discord.Colour.red())
-        embed.set_image(
-            url=self.image_urls['dow3'])
-        embed.set_author(name=ctx.guild.owner.name,
-                         icon_url=ctx.guild.owner.avatar_url)
-        embed.add_field(name="Plan of action", value=f"{when.arg}")
-        embed.add_field(
-            name="When", value=f"{(when.dt + datetime.timedelta(hours=1)).strftime('%d-%m-%Y %H:%M')}")
-        embed.description = "Add a reaction to this post to join this event!"
-        await message.edit(content="", embed=embed)
-        return await ctx.message.delete()
-
     @event.command(aliases=['ih', 'IH', 'ironharvest'], usage="<when>", invoke_without_command=True)
     async def iron_harvest(self, ctx: commands.Context, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
         """ Create an Iron Harvest event. """
@@ -429,19 +309,78 @@ class Specialist(commands.Cog):
         await message.edit(content="", embed=embed)
         return await ctx.message.delete()
 
+    @event.command(usage="<when>", invoke_without_command=True)
+    async def custom(self, ctx: commands.Context, *, when: time.UserFriendlyTime(commands.clean_content, default="\u2026")):
+        """ Create an Iron Harvest event. """
+        reminder = self.bot.get_cog("Reminder")
+        if not reminder:
+            return await ctx.send("Sorry, this functionality is currently unavailable.", delete_after=5)
+        responses = {}
+        def check(message):
+            return message.author == ctx.author and message.channel == ctx.channel
+        await ctx.send("Okay, and the event name?", delete_after=60)
+        try:
+            event_name = await self.bot.wait_for("message", timeout=60, check=check)
+        except asyncio.TimeoutError:
+            return
+        else:
+            responses[1] = event_name
+        await ctx.send("Okay, neat. Is there a URL for the image?", delete_after=60)
+        try:
+            image_url = await self.bot.wait_for("message", timeout=60, check=check)
+        except asyncio.TimeoutError:
+            return
+        else:
+            responses[2] = image_url
+        message = await ctx.send("Placeholder")
+        when.dt = when.dt - datetime.timedelta(hours=1)
+        event_trigger = when.dt - datetime.timedelta(minutes=15)
+        cancellation_trigger = when.dt - datetime.timedelta(hours=2)
+        role_str = self.gen_role_str()
+        role = await ctx.guild.create_role(name=f"CE-{role_str}", colour=discord.Colour(0xcbe029),
+                                           reason="Event creation.", mentionable=False)
+        await reminder.create_timer(event_trigger, 'custom', ctx.author.id,
+                                    ctx.channel.id,
+                                    when.arg,
+                                    connection=ctx.db,
+                                    created=ctx.message.created_at,
+                                    message_id=message.id,
+                                    role_id=role.id,
+                                    image_url=responses[2].content,
+                                    event_name=responses[1].content)
+        await reminder.create_timer(cancellation_trigger, 'event_check', ctx.author.id,
+                                    ctx.channel.id,
+                                    when.arg,
+                                    connection=ctx.db,
+                                    created=ctx.message.created_at,
+                                    message_id=message.id,
+                                    role_id=role.id)
+        embed = discord.Embed(title=f"{responses[1].content} Event Prep!",
+                              colour=discord.Colour.red())
+        embed.set_image(
+            url=responses[2].content)
+        embed.set_author(name=ctx.guild.owner.name,
+                         icon_url=ctx.guild.owner.avatar_url)
+        embed.add_field(name="Plan of action", value=f"{when.arg}")
+        embed.add_field(
+            name="When", value=f"{(when.dt + datetime.timedelta(hours=1)).strftime('%d-%m-%Y %H:%M')}")
+        embed.description = "Add a reaction to this post to join this event!"
+        await message.edit(content="", embed=embed)
+        for message in responses.values():
+            await message.delete()
+        return await ctx.message.delete()
+
     @event.command(name="list")
     async def events_list(self, ctx: commands.Context):
         """ Send a list of events. """
         query = """SELECT id, expires, event, extra #>> '{args,2}'
                    FROM reminders
                    WHERE event = 'bfme2'
-                   OR event = 'aoe2'
                    OR event = 'bf2'
-                   OR event = 'coh2'
                    OR event = 'swtor'
                    OR event = 'gtfo'
-                   OR event = 'dow3'
                    OR event = 'ih'
+                   OR event = 'custom'
                    AND extra #>> '{args,0}' = $1
                    ORDER BY expires
                    LIMIT 10;
@@ -549,41 +488,6 @@ class Specialist(commands.Cog):
         await prev_message.delete()
         await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
 
-    # @commands.Cog.listener()
-    async def on_aoe2_timer_complete(self, event):
-        """ On 'aoe2' event timer complete. """
-        author_id, channel_id, message = event.args
-
-        try:
-            channel: discord.TextChannel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
-        except discord.HTTPException:
-            return
-
-        message_id: int = event.kwargs.get('message_id')
-        prev_message: discord.Message = await channel.fetch_message(message_id)
-        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
-        await role.edit(mentionable=True)
-        reacted_list: list = await self.get_reacts(prev_message.reactions)
-        member_names: set = set([member.display_name for member in reacted_list])
-        embed: discord.Embed = discord.Embed(title="**AOE 2 Event time**",
-                              colour=discord.Colour.red())
-        event_author: discord.Member = channel.guild.get_member(author_id)
-        embed.set_author(name=event_author.display_name,
-                         icon_url=event_author.avatar_url)
-        embed.set_image(
-            url=self.image_urls['aoe2'])
-        if member_names:
-            embed.add_field(name="Members that signed up",
-                            value=", ".join(member_names))
-        embed.add_field(name="Plan of action",
-                        value=f"{message}")
-        embed.description = random.choice(specialist.AOE_QUOTES)
-        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
-        await prev_message.delete()
-        await asyncio.sleep(60)
-        await role.delete()
-        return await current_message.delete(delay=60*60*1)
-
     @commands.Cog.listener()
     async def on_bf2_timer_complete(self, event):
         """ On 'bf2' event timer complete. """
@@ -616,41 +520,6 @@ class Specialist(commands.Cog):
         current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
         await prev_message.delete()
         await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
-
-
-    # @commands.Cog.listener()
-    async def on_coh2_timer_complete(self, event):
-        """ On 'aoe2' event timer complete. """
-        author_id, channel_id, message = event.args
-
-        try:
-            channel: discord.TextChannel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
-        except discord.HTTPException:
-            return
-
-        message_id: int = event.kwargs.get('message_id')
-        prev_message: discord.Message = await channel.fetch_message(message_id)
-        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
-        await role.edit(mentionable=True)
-        reacted_list: list = await self.get_reacts(prev_message.reactions)
-        member_names: set = set([member.display_name for member in reacted_list])
-        embed: discord.Embed = discord.Embed(title="**COH 2 Event time**",
-                              colour=discord.Colour.red())
-        event_author: discord.Member = channel.guild.get_member(author_id)
-        embed.set_author(name=event_author.display_name,
-                         icon_url=event_author.avatar_url)
-        embed.set_image(
-            url=self.image_urls['coh2'])
-        if member_names:
-            embed.add_field(name="Members that signed up",
-                            value=", ".join(member_names))
-        embed.add_field(name="Plan of action",
-                        value=f"{message}")
-        embed.description = random.choice(specialist.COH2_QUOTES)
-        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
-        await prev_message.delete()
-        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
-
 
     @commands.Cog.listener()
     async def on_swtor_timer_complete(self, event):
@@ -718,40 +587,6 @@ class Specialist(commands.Cog):
         await prev_message.delete()
         await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
 
-
-    @commands.Cog.listener()
-    async def on_dow3_timer_complete(self, event):
-        """ On 'dow3' event timer complete. """
-        author_id, channel_id, message = event.args
-
-        try:
-            channel: discord.TextChannel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
-        except discord.HTTPException:
-            return
-
-        message_id: int = event.kwargs.get('message_id')
-        prev_message: discord.Message = await channel.fetch_message(message_id)
-        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
-        await role.edit(mentionable=True)
-        reacted_list: list = await self.get_reacts(prev_message.reactions)
-        member_names: set = set([member.display_name for member in reacted_list])
-        embed: discord.Embed = discord.Embed(title="**DOW3 Event time**",
-                              colour=discord.Colour.red())
-        event_author: discord.Member = channel.guild.get_member(author_id)
-        embed.set_author(name=event_author.display_name,
-                         icon_url=event_author.avatar_url)
-        embed.set_image(
-            url=self.image_urls['dow3'])
-        if member_names:
-            embed.add_field(name="Members that signed up",
-                            value=", ".join(member_names))
-        embed.add_field(name="Plan of action",
-                        value=f"{message}")
-        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
-        await prev_message.delete()
-        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
-
-
     @commands.Cog.listener()
     async def on_ih_timer_complete(self, event):
         """ On 'dow3' event timer complete. """
@@ -784,6 +619,38 @@ class Specialist(commands.Cog):
         await prev_message.delete()
         await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
 
+    @commands.Cog.listener()
+    async def on_custom_timer_complete(self, event):
+        """ On 'custom' event timer complete. """
+        author_id, channel_id, message = event.args
+
+        try:
+            channel: discord.TextChannel = self.bot.get_channel(channel_id) or (await self.bot.fetch_channel(channel_id))
+        except discord.HTTPException:
+            return
+
+        message_id: int = event.kwargs.get('message_id')
+        prev_message: discord.Message = await channel.fetch_message(message_id)
+        role: discord.Role = channel.guild.get_role(event.kwargs.get('role_id'))
+        await role.edit(mentionable=True)
+        reacted_list: list = await self.get_reacts(prev_message.reactions)
+        member_names: set = set([member.display_name for member in reacted_list])
+        embed: discord.Embed = discord.Embed(title=f"**{event.kwargs.get('event_name')} Event time**",
+                              colour=discord.Colour.red())
+        event_author: discord.Member = channel.guild.get_member(author_id)
+        embed.set_author(name=event_author.display_name,
+                         icon_url=event_author.avatar_url)
+        embed.set_image(
+            url=event.kwargs.get('image_url'))
+        if member_names:
+            embed.add_field(name="Members that signed up",
+                            value=", ".join(member_names))
+        embed.add_field(name="Plan of action",
+                        value=f"{message}")
+        current_message: discord.Message = await channel.send(role.mention, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
+        await prev_message.delete()
+        await self.bot.loop.create_task(self.event_cleanup(message=current_message, role=role, delay=3600.0))
+
 
     @commands.Cog.listener()
     async def on_raw_reaction_add(self, payload: discord.RawReactionActionEvent):
@@ -799,19 +666,22 @@ class Specialist(commands.Cog):
         query = """SELECT *
                    FROM reminders
                    WHERE event = 'bfme2'
-                   OR event = 'aoe2'
                    OR event = 'bf2'
-                   OR event = 'coh2'
                    OR event = 'swtor'
                    OR event = 'gtfo'
-                   OR event = 'dow3'
                    OR event = 'ih'
+                   OR event = 'custom'
                 """
         records = await self.bot.pool.fetch(query)
         for record in records:
             if int(record['extra']['args'][1]) == payload.channel_id:
                 if int(record['extra']['kwargs']['message_id']) == payload.message_id:
                     role = guild.get_role(record['extra']['kwargs']['role_id'])
+                    # if role in member.roles:
+                    #     emoji = f"{payload.emoji.name}:{payload.emoji.id}" if not isinstance(
+                    #         payload.emoji, str) else payload.emoji.strip("<>")
+                    #     print(emoji)
+                    #     return await self.bot.http.remove_reaction(payload.channel_id, payload.message_id, emoji, member.id)
                     return await member.add_roles(role, reason="Event sign up.")
 
     @commands.Cog.listener()
@@ -828,13 +698,11 @@ class Specialist(commands.Cog):
         query = """SELECT *
                    FROM reminders
                    WHERE event = 'bfme2'
-                   OR event = 'aoe2'
                    OR event = 'bf2'
-                   OR event = 'coh2'
                    OR event = 'swtor'
                    OR event = 'gtfo'
-                   OR event = 'dow3'
                    OR event = 'ih'
+                   OR event = 'custom'
                 """
         records = await self.bot.pool.fetch(query)
         for record in records:
