@@ -33,21 +33,6 @@ LOTR_QUOTES = [
     "{Mordor} WOT WE BUILDIN'?"
 ]
 
-AOE_QUOTES = [
-    "{Britons (Latin)} Mandatum. ~~ Order.",
-    "{Britons (Latin)} Correctus. ~~ Right.",
-    "{Britons (Germanic)} Ich Willen. ~~ I will.",
-    "{Britons (Norse)} Fisk. ~~ Fish.",
-    "{Byzantines (Latin)} Sane ~~ Certainly.",
-    "{Byzantines (Latin)} Fodio ~~ I mine.",
-    "{Byzantines (Latin)} Reficio ~~ I repair.",
-    "{Byzantines (Latin)} Punio! ~~ Punish!",
-    "{Celts (Gaelige)} For-Ghaire? ~~ (Provoked) What?",
-    "{Celts (Gaelige)} Quid? ~~ What?",
-    "{Celts (Gaelige)} Beidh fear. ~~ As you wish.",
-    "{Celts (Gaelige)} Taoubh? ~~ Which way?"
-]
-
 BF2_QUOTES = [
     "{Captain Phasma} Submit your weapon for inspection.",
     "{Captain Phasma} The First Order will conquer you all.",
@@ -63,12 +48,8 @@ BF2_QUOTES = [
     "{Rey Palpatine} I can handle myself.",
 ]
 
-COH2_QUOTES = [
-    "Placeholder."
-]
-
 SWTOR_QUOTES = [
-    "{Soa, The Infernal One} For I ruled a thousand worlds, and Korriban was my crown, Korriban my cradle and my testing ground.",
+    "{Soa, The Infernal One} For I ruled a thousand worlds, and Dromuund Kaas was my crown, Korriban my cradle and my testing ground.",
     "{Soa, The Infernal One} I have waited twenty thousand years, but I will wait no longer.",
     "{Dread Master Raptus} Sanity is prison. Let the madness release you!",
     "{Dread Master Bestia} Consume them! Consume them all!",

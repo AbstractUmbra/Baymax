@@ -156,6 +156,7 @@ def clean_emojis(line):
     """Escape custom emojis."""
     return re.sub(r'<(a)?:([a-zA-Z0-9_]+):([0-9]+)>', '<\u200b\\1:\\2:\\3>', line)
 
+
 def clean_single_backtick(line):
     """Clean string for insertion in single backtick code section.
     Clean backticks so we don't accidentally escape, and escape custom emojis

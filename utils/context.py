@@ -28,12 +28,11 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import io
 
 import discord
 from discord.ext import commands
-
 from utils import mystbin
+
 
 class _ContextDBAcquire:
     __slots__ = ('ctx', 'timeout')

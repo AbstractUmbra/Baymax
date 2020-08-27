@@ -26,6 +26,7 @@ import aiohttp
 
 MB_POST = "https://mystb.in/documents"
 
+
 async def post(content: str, *, session: aiohttp.ClientSession = None, suffix: str = None):
     """ Post `content` to MystB.in with optional suffix text. """
     timeout = aiohttp.ClientTimeout(total=15.0)

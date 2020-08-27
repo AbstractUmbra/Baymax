@@ -28,7 +28,6 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import math
 
 import discord
 from discord.ext.commands import Paginator as CommandPaginator
@@ -36,6 +35,7 @@ from discord.ext.commands import Paginator as CommandPaginator
 
 class CannotPaginate(Exception):
     pass
+
 
 class Pages:
     """Implements a paginator that queries the user for the
