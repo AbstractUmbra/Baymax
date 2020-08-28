@@ -156,7 +156,7 @@ class Todo(commands.Cog):
         if isinstance(error, commands.MaxConcurrencyReached):
             return await ctx.send("Whoa, I know you're eager but close your active list first!")
         elif isinstance(error, commands.CommandOnCooldown):
-            return await ctx.send(f"Goodness, didn't you just view try this? Try again in {error.retry_after:.2f} seconds.")
+            return await ctx.send(f"Goodness, didn't you just try to view this? Try again in {error.retry_after:.2f} seconds.")
 
 
 def setup(bot):
