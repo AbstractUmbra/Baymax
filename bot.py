@@ -110,10 +110,13 @@ class Baymax(commands.AutoShardedBot):
         self._prev_events = deque(maxlen=10)
         self.prefixes = Config('prefixes.json')
         self.blacklist = Config('blacklist.json')
-        
+
         self.emoji = {True: "<:TickYes:735498312861351937>",
                       False: "<:CrossNo:735498453181923377>",
                       None: "<:QuestionMaybe:738038828928860269>"}
+        self.colour = {'dsc': discord.Colour(0xF38474),
+                       'rgb': (244, 128, 115),
+                       'hsv': (6, 85, 70)}
 
         # in case of even further spam, add a cooldown mapping
         # for people who excessively spam commands

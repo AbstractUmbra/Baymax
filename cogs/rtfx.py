@@ -183,7 +183,7 @@ class RTFX(commands.Cog):
 
         matches = fuzzy.finder(obj, cache, key=lambda t: t[0], lazy=False)[:8]
 
-        e = discord.Embed(colour=discord.Colour.blurple())
+        e = discord.Embed(colour=self.bot.colour['dsc'])
         if len(matches) == 0:
             return await ctx.send('Could not find anything. Sorry.')
         e.title = f"RTFM for __**`{key}`**__: {obj}"
@@ -242,14 +242,14 @@ class RTFX(commands.Cog):
         e.add_field(name='Uses', value=count)
         e.add_field(name='Percentage',
                     value=f'{count/total_uses:.2%} out of {total_uses}')
-        e.colour = discord.Colour.blurple()
+        e.colour = self.bot.colour['dsc']
         await ctx.send(embed=e)
 
     @commands.command()
     async def rtfs(self, ctx, *, search: str):
         embed = discord.Embed(
             title="Read the f*ckin source",
-            colour=discord.Colour.gold()
+            colour=self.bot.colour['dsc']
         )
         async with self.bot.session.get(f"https://rtfs.eviee.me/dpy?search={search}") as resp:
             results = await resp.json()

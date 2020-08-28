@@ -30,23 +30,17 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 import copy
 import io
-import subprocess
-import textwrap
 import time
 import traceback
-from contextlib import redirect_stdout
 from typing import Optional
-
-import import_expression
 
 import discord
 from discord.ext import commands
 from utils import db, formats
-from utils.paginator import TextPages
 
 
 class BlockTable(db.Table, table_name="owner_blocked"):
-    """ I hate these people. """
+    """ Keeping track of whom I blocked and why. """
     user_id = db.Column(db.Integer(big=True), primary_key=True)
     reason = db.Column(db.String)
 
@@ -59,7 +53,6 @@ class PerformanceMocker:
 
     def permissions_for(self, obj):
         """ Lying about permissions to embed, only temporarily. """
-        # Lie and say we don't have permissions to embed
         # This makes it so pagination sessions just abruptly end on __init__
         # Most checks based on permission have a bypass for the owner anyway
         # So this lie will not affect the actual command invocation.
@@ -123,13 +116,11 @@ class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._last_result = None
-        self.sessions = set()
         self.my_guilds = {174702278673039360,
                           705500489248145459}
 
     def cleanup_code(self, content):
         """Automatically removes code blocks from the code."""
-        # remove ```py\n```
         if content.startswith('```') and content.endswith('```'):
             return '\n'.join(content.split('\n')[1:-1])
 
