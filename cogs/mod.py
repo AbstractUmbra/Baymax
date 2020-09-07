@@ -62,8 +62,6 @@ class RaidMode(enum.Enum):
     def __str__(self):
         return self.name
 
-# Tables
-
 
 class GuildConfig(db.Table, table_name='guild_mod_config'):
     id = db.Column(db.Integer(big=True), primary_key=True)

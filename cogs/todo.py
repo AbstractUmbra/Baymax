@@ -98,9 +98,9 @@ class Todo(commands.Cog):
         query = """ INSERT INTO todos (owner_id, content, added_at, jump_url) VALUES ($1, $2, $3, $4) RETURNING id; """
         succeed = await self.bot.pool.fetchrow(query, ctx.author.id, content, datetime.datetime.utcnow(), ctx.message.jump_url)
         if succeed['id']:
-            return await ctx.send(f"{self.bot.emoji[True]}: created todo #__`{succeed['id']}`__ for you!", delete_after=3)
+            return await ctx.send(f"{self.bot.emoji[True]}: created todo #__`{succeed['id']}`__ for you!")
 
-    @todo.command(name="delete", aliases=["remove", "Delete", "Remove", "bin"])
+    @todo.command(name="delete", aliases=["remove", "bin", "done"])
     async def todo_delete(self, ctx, todo_ids: commands.Greedy[int]):
         """ Delete my todo thanks, since I did it already. """
         query = """ DELETE FROM todos WHERE owner_id = $1 AND id = $2 RETURNING id; """
@@ -110,7 +110,7 @@ class Todo(commands.Cog):
         except Exception as error:
             raise error
         finally:
-            await ctx.send(f"Okay well done. I removed the __**`#{'`**__, __**`#'.join(str(tid) for tid in todo_ids)}`**__ todo{'s' if len(todo_ids) > 1 else ''} for you.", delete_after=3)
+            await ctx.send(f"Okay well done. I removed the __**`#{'`**__, __**`#'.join(str(tid) for tid in todo_ids)}`**__ todo{'s' if len(todo_ids) > 1 else ''} for you.")
 
     @todo.command(name="edit")
     async def todo_edit(self, ctx, todo_id: int, *, content):
@@ -122,7 +122,7 @@ class Todo(commands.Cog):
         update_query = """ UPDATE todos SET content = $2, jump_url = $3 WHERE id = $1 RETURNING id; """
         success = await self.bot.pool.fetchrow(update_query, todo_id, content, ctx.message.jump_url)
         if success:
-            return await ctx.send(f"Neat. So todo #__`{success['id']}`__ has been updated for you. Go be productive!", delete_after=3)
+            return await ctx.send(f"Neat. So todo #__`{success['id']}`__ has been updated for you. Go be productive!")
 
     @todo.command(name="info")
     async def todo_info(self, ctx, todo_id: int):

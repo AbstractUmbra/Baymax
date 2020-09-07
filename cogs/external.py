@@ -29,6 +29,7 @@ from aiohttp import ContentTypeError
 
 import discord
 from discord.ext import commands
+from utils import time
 
 
 class PypiObject:
@@ -70,16 +71,7 @@ class PypiObject:
 
     @property
     def release_datetime(self) -> datetime:
-        datetime_obj = datetime.fromisoformat(self.release_time)
-        if datetime_obj.day in [1, 21, 31]:
-            date_modif = "st"
-        elif datetime_obj.day in [2, 22]:
-            date_modif = "nd"
-        elif datetime_obj.day in [3, 23]:
-            date_modif = "rd"
-        else:
-            date_modif = "th"
-        return datetime_obj.strftime(f"%A %B %-d{date_modif} @ %H:%M UTC")
+        return time.hf_time(datetime.fromisoformat(self.release_time))
 
 
 class External(commands.Cog):
@@ -110,7 +102,7 @@ class External(commands.Cog):
                         value=pypi_details.module_latest_ver, inline=True)
         embed.add_field(name="Released at",
                         value=pypi_details.release_datetime, inline=True)
-        embed.add_field(name="Minimum Python ver",
+        embed.add_field(name="Supported Python version(s)",
                         value=pypi_details.minimum_ver, inline=False)
 
         if isinstance(pypi_details.urls, str):
