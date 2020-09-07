@@ -33,6 +33,8 @@ from utils import db, lang
 
 ABT_REG = "~([a-zA-Z]+)~"
 
+MENTION_CHANNEL_ID = 722930330897743894
+DM_CHANNEL_ID = 722930296756109322
 
 class StatisticsTable(db.Table, table_name="statistics"):
     id = db.PrimaryKeyColumn()
@@ -95,6 +97,25 @@ class Fun(commands.Cog):
     async def on_raw_message_delete(self, payload):
         async with self.lock:
             self.message_deletes += 1
+
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.id == self.bot.user.id:
+            return
+        if self.bot.user in message.mentions:
+            channel = self.bot.get_channel(MENTION_CHANNEL_ID)
+            embed = discord.Embed(title="Baymax was mentioned!")
+            embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+            embed.description = message.content
+            embed.timestamp = message.created_at
+            await channel.send(embed=embed)
+        elif not message.guild:
+            channel = self.bot.get_channel(DM_CHANNEL_ID)
+            embed = discord.Embed(title="Baymax was DM'd.")
+            embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+            embed.description = message.content
+            embed.timestamp = message.created_at
+            await channel.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_raw_bulk_message_delete(self, payload):
