@@ -88,7 +88,7 @@ class Token(commands.Cog):
         enc_id = b64decode(enc_id)
         user_id = int(enc_id.decode("utf-8"))
 
-        user = self.bot.get_user(user_id) or self.bot.fetch_user(user_id)
+        user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
         if not user:
             return ctx.send("Not a valid token.")
         url = await self.create_gist(token, description="Invalidating a token.")
