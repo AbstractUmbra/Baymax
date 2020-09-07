@@ -31,6 +31,9 @@ import io
 import os
 import re
 import zlib
+from asyncio import TimeoutError
+
+from aiohttp import ClientTimeout
 
 import discord
 from discord.ext import commands
@@ -149,7 +152,7 @@ class RTFX(commands.Cog):
 
     async def do_rtfm(self, ctx, key, obj):
         page_types = {
-            'discord.py': 'https://discordpy.readthedocs.io/en/neo-docs/',
+            'discord.py': 'https://discordpy.readthedocs.io/en/latest/',
             'discord.py-jp': 'https://discordpy.readthedocs.io/ja/latest/',
             'python': 'https://docs.python.org/3',
             'python-jp': 'https://docs.python.org/ja/3',
@@ -251,8 +254,12 @@ class RTFX(commands.Cog):
             title="Read the f*ckin source",
             colour=self.bot.colour['dsc']
         )
-        async with self.bot.session.get(f"https://rtfs.eviee.me/dpy?search={search}") as resp:
-            results = await resp.json()
+        timeout = ClientTimeout(5)
+        try:
+            async with self.bot.session.get(f"https://rtfs.eviee.me/dpy?search={search}", timeout=timeout) as resp:
+                results = await resp.json()
+        except TimeoutError:
+            return await ctx.send("API is down, go look yourself lmao: <https://github.com/Rapptz/discord.py>")
         if not results:
             embed.title = "Couldn't find anything."
         else:
