@@ -34,5 +34,5 @@ async def post(content: str, *, session: aiohttp.ClientSession = None, suffix: s
     async with session.post(MB_POST, data=content.encode("utf-8"), timeout=timeout) as mb_res:
         url = await mb_res.json()
     short_id = url['key']
-    suffix = f".{suffix}" if suffix else None
+    suffix = f".{suffix}" if suffix else ""
     return f"https://mystb.in/{short_id}{suffix}"
