@@ -304,7 +304,7 @@ class Admin(commands.Cog):
         try:
             await ctx.message.delete()
         except discord.Forbidden:
-            return await ctx.message.add_reaction("<:tomatomad:712995196215885835>")
+            pass
 
     @_blocked.command(name="query", aliases=["q"])
     async def _blocked_query(self, ctx, user_id: int):
@@ -315,8 +315,7 @@ class Admin(commands.Cog):
             return await ctx.send("Huh, you've not complained about them yet.")
 
         embed = discord.Embed(description=result['reason'])
-        msg = await ctx.send(embed=embed)
-        return await msg.add_reaction("<:tomatomad:712995196215885835>")
+        await ctx.send(embed=embed)
 
     @_blocked.command(name="remove", aliases=["r"])
     async def _blocked_remove(self, ctx: commands.Context, user_id: int) -> discord.Reaction:

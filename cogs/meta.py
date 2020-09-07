@@ -482,21 +482,14 @@ class Meta(commands.Cog):
 
         roles = [role.name.replace('@', '@\u200b') for role in guild.roles]
 
-        # we're going to duck type our way here
-        class Secret:
-            pass
-
-        secret_member = Secret()
-        secret_member.id = 0
-        secret_member.roles = [guild.default_role]
-        secret_member._roles = discord.utils.SnowflakeList(
-            map(int, [guild.default_role.id]))
-
         # figure out what channels are 'secret'
+        everyone = guild.default_role
+        everyone_perms = everyone.permissions.value
         secret = Counter()
         totals = Counter()
         for channel in guild.channels:
-            perms = channel.permissions_for(secret_member)
+            allow, deny = channel.permissions_for(everyone).pair()
+            perms = discord.Permissions((everyone_perms & ~deny.value) | allow_value)
             channel_type = type(channel)
             totals[channel_type] += 1
             if not perms.read_messages:
@@ -536,6 +529,7 @@ class Meta(commands.Cog):
             'VERIFIED': 'Verified',
             'DISCOVERABLE': 'Server Discovery',
             'COMMUNITY': 'Community Server',
+            'FEATURED': 'Featured.',
             'WELCOME_SCREEN_ENABLED': 'Welcome Screen',
             'INVITE_SPLASH': 'Invite Splash',
             'VIP_REGIONS': 'VIP Voice Servers',
