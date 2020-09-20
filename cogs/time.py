@@ -29,8 +29,10 @@ import pytz
 
 import discord
 from discord.ext import commands, menus
-from utils import db
+from utils import db, time
 
+PYTZ_LOWER_TIMEZONES = [pt_timezone.lower()
+                        for pt_timezone in pytz.all_timezones]
 
 class TZMenuSource(menus.ListPageSource):
     """ Okay let's make it embeds, I guess. """
@@ -46,21 +48,12 @@ class TZMenuSource(menus.ListPageSource):
 
 
 class TimeTable(db.Table, table_name="tz_store"):
-    """ Create the table for timezones. Make it unique per user, per guild. """
+    """ Create the table for timezones. Make it unique per user, with guild array. """
 
-    id = db.PrimaryKeyColumn()
+    user_id = db.Column(db.Integer(big=True), primary_key=True)
 
-    user_id = db.Column(db.Integer(big=True))
-    guild_id = db.Column(db.Integer(big=True))
+    guild_ids = db.Column(db.Array(db.Integer(big=True)))
     tz = db.Column(db.String, unique=True)
-
-    @classmethod
-    def create_table(cls, *, exists_ok=True):
-        """ Unique index for tzs. """
-        statement = super().create_table(exists_ok=exists_ok)
-
-        sql = "CREATE UNIQUE INDEX IF NOT EXISTS timezone_uniq_idx ON tz_store (guild_id, user_id);"
-        return statement + '\n' + sql
 
 
 class Time(commands.Cog):
@@ -71,7 +64,19 @@ class Time(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_remove(self, guild):
-        query = "DELETE FROM tz_store WHERE guild_id = $1;"
+        query = """
+        WITH corrected AS (
+            SELECT user_id, array_agg(guild_id) new_guild_ids
+            FROM tz_store, unnest(guild_ids) WITH ORDINALITY guild_id
+            WHERE guild_id != $1
+            GROUP BY user_id
+        )
+        UPDATE tz_store
+        SET guild_ids = new_guild_ids
+        FROM corrected
+        WHERE guild_ids <> new_guild_ids
+        AND tz_store.user_id = corrected.user_id;
+        """
         return await self.bot.pool.execute(query, guild.id)
 
     def _gen_tz_embeds(self,
@@ -91,10 +96,9 @@ class Time(commands.Cog):
         return embeds
 
     def _verify_tz(self, v_timezone: str) -> str:
-        lower_tzs = [pt_timezone.lower() for pt_timezone in pytz.all_timezones]
-        if v_timezone.lower() not in lower_tzs:
+        if v_timezone.lower() not in PYTZ_LOWER_TIMEZONES:
             return None
-        idx = lower_tzs.index(v_timezone.lower())
+        idx = PYTZ_LOWER_TIMEZONES.index(v_timezone.lower())
         v_timezone = pytz.all_timezones[idx]
         return v_timezone
 
@@ -104,15 +108,7 @@ class Time(commands.Cog):
         dt_obj = datetime.now(timezone)
         if ret_datetime:
             return dt_obj
-        if dt_obj.day in [1, 21, 31]:
-            date_modif = "st"
-        elif dt_obj.day in [2, 22]:
-            date_modif = "nd"
-        elif dt_obj.day in [3, 23]:
-            date_modif = "rd"
-        else:
-            date_modif = "th"
-        return dt_obj.strftime(f"%A %-d{date_modif} of %B %Y @ %H:%M %Z%z")
+        return time.hf_time(dt_obj)
 
     @commands.command(aliases=['tz'])
     async def timezone(self, ctx: commands.Context, *, timezone: str = None) -> discord.Message:
@@ -124,7 +120,7 @@ class Time(commands.Cog):
             return await ctx.send("This doesn't seem like a valid timezone.")
         embed = discord.Embed(
             title=f"Current time in {timezone}",
-            description=f"{self._curr_tz_time(timezone, ret_datetime=False)}"
+            description=f"```\n{self._curr_tz_time(timezone, ret_datetime=False)}\n```"
         )
         embed.set_footer(text=f"Requested by: {ctx.author}")
         embed.timestamp = datetime.utcnow()
@@ -134,11 +130,7 @@ class Time(commands.Cog):
     @commands.cooldown(1, 15, commands.BucketType.channel)
     async def timezones(self, ctx: commands.Context):
         """ List all possible timezones... """
-        tz_list = [pytz.all_timezones[x:x+15]
-                   for x in range(0, len(pytz.all_timezones), 15)]
-        embeds = self._gen_tz_embeds(str(ctx.author), tz_list)
-        pages = menus.MenuPages(source=TZMenuSource(range(0, 40), embeds))
-        await pages.start(ctx)
+        return await ctx.send("Nah bro, no more menu for this:\n<https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568>")
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
@@ -150,17 +142,16 @@ class Time(commands.Cog):
         query = """SELECT *
                    FROM tz_store
                    WHERE user_id = $1
-                   AND guild_id = $2;
+                   AND $2 = ANY(guild_ids);
                 """
         result = await self.bot.pool.fetchrow(query, member.id, ctx.guild.id)
         if not result:
-            return await ctx.send(f"No timezone for {member} set.")
+            return await ctx.send(f"No timezone for {member} set or it's not public in this guild.")
         member_timezone = result['tz']
         current_time = self._curr_tz_time(member_timezone, ret_datetime=False)
         embed = discord.Embed(
             title=f"Time for {member}",
-            description=f"```py\n{current_time}```"
-        )
+            description=f"```py\n{current_time}\n```")
         embed.set_footer(text=member_timezone)
         embed.timestamp = datetime.utcnow()
         return await ctx.send(embed=embed)
@@ -172,23 +163,37 @@ class Time(commands.Cog):
         set_timezone = self._verify_tz(set_timezone)
         if not set_timezone:
             return await ctx.send("This doesn't appear to be a valid timezone.")
-        query = """ INSERT INTO tz_store (user_id, guild_id, tz)
+        query = """ INSERT INTO tz_store(user_id, guild_ids, tz)
                     VALUES ($1, $2, $3)
-                    ON CONFLICT ON CONSTRAINT unique_guild_user
-                    DO UPDATE SET tz = $3;
+                    ON CONFLICT (user_id) DO UPDATE
+                    SET guild_ids = tz_store.guild_ids || $2, tz = $3
+                    WHERE tz_store.user_id = $1;
                 """
         confirm = await ctx.prompt("This will make your timezone public in this guild, confirm?",
                                    reacquire=False)
         if not confirm:
             return
-        await self.bot.pool.execute(query, ctx.author.id, ctx.guild.id, set_timezone)
+        await self.bot.pool.execute(query, ctx.author.id, [ctx.guild.id], set_timezone)
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @time.command(name="remove")
     @commands.guild_only()
     async def _remove(self, ctx):
         """ Remove your timezone from this guild. """
-        query = "DELETE FROM tz_store WHERE user_id = $1 and guild_id = $2;"
+        query = """
+            WITH corrected AS (
+                SELECT user_id, array_agg(guild_id) new_guild_ids
+                FROM tz_store, unnest(guild_ids) WITH ORDINALITY guild_id
+                WHERE guild_id != $2
+                AND user_id = $1
+                GROUP BY user_id
+            )
+            UPDATE tz_store
+            SET guild_ids = new_guild_ids
+            FROM corrected
+            WHERE guild_ids <> new_guild_ids
+            AND tz_store.user_id = corrected.user_id;
+            """
         await self.bot.pool.execute(query, ctx.author.id, ctx.guild.id)
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
