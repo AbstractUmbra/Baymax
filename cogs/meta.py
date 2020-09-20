@@ -489,7 +489,8 @@ class Meta(commands.Cog):
         totals = Counter()
         for channel in guild.channels:
             allow, deny = channel.permissions_for(everyone).pair()
-            perms = discord.Permissions((everyone_perms & ~deny.value) | allow_value)
+            perms = discord.Permissions(
+                (everyone_perms & ~deny.value) | allow_value)
             channel_type = type(channel)
             totals[channel_type] += 1
             if not perms.read_messages:
@@ -672,10 +673,10 @@ class Meta(commands.Cog):
         perms.administrator = False
         stringy = f"""
                    Okay you have two options:
-                   Invite me with managed permissions [here]({discord.utils.oauth_url(self.bot.client_id, perms)})
+                   Invite me with managed permissions [here]({discord.utils.oauth_url(self.bot.client_id, perms)} 'WARNING: Creates a managed role in your server.').
                    or...
                    Invite me with no permissions, and you handle it with your own roles.
-                   [I can't promise I'll work until you fix my perms.]({discord.utils.oauth_url(self.bot.client_id)})
+                   [I can't promise I'll work until you fix my perms.]({discord.utils.oauth_url(self.bot.client_id)} 'I prefer this option, personally.').
                    """
         embed = discord.Embed()
         embed.description = textwrap.dedent(stringy)
@@ -695,6 +696,56 @@ class Meta(commands.Cog):
             await asyncio.sleep(1)
 
         await ctx.send('go')
+
+    @commands.command()
+    @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
+    async def feedback(self, ctx, *, content: str):
+        """Gives feedback about the bot.
+
+        This is a quick way to request features or bug fixes
+        without being in the bot's server.
+
+        The bot will communicate with you via PM about the status
+        of your request if possible.
+
+        You can only request feedback once a minute.
+        """
+
+        embed = discord.Embed(title='Feedback', colour=0x738bd7)
+        channel = self.bot.get_channel(705501796159848541)
+        if channel is None:
+            return
+
+        embed.set_author(name=str(ctx.author), icon_url=ctx.author.avatar_url)
+        embed.description = content
+        embed.timestamp = ctx.message.created_at
+
+        if ctx.guild is not None:
+            embed.add_field(
+                name='Server', value=f'{ctx.guild.name} (ID: {ctx.guild.id})', inline=False)
+
+        embed.add_field(
+            name='Channel', value=f'{ctx.channel} (ID: {ctx.channel.id})', inline=False)
+        embed.set_footer(text=f'Author ID: {ctx.author.id}')
+
+        await channel.send(embed=embed)
+        await ctx.send(f'{ctx.tick(True)} Successfully sent feedback')
+
+    @commands.command(name="pm", hidden=True)
+    @commands.is_owner()
+    async def _pm(self, ctx, user_id: int, *, content: str):
+        """ PMs requested users. """
+        user = self.bot.get_user(user_id)
+
+        fmt = content + '\n\n*This is a DM sent because you had previously requested' \
+                        ' feedback or I found a bug' \
+                        ' in a command you used, I do not monitor this DM.*'
+        try:
+            await user.send(fmt)
+        except:
+            await ctx.send(f'Could not PM user by ID {user_id}.')
+        else:
+            await ctx.send('PM successfully sent.')
 
     """ This code and the used utils were written by and source from https://github.com/khazhyk/dango.py """
     @commands.command(name="msgraw", aliases=["msgr", "rawm"])

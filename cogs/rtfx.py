@@ -158,7 +158,8 @@ class RTFX(commands.Cog):
             'python-jp': 'https://docs.python.org/ja/3',
             'asyncpg': 'https://magicstack.github.io/asyncpg/current/',
             'twitchio': 'https://twitchio.readthedocs.io/en/rewrite/',
-            'aiohttp': 'https://docs.aiohttp.org/en/stable/'
+            'aiohttp': 'https://docs.aiohttp.org/en/stable/',
+            'wavelink': 'https://wavelink.readthedocs.io/en/latest/'
         }
 
         if obj is None:
@@ -184,13 +185,13 @@ class RTFX(commands.Cog):
 
         cache = list(self._rtfm_cache[key].items())
 
-        matches = fuzzy.finder(obj, cache, key=lambda t: t[0], lazy=False)[:8]
+        matches = fuzzy.finder(obj, cache, key=lambda t: t[0], lazy=False)
 
         e = discord.Embed(colour=self.bot.colour['dsc'])
-        if len(matches) == 0:
+        if not matches:
             return await ctx.send('Could not find anything. Sorry.')
         e.title = f"RTFM for __**`{key}`**__: {obj}"
-        e.description = '\n'.join(f'[`{key}`]({url})' for key, url in matches)
+        e.description = '\n'.join(f'[`{key}`]({url})' for key, url in matches[:8])
         e.set_footer(text=f"{len(matches)} possible results.")
         await ctx.send(embed=e)
 
@@ -230,6 +231,10 @@ class RTFX(commands.Cog):
     async def rtfm_aiohttp(self, ctx, *, obj: str = None):
         await self.do_rtfm(ctx, 'aiohttp', obj)
 
+    @rtfm.command(name="wavelink")
+    async def rtfm_aiohttp(self, ctx, *, obj: str = None):
+        await self.do_rtfm(ctx, 'wavelink', obj)
+
     async def _member_stats(self, ctx, member, total_uses):
         e = discord.Embed(title='RTFM Stats')
         e.set_author(name=str(member), icon_url=member.avatar_url)
@@ -268,7 +273,7 @@ class RTFX(commands.Cog):
                 f"[`{result['module']}.{result['object']}`]({result['url']})" for result in results[:10])
             eviee = self.bot.get_user(402159684724719617)
             embed.set_footer(
-                text=f"Requested by {ctx.author} | Thanks to {eviee} for the API.")
+                text=f"Requested by {ctx.author} | Thank you {eviee} for the API.")
         return await ctx.send(embed=embed)
 
 

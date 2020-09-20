@@ -35,6 +35,7 @@ import io
 import logging
 import re
 import shlex
+import traceback
 from collections import Counter, defaultdict
 
 import asyncpg
@@ -60,7 +61,7 @@ class RaidMode(enum.Enum):
     strict = 2
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
 
 class GuildConfig(db.Table, table_name='guild_mod_config'):
@@ -1962,15 +1963,9 @@ class Mod(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send('Missing a duration to selfmute for.')
 
-    def get_block_channel(self, guild, channel):
-        """ Get the active block channel. """
-        if channel.id == 174702278673039360:
-            return guild.get_channel(174702278673039360)
-        return [channel]
-
     @commands.command()
     @commands.has_guild_permissions(manage_roles=True)
-    async def block(self, ctx, channel=None, *, member: discord.Member):
+    async def block(self, ctx, member: discord.Member, channel: discord.TextChannel = None):
         """Blocks a user from your channel."""
 
         reason = f'Block by {ctx.author} (ID: {ctx.author.id})'
@@ -1987,14 +1982,20 @@ class Mod(commands.Cog):
                     send_messages=False,
                     add_reactions=False,
                     reason=reason)
-        except:
+        except Exception as err:
             await ctx.send('\N{THUMBS DOWN SIGN}')
+            real_exc = traceback.print_exception(
+                type(err), err, err.__traceback__, 4)
+            stats = self.bot.get_cog("Stats")
+            if stats:
+                wh = stats.webhook
+                await wh.send(f"```py\n{real_exc}\n```")
         else:
             await ctx.send('\N{THUMBS UP SIGN}')
 
     @commands.command()
     @commands.has_guild_permissions(manage_roles=True)
-    async def tempblock(self, ctx, duration: time.FutureTime, channel=None, *, member: discord.Member):
+    async def tempblock(self, ctx, duration: time.FutureTime, member: discord.Member, channel: discord.TextChannel = None):
         """Temporarily blocks a user from your channel.
 
         The duration can be a a short time form, e.g. 30d or a more human
@@ -2016,7 +2017,8 @@ class Mod(commands.Cog):
         timer = await reminder.create_timer(duration.dt, 'tempblock', ctx.guild.id, ctx.author.id,
                                             ctx.channel.id, member.id,
                                             connection=ctx.db,
-                                            created=ctx.message.created_at)
+                                            created=ctx.message.created_at,
+                                            channels=[chan.id for chan in channels])
 
         reason = f'Tempblock by {ctx.author} (ID: {ctx.author.id}) until {duration.dt}'
 
@@ -2027,8 +2029,14 @@ class Mod(commands.Cog):
                     send_messages=False,
                     add_reactions=False,
                     reason=reason)
-        except:
+        except Exception as err:
             await ctx.send('\N{THUMBS DOWN SIGN}')
+            real_exc = traceback.print_exception(
+                type(err), err, err.__traceback__, 4)
+            stats = self.bot.get_cog("Stats")
+            if stats:
+                wh = stats.webhook
+                await wh.send(f"```py\n{real_exc}\n```")
         else:
             await ctx.send(
                 f'Blocked {member}: {time.human_timedelta(duration.dt, source=timer.created_at)}.')
@@ -2037,6 +2045,7 @@ class Mod(commands.Cog):
     async def on_tempblock_timer_complete(self, timer):
         """ Custom event for timer - when it completes. """
         guild_id, mod_id, channel_id, member_id = timer.args
+        channels = timer.kwargs.get("channels")
 
         guild = self.bot.get_guild(guild_id)
         if guild is None:
@@ -2053,28 +2062,28 @@ class Mod(commands.Cog):
             # RIP x3
             return
 
-        moderator = guild.get_member(mod_id)
+        moderator = guild.get_member(mod_id) or await self.bot.fetch_user(mod_id)
         if moderator is None:
-            try:
-                moderator = await self.bot.fetch_user(mod_id)
-            except:
-                # request failed somehow
-                moderator = f'Mod ID {mod_id}'
-            else:
-                moderator = f'{moderator} (ID: {mod_id})'
+            moderator = f'Mod ID {mod_id}'
         else:
             moderator = f'{moderator} (ID: {mod_id})'
 
         reason = f'Automatic unblock from timer made on {timer.created_at} by {moderator}.'
 
-        for chann in self.get_block_channel(guild, channel):
+        for chan in channels:
             try:
-                await chann.set_permissions(to_unblock,
-                                            send_messages=None,
-                                            add_reactions=None,
-                                            reason=reason)
-            except:
-                pass
+                channel = self.bot.get_channel(chan)
+                await channel.set_permissions(to_unblock,
+                                              send_messages=None,
+                                              add_reactions=None,
+                                              reason=reason)
+            except Exception as err:
+                real_exc = traceback.print_exception(
+                    type(err), err, err.__traceback__, 4)
+                stats = self.bot.get_cog("Stats")
+                if stats:
+                    wh = stats.webhook
+                    await wh.send(f"```py\n{real_exc}\n```")
 
 
 def setup(bot):

@@ -175,7 +175,7 @@ class Snipe(commands.Cog):
         embeds = []
         for record in records:
             channel = self.bot.get_channel(record['channel_id'])
-            author = self.bot.get_user(record['user_id'])
+            author = self.bot.get_user(record['user_id']) or await self.bot.fetch_user(record['user_id'])
             jump = record['jump_url']
             embed = discord.Embed()
             if not author:
