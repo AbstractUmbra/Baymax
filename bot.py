@@ -55,7 +55,6 @@ COGS = (
     'jishaku',
     'cogs.admin',
     'cogs.baymax',
-    'cogs.buttons',
     'cogs.config',
     'cogs.external',
     'cogs.fun',
@@ -96,11 +95,9 @@ class Baymax(commands.AutoShardedBot):
     def __init__(self):
         super().__init__(command_prefix=_prefix_callable,
                          description=DESCRIPTION,
-                         pm_help=None,
                          help_attrs=dict(hidden=True),
                          activity=discord.Game(
                              name="b!help for help."),
-                         status=discord.Status.online,
                          allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False))
 
         self.client_id = config.client_id
@@ -266,6 +263,10 @@ class Baymax(commands.AutoShardedBot):
         if message.author.bot:
             return
         await self.process_commands(message)
+
+    async def on_message_edit(self, before, after):
+        if after.author.id == self.owner_id:
+            await self.process_commands(after)
 
     async def on_guild_join(self, guild):
         """ When the bot joins a guild. """
