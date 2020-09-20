@@ -6,7 +6,7 @@ authors = ["AbstractUmbra <Umbra@AbstractUmbra.xyz>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py"}
 discord-ext-menus = {git = "https://github.com/Rapptz/discord-ext-menus"}
 jishaku = "^1.19.0"
@@ -22,6 +22,7 @@ pygit2 = "^1.2.1"
 pytz = "^2020.1"
 python-dateutil = "^2.8.1"
 uwuify = "^1.0.1"
+fuzzywuzzy = "^0.18.0"
 
 [tool.poetry.dev-dependencies]
 pylint = "*"
