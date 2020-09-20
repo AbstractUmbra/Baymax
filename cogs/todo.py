@@ -107,8 +107,6 @@ class Todo(commands.Cog):
         iterable = [(ctx.author.id, td) for td in todo_ids]
         try:
             await self.bot.pool.executemany(query, iterable)
-        except Exception as error:
-            raise error
         finally:
             await ctx.send(f"Okay well done. I removed the __**`#{'`**__, __**`#'.join(str(tid) for tid in todo_ids)}`**__ todo{'s' if len(todo_ids) > 1 else ''} for you.")
 
