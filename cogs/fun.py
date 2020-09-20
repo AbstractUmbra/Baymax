@@ -100,20 +100,20 @@ class Fun(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
-        if message.author.id == self.bot.user.id:
+        if message.author.id in (self.bot.user.id, self.bot.owner_id):
             return
         if self.bot.user in message.mentions:
             channel = self.bot.get_channel(MENTION_CHANNEL_ID)
             embed = discord.Embed(title="Baymax was mentioned!")
             embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-            embed.description = message.content
+            embed.description = f"{message.content}\n\n[Jump!]({message.jump_url})"
             embed.timestamp = message.created_at
             await channel.send(embed=embed)
         elif not message.guild:
             channel = self.bot.get_channel(DM_CHANNEL_ID)
             embed = discord.Embed(title="Baymax was DM'd.")
             embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
-            embed.description = message.content
+            embed.description = f"{message.content}\n\n[Jump!]({message.jump_url})"
             embed.timestamp = message.created_at
             await channel.send(embed=embed)
 

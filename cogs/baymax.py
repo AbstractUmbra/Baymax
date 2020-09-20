@@ -35,14 +35,14 @@ class Baymax(commands.Cog):
     @commands.command(aliases=["fistbump"])
     async def boop(self, ctx: commands.Context):
         """ Boops to you. """
-        embed = discord.Embed()
+        embed = discord.Embed(colour=self.bot.colour['dsc'])
         file = discord.File("./static/boop.gif", filename="fistbump.gif")
         embed.set_image(url="attachment://fistbump.gif")
         await ctx.send(file=file, embed=embed)
 
     @commands.command()
     async def hello(self, ctx: commands.Context):
-        embed = discord.Embed()
+        embed = discord.Embed(colour=self.bot.colour['dsc'])
         file = discord.File("./static/hello.gif", filename="hello.gif")
         embed.set_image(url="attachment://hello.gif")
         await ctx.send("Hi, I'm Baymax. Umbra#0009 created me.", file=file, embed=embed)
