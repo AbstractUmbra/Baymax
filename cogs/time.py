@@ -26,6 +26,7 @@ import random
 from datetime import datetime
 
 import pytz
+from fuzzywuzzy import process
 
 import discord
 from discord.ext import commands, menus
@@ -56,6 +57,17 @@ class TimeTable(db.Table, table_name="tz_store"):
     tz = db.Column(db.String, unique=True)
 
 
+class TimezoneConverter(commands.Converter):
+    async def convert(self, ctx: commands.Context, argument: str):
+        if argument.lower() not in {timezone.lower() for timezone in pytz.all_timezones_set}:
+            matches = '\n'.join([f'`{index + 1}.` {match[0]}' for index, match in enumerate(
+                process.extract(query=argument.lower(), choices=pytz.all_timezones_set, limit=5))])
+            raise commands.BadArgument(
+                f'That was not a recognised timezone. Maybe you meant one of these?\n{matches}')
+
+        return pytz.timezone(argument)
+
+
 class Time(commands.Cog):
     """ Time cog for fun time stuff. """
 
@@ -79,6 +91,12 @@ class Time(commands.Cog):
         """
         return await self.bot.pool.execute(query, guild.id)
 
+    async def cog_command_error(self, ctx, error):
+        """ Error handling for Time.py. """
+        error = getattr(error, "original", error)
+        if isinstance(error, commands.BadArgument):
+            return await ctx.send(str(error))
+
     def _gen_tz_embeds(self,
                        requester: str,
                        iterable: list):
@@ -95,29 +113,18 @@ class Time(commands.Cog):
             embeds.append(embed)
         return embeds
 
-    def _verify_tz(self, v_timezone: str) -> str:
-        if v_timezone.lower() not in PYTZ_LOWER_TIMEZONES:
-            return None
-        idx = PYTZ_LOWER_TIMEZONES.index(v_timezone.lower())
-        v_timezone = pytz.all_timezones[idx]
-        return v_timezone
-
-    def _curr_tz_time(self, curr_timezone: str, *, ret_datetime: bool = False):
+    def _curr_tz_time(self, curr_timezone: pytz.tzinfo.BaseTzInfo, *, ret_datetime: bool = False):
         """ We assume it's a good tz here. """
-        timezone = pytz.timezone(curr_timezone)
-        dt_obj = datetime.now(timezone)
+        dt_obj = datetime.now(curr_timezone)
         if ret_datetime:
             return dt_obj
         return time.hf_time(dt_obj)
 
     @commands.command(aliases=['tz'])
-    async def timezone(self, ctx: commands.Context, *, timezone: str = None) -> discord.Message:
+    async def timezone(self, ctx: commands.Context, *, timezone: TimezoneConverter = None) -> discord.Message:
         """ This will return the time in a specified timezone. """
         if not timezone:
             timezone = random.choice(pytz.all_timezones)
-        timezone = self._verify_tz(timezone)
-        if not timezone:
-            return await ctx.send("This doesn't seem like a valid timezone.")
         embed = discord.Embed(
             title=f"Current time in {timezone}",
             description=f"```\n{self._curr_tz_time(timezone, ret_datetime=False)}\n```"
@@ -158,11 +165,8 @@ class Time(commands.Cog):
 
     @time.command(name="set")
     @commands.guild_only()
-    async def _set(self, ctx, *, set_timezone: str):
+    async def _set(self, ctx, *, set_timezone: TimezoneConverter):
         """ Add your time zone, with a warning about public info. """
-        set_timezone = self._verify_tz(set_timezone)
-        if not set_timezone:
-            return await ctx.send("This doesn't appear to be a valid timezone.")
         query = """ INSERT INTO tz_store(user_id, guild_ids, tz)
                     VALUES ($1, $2, $3)
                     ON CONFLICT (user_id) DO UPDATE
@@ -173,7 +177,7 @@ class Time(commands.Cog):
                                    reacquire=False)
         if not confirm:
             return
-        await self.bot.pool.execute(query, ctx.author.id, [ctx.guild.id], set_timezone)
+        await self.bot.pool.execute(query, ctx.author.id, [ctx.guild.id], set_timezone.zone)
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @time.command(name="remove")
