@@ -270,7 +270,7 @@ class Context(commands.Context):
 
     async def send(self, content=None, **kwargs):
         """ Let's try and override default send. """
-        if content and len(content) > 2000:
+        if content and hasattr(content, "__len__") and len(content) > 2000:
             link = await mystbin.post(content, session=self.bot.session, suffix="text")
             return await super().send(f"Output too long, here it is on Mystb.in: {link}.")
         return await super().send(content=content, **kwargs)

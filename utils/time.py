@@ -291,7 +291,7 @@ def human_timedelta(dt, *, source=None, accuracy=3, brief=False, suffix=True):
 
 def hf_time(dt: datetime.datetime) -> str:
     date_modif = ordinal(dt.day)
-    return dt.strftime(f"%A {date_modif} of %B %Y @ %H:%M %Z%z")
+    return dt.strftime(f"%A {date_modif} of %B %Y @ %H:%M %Z (%z)")
 
 
 def ordinal(number: int) -> str:

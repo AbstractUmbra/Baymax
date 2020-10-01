@@ -51,7 +51,6 @@ import pygit2
 from discord.ext import commands, tasks
 
 from utils import checks, db, formats, time
-from utils.paginator import CannotPaginate
 
 log = logging.getLogger(__name__)
 

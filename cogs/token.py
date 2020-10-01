@@ -1,4 +1,6 @@
 import asyncio
+import binascii
+import re
 from base64 import b64decode
 from textwrap import dedent
 
@@ -12,6 +14,24 @@ from utils.time import hf_time
 class GithubError(commands.CommandError):
     pass
 
+
+TOKEN_REGEX = re.compile(
+    r'[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27}')
+
+EXAMPLE_TOKENS = [
+    "MjM4NDk0NzU2NTIxMzc3Nzky.CunGFQ.wUILz7z6HoJzVeq6pyHPmVgQgV4",
+    "NDc4NDM3MTAxMTIyMjI0MTI4.Dn8zSw.CWORjs-4vMJAbZmSZVEpBYJ3g3E",
+]
+
+def validate_token(token):
+    try:
+        # Just check if the first part validates as a user ID
+        (user_id, _, _) = token.split('.')
+        user_id = int(b64decode(user_id, validate=True))
+    except (ValueError, binascii.Error):
+        return False
+    else:
+        return True
 
 class Token(commands.Cog):
     """ For handling and parsing tokens. """
@@ -68,12 +88,22 @@ class Token(commands.Cog):
         js = await self.github_request("POST", "gists", data=data, headers=headers)
         return js['html_url']
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        tokens = [token for token in TOKEN_REGEX.findall(
+                    message.content) if validate_token(token) and token not in EXAMPLE_TOKENS]
+        if tokens and message.author.id != self.bot.user.id:
+            url =  await self.create_gist('\n'.join(tokens), description='Invalidating a token.')
+            embed = discord.Embed(description=f"Located token(s) have now been [invalidated]({url}).", colour=discord.Colour(0x000001))
+            return await message.channel.send(embed=embed)
+
     @commands.group(invoke_without_command=True, aliases=["t"])
-    @commands.has_guild_permissions(manage_messages=True)
     async def token(self, ctx, *, token) -> discord.Message:
         """ Invalidate a token manually. """
         if ctx.invoked_subcommand:
             pass
+        if not validate_token(token):
+            raise ValueError
         url = await self.create_gist(token, description="Invalidating a token.")
         embed = discord.Embed(colour=discord.Colour(0x000001))
         embed.description = f"Token now [invalidated]({url})."
@@ -82,6 +112,8 @@ class Token(commands.Cog):
     @token.command(aliases=["p"])
     async def parse(self, ctx, *, token):
         """ Parse a token and return details. """
+        if not validate_token(token):
+            raise ValueError
         enc_id = token.split(".")
         # We only care about the user id, so yeah, index.
         enc_id = enc_id[0]

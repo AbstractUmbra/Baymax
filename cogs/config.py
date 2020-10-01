@@ -34,9 +34,9 @@ from typing import Optional
 import asyncpg
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, menus
 from utils import cache, checks, db, mystbin
-from utils.paginator import Pages
+from utils.paginator import SimplePages
 
 
 class LazyEntity:
@@ -372,9 +372,8 @@ class Config(commands.Cog):
         await ctx.release()
 
         try:
-            page = Pages(ctx, entries=entries, per_page=20)
-            await page.paginate()
-        except Exception as err:
+            page = SimplePages(entries=entries, per_page=20).start(ctx)
+        except menus.MenuError as err:
             await ctx.send(str(err))
 
     @ignore.command(name='all')

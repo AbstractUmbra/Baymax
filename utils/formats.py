@@ -126,10 +126,6 @@ class TabularData:
 
 
 def format_codeblock(content, language='py', replace_existing=True, escape_md=True, new="'''"):
-    # split_content = content.splitlines()
-    # new = textwrap.shorten("\N{zwsp}".join(
-    #     split_content), width=300)
-    # content = "\n".join(new.split("\N{zwsp}"))
     if replace_existing:
         content = content.replace('```', new)
     if escape_md:

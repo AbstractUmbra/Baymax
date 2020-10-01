@@ -42,6 +42,7 @@ class Baymax(commands.Cog):
 
     @commands.command()
     async def hello(self, ctx: commands.Context):
+        """ Hello from Baymax. """
         embed = discord.Embed(colour=self.bot.colour['dsc'])
         file = discord.File("./static/hello.gif", filename="hello.gif")
         embed.set_image(url="attachment://hello.gif")

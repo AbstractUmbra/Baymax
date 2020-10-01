@@ -32,8 +32,7 @@ import discord
 from discord.ext import commands, menus
 from utils import db, time
 
-PYTZ_LOWER_TIMEZONES = [pt_timezone.lower()
-                        for pt_timezone in pytz.all_timezones]
+PYTZ_LOWER_TIMEZONES = [*map(str.lower, pytz.all_timezones)]
 
 class TZMenuSource(menus.ListPageSource):
     """ Okay let's make it embeds, I guess. """
@@ -155,10 +154,11 @@ class Time(commands.Cog):
         if not result:
             return await ctx.send(f"No timezone for {member} set or it's not public in this guild.")
         member_timezone = result['tz']
-        current_time = self._curr_tz_time(member_timezone, ret_datetime=False)
+        tz = await TimezoneConverter().convert(ctx, member_timezone)
+        current_time = self._curr_tz_time(tz, ret_datetime=False)
         embed = discord.Embed(
             title=f"Time for {member}",
-            description=f"```py\n{current_time}\n```")
+            description=f"```\n{current_time}\n```")
         embed.set_footer(text=member_timezone)
         embed.timestamp = datetime.utcnow()
         return await ctx.send(embed=embed)

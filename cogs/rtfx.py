@@ -232,7 +232,7 @@ class RTFX(commands.Cog):
         await self.do_rtfm(ctx, 'aiohttp', obj)
 
     @rtfm.command(name="wavelink")
-    async def rtfm_aiohttp(self, ctx, *, obj: str = None):
+    async def rtfm_wavelink(self, ctx, *, obj: str = None):
         await self.do_rtfm(ctx, 'wavelink', obj)
 
     async def _member_stats(self, ctx, member, total_uses):

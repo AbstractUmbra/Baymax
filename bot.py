@@ -94,6 +94,7 @@ class Baymax(commands.AutoShardedBot):
 
     def __init__(self):
         super().__init__(command_prefix=_prefix_callable,
+                         intents=discord.Intents.all(),
                          description=DESCRIPTION,
                          help_attrs=dict(hidden=True),
                          activity=discord.Game(
