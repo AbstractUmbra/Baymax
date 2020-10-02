@@ -137,7 +137,7 @@ def migrate(ctx, cog, quiet):
         importlib.import_module(cog)
     except Exception:
         click.echo(
-            f'Could not load {ext}.\n{traceback.format_exc()}', err=True)
+            f'Could not load {cog}.\n{traceback.format_exc()}', err=True)
         return
 
     def work(table, *, invoked=False):

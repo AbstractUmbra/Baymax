@@ -31,13 +31,15 @@ import asyncio
 import argparse
 import datetime
 import json
+import io
 import re
+import shlex
 import traceback
 
 import asyncpg
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, menus
 from utils import cache, checks, db, formats
 from utils.paginator import SimplePages
 

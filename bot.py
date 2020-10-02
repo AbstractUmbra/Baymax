@@ -60,7 +60,7 @@ COGS = (
     'cogs.fun',
     'cogs.meta',
     'cogs.mod',
-    'cogs.private',
+    # 'cogs.private',
     'cogs.reactionroles',
     'cogs.reddit',
     'cogs.reminders',
@@ -93,13 +93,15 @@ class Baymax(commands.AutoShardedBot):
     """ The actual robot himself! """
 
     def __init__(self):
+        intents = discord.Intents(messages=True, reactions=True, guilds=True, members=True)
+
         super().__init__(command_prefix=_prefix_callable,
-                         intents=discord.Intents.all(),
                          description=DESCRIPTION,
                          help_attrs=dict(hidden=True),
                          activity=discord.Game(
                              name="b!help for help."),
-                         allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False))
+                         allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False),
+                         intents=intents)
 
         self.client_id = config.client_id
         self.bots_key = config.bots_key
