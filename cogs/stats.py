@@ -709,7 +709,7 @@ class Stats(commands.Cog):
         if hasattr(error, "handled") or hasattr(error.original, "handled"):
             return
         error = error.original
-        if isinstance(error, (discord.Forbidden, discord.LoginFailure, discord.NotFound, CannotPaginate)):
+        if isinstance(error, (discord.Forbidden, discord.LoginFailure, discord.NotFound)):
             return
 
         e = discord.Embed(title='Command Error', colour=0xcc3366)

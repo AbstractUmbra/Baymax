@@ -513,9 +513,9 @@ class Meta(commands.Cog):
         secret = Counter()
         totals = Counter()
         for channel in guild.channels:
-            allow, deny = channel.permissions_for(everyone).pair()
+            allow, deny = channel.overwrites_for(everyone).pair()
             perms = discord.Permissions(
-                (everyone_perms & ~deny.value) | allow_value)
+                (everyone_perms & ~deny.value) | allow.value)
             channel_type = type(channel)
             totals[channel_type] += 1
             if not perms.read_messages:

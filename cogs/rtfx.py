@@ -271,7 +271,7 @@ class RTFX(commands.Cog):
             embed.title = f"RTFS for '{search}'"
             embed.description = '\n'.join(
                 f"[`{result['module']}.{result['object']}`]({result['url']})" for result in results[:10])
-            eviee = self.bot.get_user(402159684724719617)
+            eviee = self.bot.get_user(402159684724719617) or "Eviee#0666"  # just in case ;q
             embed.set_footer(
                 text=f"Requested by {ctx.author} | Thank you {eviee} for the API.")
         return await ctx.send(embed=embed)
