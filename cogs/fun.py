@@ -23,6 +23,7 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
+import math
 import re
 import textwrap
 from string import ascii_lowercase
@@ -35,6 +36,7 @@ ABT_REG = "~([a-zA-Z]+)~"
 
 MENTION_CHANNEL_ID = 722930330897743894
 DM_CHANNEL_ID = 722930296756109322
+
 
 class StatisticsTable(db.Table, table_name="statistics"):
     id = db.PrimaryKeyColumn()
@@ -63,6 +65,10 @@ class Fun(commands.Cog):
         self.channel_creates = 0
         self.command_count = 0
         self.bulk_update.start()
+        self.pepe = {'up': "<:pepePoint_up:728347439391572000>",
+                     'down': "<:pepePoint_down:728347439571927122>",
+                     'left': "<:pepePoint_left:728347439387377737>",
+                     'right': "<:pepePoint:728347439903277056>"}
 
     @commands.group(invoke_without_command=True, skip_extra=False)
     async def abt(self, ctx, *, content: commands.clean_content):
@@ -105,14 +111,16 @@ class Fun(commands.Cog):
         if self.bot.user in message.mentions:
             channel = self.bot.get_channel(MENTION_CHANNEL_ID)
             embed = discord.Embed(title="Baymax was mentioned!")
-            embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+            embed.set_author(name=message.author.name,
+                             icon_url=message.author.avatar_url)
             embed.description = f"{message.content}\n\n[Jump!]({message.jump_url})"
             embed.timestamp = message.created_at
             await channel.send(embed=embed)
         elif not message.guild:
             channel = self.bot.get_channel(DM_CHANNEL_ID)
             embed = discord.Embed(title="Baymax was DM'd.")
-            embed.set_author(name=message.author.name, icon_url=message.author.avatar_url)
+            embed.set_author(name=message.author.name,
+                             icon_url=message.author.avatar_url)
             embed.description = f"{message.content})"
             embed.timestamp = message.created_at
             await channel.send(embed=embed)
@@ -217,6 +225,18 @@ class Fun(commands.Cog):
         embed.set_footer(text=f"I have also run {command_count:,} commands!")
 
         await ctx.send(embed=embed)
+
+    @commands.command()
+    async def point(self, ctx, member: discord.Member):
+        """ Point. """
+        length = 1 + len(member.display_name)
+        x_length = math.ceil(math.ceil(length/2) * 0.9)
+        msg = f"""
+        {self.pepe['down']}{self.pepe['down']*x_length}{self.pepe['down']}
+        {self.pepe['right']}{member.mention}{self.pepe['left']}
+        {self.pepe['up']}{self.pepe['up']*x_length}{self.pepe['up']}
+        """
+        await ctx.send(textwrap.dedent(msg))
 
 
 def setup(bot):

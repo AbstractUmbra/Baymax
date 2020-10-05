@@ -69,6 +69,7 @@ COGS = (
     'cogs.rtfx',
     'cogs.snipe',
     'cogs.specialist',
+    'cogs.stars',
     'cogs.stats',
     'cogs.tags',
     'cogs.time',
@@ -94,14 +95,16 @@ class Baymax(commands.AutoShardedBot):
     """ The actual robot himself! """
 
     def __init__(self):
-        intents = discord.Intents(messages=True, reactions=True, guilds=True, members=True)
+        intents = discord.Intents.all()
+        intents.presences = False
 
         super().__init__(command_prefix=_prefix_callable,
                          description=DESCRIPTION,
                          help_attrs=dict(hidden=True),
                          activity=discord.Game(
                              name="b!help for help."),
-                         allowed_mentions=discord.AllowedMentions(everyone=False, roles=False, users=False),
+                         allowed_mentions=discord.AllowedMentions(
+                             everyone=False, roles=False, users=False),
                          intents=intents)
 
         self.client_id = config.client_id

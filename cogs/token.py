@@ -22,6 +22,7 @@ EXAMPLE_TOKENS = [
     "MjM4NDk0NzU2NTIxMzc3Nzky.CunGFQ.wUILz7z6HoJzVeq6pyHPmVgQgV4",
     "NDc4NDM3MTAxMTIyMjI0MTI4.Dn8zSw.CWORjs-4vMJAbZmSZVEpBYJ3g3E",
 ]
+RDADDY = 80528701850124288
 
 def validate_token(token):
     try:
@@ -90,6 +91,8 @@ class Token(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if message.author.id == RDADDY:
+            return
         tokens = [token for token in TOKEN_REGEX.findall(
                     message.content) if validate_token(token) and token not in EXAMPLE_TOKENS]
         if tokens and message.author.id != self.bot.user.id:
