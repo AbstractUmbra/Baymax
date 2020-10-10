@@ -1,16 +1,5 @@
 [[package]]
 category = "main"
-description = "Free Google Translate API for Python. Translates totally free of charge."
-name = "aiogoogletrans"
-optional = false
-python-versions = "*"
-version = "3.3.2"
-
-[package.dependencies]
-aiohttp = "*"
-
-[[package]]
-category = "main"
 description = "Async http client/server framework (asyncio)"
 name = "aiohttp"
 optional = false
@@ -174,6 +163,7 @@ version = "1.0.0a26+g84caae8"
 reference = "84caae8038d0d3adc860957ccef05baeec2e2dd8"
 type = "git"
 url = "https://github.com/Rapptz/discord-ext-menus"
+
 [[package]]
 category = "main"
 description = "A Python wrapper for the Discord API"
@@ -193,6 +183,7 @@ voice = ["PyNaCl (1.3.0)"]
 reference = "f308f34db1b1c24178fbdb1756838064cd9e4348"
 type = "git"
 url = "https://github.com/Rapptz/discord.py"
+
 [[package]]
 category = "main"
 description = "Fuzzy string matching in python"
@@ -331,7 +322,7 @@ description = "A Python utility / library to sort Python imports."
 name = "isort"
 optional = false
 python-versions = ">=3.6,<4.0"
-version = "5.6.1"
+version = "5.6.2"
 
 [package.extras]
 colors = ["colorama (>=0.4.3,<0.5.0)"]
@@ -438,6 +429,7 @@ version = "0.0.0"
 reference = "735d007b72f06256b3c4dfc4692f32a1011315db"
 type = "git"
 url = "https://github.com/ShineyDev/prettify.py"
+
 [[package]]
 category = "main"
 description = "Cross-platform lib for process and system monitoring in Python."
@@ -589,15 +581,11 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "3c58186c5bf038440fe4e688714f9577aab8501e7bdfbec2e048f1cd13ac462b"
+content-hash = "d3b5714b66417a819fb0054837b78b13eb2184ded89a739d7d245dc5d86686b9"
 lock-version = "1.0"
 python-versions = "^3.8"
 
 [metadata.files]
-aiogoogletrans = [
-    {file = "aiogoogletrans-3.3.2-py3-none-any.whl", hash = "sha256:f69cabd1b1fe5a263090f444df39561ba7915439bb060df0a0a1eeb2e32e3d83"},
-    {file = "aiogoogletrans-3.3.2.tar.gz", hash = "sha256:a1300ce28e66b4dcf8ca778d27d5e404d1ec3a7b55b74360e4ea7336461acca1"},
-]
 aiohttp = [
     {file = "aiohttp-3.6.2-cp35-cp35m-macosx_10_13_x86_64.whl", hash = "sha256:1e984191d1ec186881ffaed4581092ba04f7c61582a177b187d3a2f07ed9719e"},
     {file = "aiohttp-3.6.2-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:50aaad128e6ac62e7bf7bd1f0c0a24bc968a0c0590a726d5a955af193544bcec"},
@@ -766,8 +754,8 @@ import-expression = [
     {file = "import_expression-1.1.4.tar.gz", hash = "sha256:06086a6ab3bfa528b1c478e633d6adf2b3a990e31440f6401b0f3ea12b0659a9"},
 ]
 isort = [
-    {file = "isort-5.6.1-py3-none-any.whl", hash = "sha256:dd3211f513f4a92ec1ec1876fc1dc3c686649c349d49523f5b5adbb0814e5960"},
-    {file = "isort-5.6.1.tar.gz", hash = "sha256:2f510f34ae18a8d0958c53eec51ef84fd099f07c4c639676525acbcd7b5bd3ff"},
+    {file = "isort-5.6.2-py3-none-any.whl", hash = "sha256:a30c567b88d7b73e448b0f30526eaf2f943f0627809e4f34b9c3271918d96c3e"},
+    {file = "isort-5.6.2.tar.gz", hash = "sha256:c2cfe5b621f62932677004f96f93c4b128dc457d957b0531f204641fe8adc8a6"},
 ]
 jishaku = [
     {file = "jishaku-1.19.1.200-py3-none-any.whl", hash = "sha256:39ddc1dd1239025e4992bc9d81c1c456938800c6e27c04d6e877cac1cf741376"},

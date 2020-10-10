@@ -28,8 +28,8 @@ import re
 import textwrap
 from string import ascii_lowercase
 
-import aiogoogletrans
 import discord
+import googletrans
 from discord.ext import commands, tasks
 from utils import db, lang
 
@@ -70,7 +70,7 @@ class Fun(commands.Cog):
                      'down': "<:pepePoint_down:728347439571927122>",
                      'left': "<:pepePoint_left:728347439387377737>",
                      'right': "<:pepePoint:728347439903277056>"}
-        self.translator = aiogoogletrans.Translator()
+        self.translator = googletrans.Translator()
 
     @commands.group(invoke_without_command=True, skip_extra=False)
     async def abt(self, ctx, *, content: commands.clean_content):
@@ -101,16 +101,22 @@ class Fun(commands.Cog):
                 new_str += char
         await ctx.send(new_str.replace("~", "").capitalize())
 
-    @commands.command()
+    @commands.command(hidden=True)
     async def translate(self, ctx, *, message: commands.clean_content):
-        """ Perform a translation of input to English. """ipython
-        translation = await self.translator.translate(message, dest="en")
+        """Translates a message to English using Google translate."""
 
-        embed = discord.Embed(title="Translation")
-        source = aiogoogletrans.LANGUAGES.get(translation.src, "(Auto-detected)").title()
-        destination = aiogoogletrans.LANGUAGES.get(translation.dest, "Unknown").title()
-        embed.add_field(name=f"From {source}", value=translation.origin, inline=False)
-        embed.add_field(name=f"To {destination}", value=translation.text, inline=False)
+        loop = self.bot.loop
+
+        try:
+            ret = await loop.run_in_executor(None, self.translator.translate, message)
+        except Exception as e:
+            return await ctx.send(f'An error occurred: {e.__class__.__name__}: {e}')
+
+        embed = discord.Embed(title='Translated', colour=0x000001)
+        src = googletrans.LANGUAGES.get(ret.src, '(auto-detected)').title()
+        dest = googletrans.LANGUAGES.get(ret.dest, 'Unknown').title()
+        embed.add_field(name=f'From {src}', value=ret.origin, inline=False)
+        embed.add_field(name=f'To {dest}', value=ret.text, inline=False)
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()

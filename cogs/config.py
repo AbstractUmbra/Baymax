@@ -35,7 +35,7 @@ import asyncpg
 
 import discord
 from discord.ext import commands, menus
-from utils import cache, checks, db, mystbin
+from utils import cache, checks, db
 from utils.paginator import SimplePages
 
 
@@ -556,7 +556,7 @@ class Config(commands.Cog):
         disabled = resolved.get_blocked_commands(channel.id)
 
         if len(disabled) > 15:
-            value = await mystbin.post('\n'.join(disabled), session=self.bot.session, suffix="txt")
+            value = await self.bot.mb_client.post('\n'.join(disabled), session=self.bot.session, suffix="txt")
         else:
             value = '\n'.join(disabled) or 'None!'
         await ctx.send(f'In {channel.mention} the following commands are disabled:\n{value}')

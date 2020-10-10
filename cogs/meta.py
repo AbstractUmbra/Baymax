@@ -516,7 +516,7 @@ class Meta(commands.Cog):
         This is a quick way to request features or bug fixes
         without being in the bot's server.
 
-        The bot will communicate with you via PM about the status
+        The bot will communicate with you via DM about the status
         of your request if possible.
 
         You can only request feedback once a minute.

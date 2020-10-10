@@ -288,6 +288,12 @@ class Admin(commands.Cog):
             g = self.bot.get_guild(gid)
             await g.ban(discord.Object(id=dick_id))
 
+    async def unban_all(self, not_dick_id):
+        """ Ban em from all your guilds. """
+        for gid in self.my_guilds:
+            g = self.bot.get_guild(gid)
+            await g.unban(discord.Object(id=not_dick_id))
+
     @commands.group(name="blocked", invoke_without_command=True, aliases=["pmulgat"])
     async def _blocked(self, ctx: commands.Context, user_id: int, *, reason: str):
         """ Let's make a private 'why I blocked them case'. """
@@ -296,11 +302,12 @@ class Admin(commands.Cog):
                     ON CONFLICT (user_id)
                     DO UPDATE SET reason = $2
                 """
-        await self.bot.pool.execute(query, user_id, reason)
-        await self.ban_all(user_id)
+        coros = [self.bot.pool.execute(
+            query, user_id, reason), self.ban_all(user_id)]
         config = self.bot.get_cog("Config")
         if config:
-            await config.global_block(ctx, user_id)
+            coros.append(config.global_block(ctx, user_id))
+        await asyncio.gather(*coros)
         try:
             await ctx.message.delete()
         except discord.Forbidden:
@@ -318,10 +325,15 @@ class Admin(commands.Cog):
         await ctx.send(embed=embed)
 
     @_blocked.command(name="remove", aliases=["r"])
-    async def _blocked_remove(self, ctx: commands.Context, user_id: int) -> discord.Reaction:
+    async def _blocked_remove(self, ctx: commands.Context, user_id: int):
         """ Remove a block entry. """
         query = """ DELETE FROM owner_blocked WHERE user_id = $1; """
-        await self.bot.pool.execute(query, user_id)
+        coros = [self.bot.pool.execute(
+            query, user_id), self.unban_all(user_id)]
+        config = self.bot.get_cog("Config")
+        if config:
+            coros.append(config.global_unblock(ctx, user_id))
+        await asyncio.gather(*coros)
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
 

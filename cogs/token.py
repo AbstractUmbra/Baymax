@@ -91,6 +91,8 @@ class Token(commands.Cog):
 
     @commands.Cog.listener()
     async def on_message(self, message):
+        if getattr(message.guild, "id", None) == 336642139381301249:
+            return
         if message.author.id == RDADDY:
             return
         tokens = [token for token in TOKEN_REGEX.findall(
