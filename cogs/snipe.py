@@ -31,7 +31,7 @@ import discord
 from asyncpg import Record
 from discord.ext import commands, menus, tasks
 
-from utils import cache, db, formats, mystbin
+from utils import cache, db, formats
 
 class RequiresSnipe(commands.CheckFailure):
     """ Requires snipe configured. """
@@ -186,7 +186,7 @@ class Snipe(commands.Cog):
             diff_text = self.get_diff(
                 record['before_content'], record['after_content'])
             if len(diff_text) > 2048:
-                url = await mystbin.post(diff_text, session=self.bot.session, suffix="diff")
+                url = await self.bot.mb_client.post(diff_text, syntax="diff")
                 embed.description = f"Diff is too large, so I put it on [MystB.in]({url})."
             else:
                 embed.description = formats.format_codeblock(
@@ -445,7 +445,7 @@ class Snipe(commands.Cog):
                 if item['channel_id'] == target.id:
                     self.snipe_deletes.remove(item)
 
-        return await ctx.message.add_reaction(self.bot.emojis[True])
+        return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @tasks.loop(minutes=1)
     async def snipe_delete_update(self):

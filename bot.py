@@ -34,6 +34,7 @@ from collections import Counter, deque
 import aiohttp
 import discord
 from discord.ext import commands
+from mystbin import MystbinClient
 
 import config
 from utils import context
@@ -110,7 +111,8 @@ class Baymax(commands.AutoShardedBot):
         self.client_id = config.client_id
         self.bots_key = config.bots_key
 
-        self.session = aiohttp.ClientSession(loop=self.loop)
+        self.session = aiohttp.ClientSession()
+        self.mb_client = MystbinClient(session=self.session)
         self._prev_events = deque(maxlen=10)
         self.prefixes = Config('prefixes.json')
         self.blacklist = Config('blacklist.json')

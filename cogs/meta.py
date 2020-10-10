@@ -476,7 +476,8 @@ class Meta(commands.Cog):
 
         await self.say_permissions(ctx, member, channel)
 
-    @commands.command(aliases=['invite'], enabled=False)
+    @commands.command(aliases=['invite'])
+    @commands.is_owner()
     async def join(self, ctx):
         """Joins a server."""
         perms = discord.Permissions.all()

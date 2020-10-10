@@ -31,7 +31,6 @@ import asyncio
 
 import discord
 from discord.ext import commands
-from utils import mystbin
 
 
 class _ContextDBAcquire:
@@ -263,7 +262,7 @@ class Context(commands.Context):
             content = discord.utils.escape_mentions(content)
 
         if len(content) > 2000:
-            link = await mystbin.post(content, session=self.bot.session, suffix=suffix)
+            link = await self.bot.mb_client.post(content, syntax=f".{suffix if suffix else ''}")
             return await self.send(f"Output too long, here it is on Mystb.in: {link}.", **kwargs)
         else:
             return await self.send(content)
@@ -271,6 +270,6 @@ class Context(commands.Context):
     async def send(self, content=None, **kwargs):
         """ Let's try and override default send. """
         if content and hasattr(content, "__len__") and len(content) > 2000:
-            link = await mystbin.post(content, session=self.bot.session, suffix="text")
+            link = await self.bot.mb_client.post(content, syntax="text")
             return await super().send(f"Output too long, here it is on Mystb.in: {link}.")
         return await super().send(content=content, **kwargs)

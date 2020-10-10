@@ -1,5 +1,16 @@
 [[package]]
 category = "main"
+description = "Free Google Translate API for Python. Translates totally free of charge."
+name = "aiogoogletrans"
+optional = false
+python-versions = "*"
+version = "3.3.2"
+
+[package.dependencies]
+aiohttp = "*"
+
+[[package]]
+category = "main"
 description = "Async http client/server framework (asyncio)"
 name = "aiohttp"
 optional = false
@@ -94,7 +105,7 @@ description = "Bash-style brace expansion for Python"
 name = "braceexpand"
 optional = false
 python-versions = "*"
-version = "0.1.5"
+version = "0.1.6"
 
 [[package]]
 category = "main"
@@ -179,7 +190,7 @@ docs = ["sphinx (1.8.5)", "sphinxcontrib_trio (1.1.1)", "sphinxcontrib-websuppor
 voice = ["PyNaCl (1.3.0)"]
 
 [package.source]
-reference = "1518790c87ccbdda0093b9ae0bb66a47382b261f"
+reference = "f308f34db1b1c24178fbdb1756838064cd9e4348"
 type = "git"
 url = "https://github.com/Rapptz/discord.py"
 [[package]]
@@ -238,7 +249,7 @@ description = "Chromium HSTS Preload list as a Python package and updated daily"
 name = "hstspreload"
 optional = false
 python-versions = ">=3.6"
-version = "2020.9.29"
+version = "2020.10.6"
 
 [[package]]
 category = "main"
@@ -275,8 +286,11 @@ category = "main"
 description = "Python humanize utilities"
 name = "humanize"
 optional = false
-python-versions = ">=3.5"
-version = "2.6.0"
+python-versions = ">=3.6"
+version = "3.0.1"
+
+[package.dependencies]
+setuptools = "*"
 
 [package.extras]
 tests = ["freezegun", "pytest", "pytest-cov"]
@@ -317,7 +331,7 @@ description = "A Python utility / library to sort Python imports."
 name = "isort"
 optional = false
 python-versions = ">=3.6,<4.0"
-version = "5.5.4"
+version = "5.6.1"
 
 [package.extras]
 colors = ["colorama (>=0.4.3,<0.5.0)"]
@@ -392,6 +406,20 @@ version = "4.7.6"
 
 [[package]]
 category = "main"
+description = "A small simple wrapper around the mystb.in API."
+name = "mystbin.py"
+optional = false
+python-versions = ">=3.6,<4.0"
+version = "0.2.5"
+
+[package.dependencies]
+aiohttp = ">=3.6.2,<4.0.0"
+
+[package.extras]
+requests = ["requests (>=2.24.0,<3.0.0)"]
+
+[[package]]
+category = "main"
 description = "Parse human-readable date/time text."
 name = "parsedatetime"
 optional = false
@@ -444,6 +472,10 @@ name = "pygit2"
 optional = false
 python-versions = "*"
 version = "1.3.0"
+
+[package.dependencies]
+cached-property = "*"
+cffi = ">=1.4.0"
 
 [[package]]
 category = "dev"
@@ -557,11 +589,15 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "8b928cec069e162dc03a0ddbf36c78da55cea673c7d1d5a997c054d40028f001"
+content-hash = "3c58186c5bf038440fe4e688714f9577aab8501e7bdfbec2e048f1cd13ac462b"
 lock-version = "1.0"
 python-versions = "^3.8"
 
 [metadata.files]
+aiogoogletrans = [
+    {file = "aiogoogletrans-3.3.2-py3-none-any.whl", hash = "sha256:f69cabd1b1fe5a263090f444df39561ba7915439bb060df0a0a1eeb2e32e3d83"},
+    {file = "aiogoogletrans-3.3.2.tar.gz", hash = "sha256:a1300ce28e66b4dcf8ca778d27d5e404d1ec3a7b55b74360e4ea7336461acca1"},
+]
 aiohttp = [
     {file = "aiohttp-3.6.2-cp35-cp35m-macosx_10_13_x86_64.whl", hash = "sha256:1e984191d1ec186881ffaed4581092ba04f7c61582a177b187d3a2f07ed9719e"},
     {file = "aiohttp-3.6.2-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:50aaad128e6ac62e7bf7bd1f0c0a24bc968a0c0590a726d5a955af193544bcec"},
@@ -619,8 +655,8 @@ autopep8 = [
     {file = "autopep8-1.5.4.tar.gz", hash = "sha256:d21d3901cb0da6ebd1e83fc9b0dfbde8b46afc2ede4fe32fbda0c7c6118ca094"},
 ]
 braceexpand = [
-    {file = "braceexpand-0.1.5-py2.py3-none-any.whl", hash = "sha256:ae6b7de1e88d3132177bd6cbda8b22487ea645b25c4ca5b1cf948b326ac27e34"},
-    {file = "braceexpand-0.1.5.tar.gz", hash = "sha256:d3d932030c3ab4740b33df68a58d70f3a10368f33b3a56eb951da649bec0bb52"},
+    {file = "braceexpand-0.1.6-py2.py3-none-any.whl", hash = "sha256:c37571ad130213247fac9921f3fd1032c81057490b9ca29be6884fd6d9dc1013"},
+    {file = "braceexpand-0.1.6.tar.gz", hash = "sha256:c1bf4fdc1713e46feacac0f1acbbb12239bdda7c7c4183fc8fb22bf6f285f854"},
 ]
 cached-property = [
     {file = "cached-property-1.5.2.tar.gz", hash = "sha256:9fa5755838eecbb2d234c3aa390bd80fbd3ac6b6869109bfc1b499f7bd89a130"},
@@ -702,8 +738,8 @@ hpack = [
     {file = "hpack-3.0.0.tar.gz", hash = "sha256:8eec9c1f4bfae3408a3f30500261f7e6a65912dc138526ea054f9ad98892e9d2"},
 ]
 hstspreload = [
-    {file = "hstspreload-2020.9.29-py3-none-any.whl", hash = "sha256:b6bdbe6e36d8acea5bb97b53ae50552293b6b0425785918da7b63e48f08af4a8"},
-    {file = "hstspreload-2020.9.29.tar.gz", hash = "sha256:349c59cd2889a2cd94f49b3872a195164cc50754f1bef148b7d2d0d6c0efe0de"},
+    {file = "hstspreload-2020.10.6-py3-none-any.whl", hash = "sha256:f413669d7b53a6d4cd5fc0fb313562bfba9fb5fba63bbb32a62a752ed72734bd"},
+    {file = "hstspreload-2020.10.6.tar.gz", hash = "sha256:01a9b58e8f32f2ef4d1f9aacc7658ec13e23c57ce9f625ea18693ec2ed38dcfb"},
 ]
 httpcore = [
     {file = "httpcore-0.9.1-py3-none-any.whl", hash = "sha256:9850fe97a166a794d7e920590d5ec49a05488884c9fc8b5dba8561effab0c2a0"},
@@ -714,8 +750,8 @@ httpx = [
     {file = "httpx-0.13.3.tar.gz", hash = "sha256:3642bd13e90b80ba8a243a730275eb10a4c26ec96f5fc16b87e458d4ab21efae"},
 ]
 humanize = [
-    {file = "humanize-2.6.0-py3-none-any.whl", hash = "sha256:fd5b32945687443d5b8bc1e02fad027da1d293a9e963b3450122ad98ef534f21"},
-    {file = "humanize-2.6.0.tar.gz", hash = "sha256:8ee358ea6c23de896b9d1925ebe6a8504bb2ba7e98d5ccf4d07ab7f3b28f3819"},
+    {file = "humanize-3.0.1-py3-none-any.whl", hash = "sha256:b67f41ad9689bd8539fe02695385989d8c789019a90c450d3d2f8891e9e4bb32"},
+    {file = "humanize-3.0.1.tar.gz", hash = "sha256:8ff8f292c9bf52bbefdc620410e7defd1c95e7eeb1a5cfc2859aaea4b1877ff5"},
 ]
 hyperframe = [
     {file = "hyperframe-5.2.0-py2.py3-none-any.whl", hash = "sha256:5187962cb16dcc078f23cb5a4b110098d546c3f41ff2d4038a9896893bbd0b40"},
@@ -730,8 +766,8 @@ import-expression = [
     {file = "import_expression-1.1.4.tar.gz", hash = "sha256:06086a6ab3bfa528b1c478e633d6adf2b3a990e31440f6401b0f3ea12b0659a9"},
 ]
 isort = [
-    {file = "isort-5.5.4-py3-none-any.whl", hash = "sha256:36f0c6659b9000597e92618d05b72d4181104cf59472b1c6a039e3783f930c95"},
-    {file = "isort-5.5.4.tar.gz", hash = "sha256:ba040c24d20aa302f78f4747df549573ae1eaf8e1084269199154da9c483f07f"},
+    {file = "isort-5.6.1-py3-none-any.whl", hash = "sha256:dd3211f513f4a92ec1ec1876fc1dc3c686649c349d49523f5b5adbb0814e5960"},
+    {file = "isort-5.6.1.tar.gz", hash = "sha256:2f510f34ae18a8d0958c53eec51ef84fd099f07c4c639676525acbcd7b5bd3ff"},
 ]
 jishaku = [
     {file = "jishaku-1.19.1.200-py3-none-any.whl", hash = "sha256:39ddc1dd1239025e4992bc9d81c1c456938800c6e27c04d6e877cac1cf741376"},
@@ -822,6 +858,10 @@ multidict = [
     {file = "multidict-4.7.6-cp38-cp38-win32.whl", hash = "sha256:5cf311a0f5ef80fe73e4f4c0f0998ec08f954a6ec72b746f3c179e37de1d210d"},
     {file = "multidict-4.7.6-cp38-cp38-win_amd64.whl", hash = "sha256:7388d2ef3c55a8ba80da62ecfafa06a1c097c18032a501ffd4cabbc52d7f2b19"},
     {file = "multidict-4.7.6.tar.gz", hash = "sha256:fbb77a75e529021e7c4a8d4e823d88ef4d23674a202be4f5addffc72cbb91430"},
+]
+"mystbin.py" = [
+    {file = "mystbin.py-0.2.5-py3-none-any.whl", hash = "sha256:945719f2d98b297535b9107b69ca7731982f87b5706d6241a3ab25a2ee1cf9ee"},
+    {file = "mystbin.py-0.2.5.tar.gz", hash = "sha256:486c7136cf92f4fe44d6ac7f79bae3698d120f4951365416d50a57118f241f1e"},
 ]
 parsedatetime = [
     {file = "parsedatetime-2.6-py3-none-any.whl", hash = "sha256:cb96edd7016872f58479e35879294258c71437195760746faffedb692aef000b"},

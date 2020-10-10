@@ -28,6 +28,7 @@ import re
 import textwrap
 from string import ascii_lowercase
 
+import aiogoogletrans
 import discord
 from discord.ext import commands, tasks
 from utils import db, lang
@@ -69,6 +70,7 @@ class Fun(commands.Cog):
                      'down': "<:pepePoint_down:728347439571927122>",
                      'left': "<:pepePoint_left:728347439387377737>",
                      'right': "<:pepePoint:728347439903277056>"}
+        self.translator = aiogoogletrans.Translator()
 
     @commands.group(invoke_without_command=True, skip_extra=False)
     async def abt(self, ctx, *, content: commands.clean_content):
@@ -98,6 +100,18 @@ class Fun(commands.Cog):
             else:
                 new_str += char
         await ctx.send(new_str.replace("~", "").capitalize())
+
+    @commands.command()
+    async def translate(self, ctx, *, message: commands.clean_content):
+        """ Perform a translation of input to English. """ipython
+        translation = await self.translator.translate(message, dest="en")
+
+        embed = discord.Embed(title="Translation")
+        source = aiogoogletrans.LANGUAGES.get(translation.src, "(Auto-detected)").title()
+        destination = aiogoogletrans.LANGUAGES.get(translation.dest, "Unknown").title()
+        embed.add_field(name=f"From {source}", value=translation.origin, inline=False)
+        embed.add_field(name=f"To {destination}", value=translation.text, inline=False)
+        await ctx.send(embed=embed)
 
     @commands.Cog.listener()
     async def on_raw_message_delete(self, payload):
