@@ -14,6 +14,9 @@ from utils.time import hf_time
 class GithubError(commands.CommandError):
     pass
 
+class InvalidToken(commands.CommandError):
+    pass
+
 
 TOKEN_REGEX = re.compile(
     r'[a-zA-Z0-9_-]{23,28}\.[a-zA-Z0-9_-]{6,7}\.[a-zA-Z0-9_-]{27}')
@@ -108,7 +111,7 @@ class Token(commands.Cog):
         if ctx.invoked_subcommand:
             pass
         if not validate_token(token):
-            raise ValueError
+            raise InvalidToken("Token does not appear to be valid.")
         url = await self.create_gist(token, description="Invalidating a token.")
         embed = discord.Embed(colour=discord.Colour(0x000001))
         embed.description = f"Token now [invalidated]({url})."
@@ -118,7 +121,7 @@ class Token(commands.Cog):
     async def parse(self, ctx, *, token):
         """ Parse a token and return details. """
         if not validate_token(token):
-            raise ValueError
+            raise InvalidToken("Not a valid token type.")
         enc_id = token.split(".")
         # We only care about the user id, so yeah, index.
         enc_id = enc_id[0]
@@ -127,7 +130,7 @@ class Token(commands.Cog):
 
         user = self.bot.get_user(user_id) or await self.bot.fetch_user(user_id)
         if not user:
-            return ctx.send("Not a valid token.")
+            return await ctx.send("Not a valid token.")
         url = await self.create_gist(token, description="Invalidating a token.")
         msg = f"""
         ```prolog
@@ -146,7 +149,7 @@ class Token(commands.Cog):
     @parse.error
     async def token_parsing_error(self, ctx, error):
         error = getattr(error, "original", error)
-        if isinstance(error, ValueError):
+        if isinstance(error, InvalidToken):
             return await ctx.send(f"`{ctx.kwargs['token'].split('.')[0]}` doesn't seem to be a valid token encoding.")
 
 
