@@ -329,6 +329,7 @@ class Twitch(commands.Cog):
         headers = await self._gen_headers()
         query = """ SELECT * FROM twitchtable; """
         results = await self.bot.pool.fetch(query)
+        role = None
 
         for item in results:
             if not item['streamer_last_datetime']:
@@ -384,7 +385,12 @@ class Twitch(commands.Cog):
                 embed.set_image(url=stream_json['data'][0]['thumbnail_url'].replace(
                     "{width}", "600").replace("{height}", "400"))
 
-                message = await channel.send(f"{role.mention if role else None}\n\n{item['streamer_name']} is now live!", embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
+                if role:
+                    fmt = f"{role.mention}\n\n{item['streamer_name']} is now live!"
+                else:
+                    fmt = f"{item['streamer_name']} is now live!"
+
+                message = await channel.send(fmt, embed=embed, allowed_mentions=discord.AllowedMentions(roles=True))
                 insert_query = """ UPDATE twitchtable SET streamer_last_game = $1, streamer_last_datetime = $2 WHERE streamer_name = $3; """
                 await self.bot.pool.execute(insert_query, stream_json['data'][0]['title'], message.created_at, item['streamer_name'])
 
