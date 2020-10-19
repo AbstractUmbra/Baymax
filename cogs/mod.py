@@ -1105,7 +1105,7 @@ class Mod(commands.Cog):
         await ctx.guild.unban(member.user, reason=reason)
         embed = discord.Embed(
             title="Moderation action: Unban",
-            colour=discord.Colour.white()
+            colour=discord.Colour(0x000001)
         )
         embed.timestamp = datetime.datetime.utcnow()
         embed.add_field(name="Target", value=member.name)
