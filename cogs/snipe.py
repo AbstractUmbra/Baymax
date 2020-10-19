@@ -305,6 +305,7 @@ class Snipe(commands.Cog):
     @commands.has_guild_permissions(manage_messages=True)
     @show_snipes.command(name="setup")
     async def set_up_snipe(self, ctx):
+        """ Opts in to the snipe capabilities of Baymax. Requires Manage Messages. """
         self.get_snipe_config.invalidate(self, ctx.guild.id)
 
         config = await self.get_snipe_config(ctx.guild.id, connection=ctx.db)
@@ -359,7 +360,7 @@ class Snipe(commands.Cog):
         self.get_snipe_config.invalidate(self, ctx.guild.id)
         await ctx.message.add_reaction(self.bot.emoji[True])
 
-    @show_snipes.command(name="optin", aliases=["in", "enable"])
+    @show_snipes.command(name="optin", aliases=["in", "enable"], usage="[member/channel] (defaults to self.)")
     @requires_snipe()
     async def snipe_optin(self, ctx, entity: typing.Union[discord.Member, discord.TextChannel] = None):
         """ Let's toggle it for this channel / member / self. """
