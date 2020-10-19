@@ -26,6 +26,7 @@ import textwrap
 from datetime import datetime
 
 from aiohttp import ContentTypeError
+from currency_converter import CurrencyConverter
 
 import discord
 from discord.ext import commands
@@ -86,6 +87,7 @@ class External(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.headers = {"User-Agent": "Baymax Discord bot."}
+        self.currency_conv = CurrencyConverter()
 
     @commands.command()
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -128,6 +130,15 @@ class External(commands.Cog):
 
         embed.set_footer(text=f"Requested by {ctx.author.display_name}")
         return await ctx.send(embed=embed)
+
+    @commands.command()
+    async def currency(self, ctx, amount: int, source: str, dest: str):
+        """ Currency converter. """
+        source = source.upper()
+        dest = dest.upper()
+        new_amount = self.currency_conv.convert(amount, source, dest)
+        prefix = "$" if dest.endswith("D") else ""
+        await ctx.send(f"{prefix}{round(new_amount, 2)}")
 
     @pypi.error
     async def pypi_error(self, ctx, error):
