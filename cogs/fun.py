@@ -20,6 +20,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+
+The idea and implementation of the OCR based commands were derived from viewing Neo's implementation.
+Source of the repo for Neo and author:
+https://github.com/nickofolas/neo
 """
 
 import asyncio
@@ -27,6 +31,7 @@ import math
 import re
 import textwrap
 from string import ascii_lowercase
+from typing import Optional
 
 import discord
 import googletrans
@@ -72,6 +77,12 @@ class Fun(commands.Cog):
                      'right': "<:pepePoint:728347439903277056>"}
         self.translator = googletrans.Translator()
 
+    async def do_ocr(self, url: str) -> Optional[str]:
+        async with self.bot.session.get("https://api.tsu.sh/google/ocr", params={"q": url}) as resp:
+            data = await resp.json()
+        ocr_text = data.get("text")
+        return ocr_text
+
     @commands.group(invoke_without_command=True, skip_extra=False)
     async def abt(self, ctx, *, content: commands.clean_content):
         """ I love this language. """
@@ -100,6 +111,24 @@ class Fun(commands.Cog):
             else:
                 new_str += char
         await ctx.send(new_str.replace("~", "").capitalize())
+
+    @commands.command()
+    async def ocr(self, ctx, *, image_url: str = None):
+        if not image_url and not ctx.message.attachments:
+            raise commands.BadArgument("Url or attachment required.")
+        image_url = image_url or ctx.message.attachments[0].Url
+        data = await self.do_ocr(image_url) or "No text returned."
+        await ctx.send(embed=discord.Embed(description=data, colour=self.bot.colour['dsc']))
+
+    @commands.command()
+    async def ocrt(self, ctx, *, image_url: str = None):
+        if not image_url and not ctx.message.attachments:
+            raise commands.BadArgument("URL or attachment required.")
+        image_url = image_url or ctx.message.attachments[0].url
+        data = await self.do_ocr(image_url)
+        if data:
+            return await self.translate(ctx, message=data)
+        return await ctx.send("No text returned.")
 
     @commands.command(hidden=True)
     async def translate(self, ctx, *, message: commands.clean_content):
