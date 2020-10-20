@@ -143,6 +143,7 @@ class Lewd(commands.Cog):
                 embed.add_field(name="Video - Source:-", value=f"[Click here!]({new_item.url})")
 
             fmt = f"ID: {new_item.gb_id} | Rating: {new_item.rating.capitalize()}"
+            fmt += f"       Result {payloads.index(item)+1}/{len(payloads)}"
             embed.set_footer(text=fmt)
 
             if new_item.source:
@@ -202,6 +203,8 @@ class Lewd(commands.Cog):
 
         async with self.bot.session.get(self.gelbooru_config.endpoint, params=aiohttp_params) as resp:
             data = await resp.text()
+            if not data:
+                raise commands.BadArgument("Got an empty response... bad search?")
             json_data = json.loads(data)
             nsfw = ctx.channel.is_nsfw()
             for gb_dict in json_data:
@@ -214,7 +217,7 @@ class Lewd(commands.Cog):
             raise commands.BadArgument("The specified query returned no results.")
 
         embeds = self._gen_embeds(new_json_data, current_config)
-        pages = menus.MenuPages(source=GelbooruPageSource(range(0, 30), embeds), delete_message_after=True)
+        pages = menus.MenuPages(source=GelbooruPageSource(range(0, 30), embeds), delete_message_after=False, clear_reactions_after=True)
         await pages.start(ctx)
 
     @gelbooru.group(invoke_without_command=True)
