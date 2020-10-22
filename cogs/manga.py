@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, List, Text
+from typing import Dict, List
 
 import aiohttp
 import discord
@@ -18,16 +18,16 @@ class MangadexFeeds(db.Table, table_name="mangadex_feeds"):
 class MangadexEntry:
     def __init__(self, payload: Dict):
         """. """
-        self._id: Text = payload.get("id")
-        self.chapter_url: Text = payload.get("link")
-        self.manga_url: Text = payload.get("mangalink")
-        self._published_at: Text = payload.get("published")
-        self.summary: Text = payload.get("summary")
-        self.title: Text = payload.get("title")
+        self._id: str = payload.get("id")
+        self.chapter_url: str = payload.get("link")
+        self.manga_url: str = payload.get("mangalink")
+        self._published_at: str = payload.get("published")
+        self.summary: str = payload.get("summary")
+        self.title: str = payload.get("title")
 
     @property
-    def mangadex_id(self) -> Text:
-        return self._id.rsplit("/", 1)[1]
+    def mangadex_id(self) -> int:
+        return int(self._id.rsplit("/", 1)[1])
 
     @property
     def published_at(self) -> datetime.datetime:
@@ -62,30 +62,32 @@ class Manga(commands.Cog):
         select_query = """ SELECT * FROM mangadex_feeds; """
         record = await self.bot.pool.fetchrow(select_query)
 
-        previous_ids = [_id for _id in record['previous_ids']]
+        previous_ids: List[int] = [_id for _id in record['previous_ids']]
 
         async with self.bot.session.get(self.rss_url, timeout=aiohttp.ClientTimeout(total=10)) as response:
             response_text = await response.text()
 
-        processed_ids = []
+        processed_ids: List[int] = []
 
-        rss_data: Dict[Text, List] = feedparser.parse(response_text)
+        rss_data: Dict[str, List] = feedparser.parse(response_text)
         entries_data: List[Dict] = rss_data['entries']
         for entry in entries_data:
             mangadex_entry = MangadexEntry(entry)
             if mangadex_entry.mangadex_id in previous_ids:
-                processed_ids.append(mangadex_entry.mangadex_id)
                 continue
             embed = self._gen_embed(mangadex_entry)
             await self.rss_webhook.send(embed=embed)
+            processed_ids.append(mangadex_entry.mangadex_id)
 
         insert_query = """ UPDATE mangadex_feeds
-                           SET previous_ids = $1
-                           WHERE id = 1;
+                           SET previous_ids = $2
+                           WHERE id = $1;
                        """
-        all_ids = set(previous_ids + processed_ids)
 
-        await self.bot.pool.execute(insert_query, list(all_ids))
+        all_ids_unique = set(previous_ids + processed_ids)
+        all_ids = list(all_ids_unique)
+
+        await self.bot.pool.execute(insert_query, 1, all_ids)
 
     @rss_parser.before_loop
     async def before_rss_parser(self):
