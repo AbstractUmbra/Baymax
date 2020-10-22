@@ -29,6 +29,7 @@ from discord.ext import commands
 
 
 class Baymax(commands.Cog):
+    """ Baymax admin commands. """
     def __init__(self, bot):
         self.bot = bot
 

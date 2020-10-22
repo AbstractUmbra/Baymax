@@ -189,7 +189,7 @@ class Snipe(commands.Cog):
                 url = await self.bot.mb_client.post(diff_text, syntax="diff")
                 embed.description = f"Diff is too large, so I put it on [MystB.in]({url})."
             else:
-                embed.description = formats.format_codeblock(
+                embed.description = formats.to_codeblock(
                     diff_text, language="diff") if diff_text else None
             fmt = f"Result {records.index(record)+1}/{len(records)}"
             embed.set_footer(text=f"{fmt} | Author ID: {author.id}")

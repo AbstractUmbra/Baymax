@@ -116,8 +116,7 @@ class Admin(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self._last_result = None
-        self.my_guilds = {174702278673039360,
-                          705500489248145459}
+        self.my_guilds = {705500489248145459, 766520806289178646}
 
     def cleanup_code(self, content):
         """Automatically removes code blocks from the code."""
@@ -325,14 +324,15 @@ class Admin(commands.Cog):
         await ctx.send(embed=embed)
 
     @_blocked.command(name="remove", aliases=["r"])
-    async def _blocked_remove(self, ctx: commands.Context, user_id: int):
+    async def _blocked_remove(self, ctx: commands.Context, user_id: int, unban: bool=False):
         """ Remove a block entry. """
         query = """ DELETE FROM owner_blocked WHERE user_id = $1; """
         coros = [self.bot.pool.execute(
             query, user_id), self.unban_all(user_id)]
         config = self.bot.get_cog("Config")
-        if config:
-            coros.append(config.global_unblock(ctx, user_id))
+        if unban:
+            if config:
+                coros.append(config.global_unblock(ctx, user_id))
         await asyncio.gather(*coros)
         return await ctx.message.add_reaction(self.bot.emoji[True])
 

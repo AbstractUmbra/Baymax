@@ -31,6 +31,9 @@ import discord
 from discord.ext import commands, menus
 
 from utils import cache, db
+from utils.formats import to_codeblock
+
+Gelbooru = namedtuple("Gelbooru", "api_key user_id endpoint")
 
 class BlacklistedGelbooru(commands.CommandError):
     """ Error raised when you request a blacklisted tag. """
@@ -60,7 +63,6 @@ class GelbooruConfig:
         else:
             self.blacklist = []
 
-Gelbooru = namedtuple("Gelbooru", "api_key user_id endpoint")
 
 RATING = {"e": "explicit", "q": "questionable", "s": "safe"}
 
@@ -69,7 +71,15 @@ def campfire_only():
     def predicate(ctx: commands.Context):
         if not ctx.guild:
             return False
-        return ctx.guild.id in [766520806289178646, 705500489248145459, 174702278673039360] or ctx.author.id == ctx.bot.owner_id
+        if ctx.author.id == ctx.bot.owner_id:
+            return True
+
+        if not ctx.channel.is_nsfw():
+            if ctx.author.id == ctx.bot.owner_id:
+                return True
+            raise commands.NSFWChannelRequired("No lewdie outside lewdie channels!")
+
+        return True
     return commands.check(predicate)
 
 class GelbooruPageSource(menus.ListPageSource):
@@ -112,6 +122,8 @@ class Lewd(commands.Cog):
         if isinstance(error, BlacklistedGelbooru):
             return await ctx.send(error)
         elif isinstance(error, commands.BadArgument):
+            return await ctx.send(error)
+        elif isinstance(error, commands.NSFWChannelRequired):
             return await ctx.send(error)
 
     @cache.cache()
@@ -157,16 +169,30 @@ class Lewd(commands.Cog):
     @commands.group(hidden=True, usage="<flags>+ | subcommand", invoke_without_command=True)
     @campfire_only()
     @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.max_concurrency(1, commands.BucketType.user, wait=False)
     async def gelbooru(self, ctx: commands.Context, *, params: str):
         """This command uses a flag style syntax.
         The following options are valid.
 
-        `+t | ++tags`: The tags to search Gelbooru for. `*`
+        `*` denotes it is a mandatory argument.
+
+        `+t | ++tags`: The tags to search Gelbooru for. `*` (uses logical AND per tag)
         `+l | ++limit`: The limit of the amount of posts to search for, limits to 30 max.
         `+p | ++pid`: Page ID to search. Handy when posts begin to repeat.
         `+c | ++cid`: Change ID of the post to search for(?)
 
-        `*` denotes it is a mandatory argument.
+        Examples:
+        ```
+        !gelbooru ++tags lemon
+            - search for the 'lemon' tag.
+
+        !gelbooru ++tags melon -rating:explicit
+            - search for the 'melon' tag, removing posts marked as 'explicit`
+
+        !gelbooru ++tags apple orange rating:safe ++pid 2
+            - Search for the 'apple' AND 'orange' tags, with only 'safe' results, but on Page 2.
+            - NOTE: if not enough searches are returned, page 2 will cause an empty response.
+        ```
         """
         aiohttp_params = self.bot.config.gelbooru_api
         aiohttp_params.update({"json": 1})
@@ -193,38 +219,47 @@ class Lewd(commands.Cog):
             lowered_tags = [tag.lower() for tag in real_args.tags]
             tags_set = set(lowered_tags)
             blacklist_set = set(current_config.blacklist)
-            if tags_set & blacklist_set:
+            common_elements = tags_set & blacklist_set
+            if common_elements:
                 raise BlacklistedGelbooru((tags_set & blacklist_set))
             aiohttp_params.update({"tags": " ".join(lowered_tags)})
         if real_args.cid:
             aiohttp_params.update({"cid", real_args.cid})
 
         new_json_data = []
+        async with ctx.typing():
+            async with self.bot.session.get(self.gelbooru_config.endpoint, params=aiohttp_params) as resp:
+                data = await resp.text()
+                if not data:
+                    raise commands.BadArgument("Got an empty response... bad search?")
+                json_data = json.loads(data)
+                nsfw = ctx.channel.is_nsfw()
+                for gb_dict in json_data:
+                    if gb_dict['rating'] in ("q", "e") and not nsfw:
+                        continue
+                    else:
+                        new_json_data.append(gb_dict)
 
-        async with self.bot.session.get(self.gelbooru_config.endpoint, params=aiohttp_params) as resp:
-            data = await resp.text()
-            if not data:
-                raise commands.BadArgument("Got an empty response... bad search?")
-            json_data = json.loads(data)
-            nsfw = ctx.channel.is_nsfw()
-            for gb_dict in json_data:
-                if gb_dict['rating'] in ("q", "e") and not nsfw:
-                    continue
-                else:
-                    new_json_data.append(gb_dict)
+            if not new_json_data:
+                raise commands.BadArgument("The specified query returned no results.")
 
-        if not new_json_data:
-            raise commands.BadArgument("The specified query returned no results.")
-
-        embeds = self._gen_embeds(new_json_data, current_config)
-        pages = menus.MenuPages(source=GelbooruPageSource(range(0, 30), embeds), delete_message_after=False, clear_reactions_after=True)
-        await pages.start(ctx)
+            embeds = self._gen_embeds(new_json_data, current_config)
+            pages = menus.MenuPages(source=GelbooruPageSource(range(0, 30), embeds), delete_message_after=False, clear_reactions_after=True)
+            await pages.start(ctx)
 
     @gelbooru.group(invoke_without_command=True)
     @campfire_only()
     @commands.has_permissions(manage_messages=True)
     async def blacklist(self, ctx: commands.Context):
         """ Blacklist management for gelbooru command. """
+        if not ctx.invoked_subcommand:
+            config = await self.get_gelbooru_config(ctx.guild.id)
+            if config.blacklist:
+                fmt = "\n".join(config.blacklist)
+            else:
+                fmt = "No blacklist recorded."
+            embed = discord.Embed(description=to_codeblock(fmt, language=""), colour=self.bot.colour['dsc'])
+            await ctx.send(embed=embed, delete_after=6.0)
 
     @blacklist.command()
     @campfire_only()

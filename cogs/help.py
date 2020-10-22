@@ -140,6 +140,9 @@ class PaginatedHelpCommand(commands.HelpCommand):
 def setup(bot):
     bot._original_help_command = bot.help_command
     bot.help_command = PaginatedHelpCommand()
+    help_cog = bot.get_cog("Meta")
+    if help_cog:
+        bot.help_command.cog = help_cog
 
 
 def teardown(bot):
