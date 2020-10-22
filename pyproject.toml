@@ -27,6 +27,7 @@ cffi = "^1.14.3"
 cached-property = "^1.5.2"
 "mystbin.py" = "^0.2.2"
 currencyconverter = "^0.14.3"
+feedparser = "^6.0.1"
 
 [tool.poetry.dev-dependencies]
 pylint = "*"

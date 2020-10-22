@@ -62,6 +62,7 @@ COGS = (
     'cogs.fun',
     'cogs.help',
     'cogs.lewd',
+    'cogs.manga',
     'cogs.meta',
     'cogs.mod',
     'cogs.private',

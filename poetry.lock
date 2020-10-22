@@ -171,6 +171,7 @@ version = "1.0.0a26+g84caae8"
 reference = "84caae8038d0d3adc860957ccef05baeec2e2dd8"
 type = "git"
 url = "https://github.com/Rapptz/discord-ext-menus"
+
 [[package]]
 category = "main"
 description = "A Python wrapper for the Discord API"
@@ -190,6 +191,18 @@ voice = ["PyNaCl (1.3.0)"]
 reference = "763d46cd7ab14a4b0345a69fd862de8a4eb6da10"
 type = "git"
 url = "https://github.com/Rapptz/discord.py"
+
+[[package]]
+category = "main"
+description = "Universal feed parser, handles RSS 0.9x, RSS 1.0, RSS 2.0, CDF, Atom 0.3, and Atom 1.0 feeds"
+name = "feedparser"
+optional = false
+python-versions = ">=3.6"
+version = "6.0.1"
+
+[package.dependencies]
+sgmllib3k = "*"
+
 [[package]]
 category = "main"
 description = "Fuzzy string matching in python"
@@ -435,6 +448,7 @@ version = "0.0.0"
 reference = "735d007b72f06256b3c4dfc4692f32a1011315db"
 type = "git"
 url = "https://github.com/ShineyDev/prettify.py"
+
 [[package]]
 category = "main"
 description = "Cross-platform lib for process and system monitoring in Python."
@@ -521,6 +535,14 @@ idna2008 = ["idna"]
 
 [[package]]
 category = "main"
+description = "Py3k port of sgmllib."
+name = "sgmllib3k"
+optional = false
+python-versions = "*"
+version = "1.0.0"
+
+[[package]]
+category = "main"
 description = "Python 2 and 3 compatibility utilities"
 name = "six"
 optional = false
@@ -586,7 +608,7 @@ idna = ">=2.0"
 multidict = ">=4.0"
 
 [metadata]
-content-hash = "187699c28b61097754d694423be58b515f350956bbfa347c0b38ab2c6067cbde"
+content-hash = "62f5b5dfdc5e12f613d06a872becbad974076d240cf5e80e9358711381cf6cca"
 lock-version = "1.0"
 python-versions = "^3.8"
 
@@ -715,6 +737,10 @@ currencyconverter = [
 ]
 discord-ext-menus = []
 "discord.py" = []
+feedparser = [
+    {file = "feedparser-6.0.1-py2.py3-none-any.whl", hash = "sha256:c9b436334258e718e224c5ef8a78088557e0d0382506360f702de10667ffde32"},
+    {file = "feedparser-6.0.1.tar.gz", hash = "sha256:6ca88edcaa43f428345968df903a87f020843eda5e28d7ea24a612158d61e74c"},
+]
 fuzzywuzzy = [
     {file = "fuzzywuzzy-0.18.0-py2.py3-none-any.whl", hash = "sha256:928244b28db720d1e0ee7587acf660ea49d7e4c632569cad4f1cd7e68a5f0993"},
     {file = "fuzzywuzzy-0.18.0.tar.gz", hash = "sha256:45016e92264780e58972dca1b3d939ac864b78437422beecebb3095f8efd00e8"},
@@ -921,6 +947,9 @@ pytz = [
 rfc3986 = [
     {file = "rfc3986-1.4.0-py2.py3-none-any.whl", hash = "sha256:af9147e9aceda37c91a05f4deb128d4b4b49d6b199775fd2d2927768abdc8f50"},
     {file = "rfc3986-1.4.0.tar.gz", hash = "sha256:112398da31a3344dc25dbf477d8df6cb34f9278a94fee2625d89e4514be8bb9d"},
+]
+sgmllib3k = [
+    {file = "sgmllib3k-1.0.0.tar.gz", hash = "sha256:7868fb1c8bfa764c1ac563d3cf369c381d1325d36124933a726f29fcdaa812e9"},
 ]
 six = [
     {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
