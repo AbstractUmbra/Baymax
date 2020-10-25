@@ -1,5 +1,5 @@
 import datetime
-from typing import Dict, List
+from typing import Dict, List, NoReturn
 
 import aiohttp
 import discord
@@ -17,7 +17,7 @@ class MangadexFeeds(db.Table, table_name="mangadex_feeds"):
 
 class MangadexEntry:
     def __init__(self, payload: Dict):
-        """. """
+        """ Data returns from the Mangadex API, just a generic object. """
         self._id: str = payload.get("id")
         self.chapter_url: str = payload.get("link")
         self.manga_url: str = payload.get("mangalink")
@@ -26,7 +26,7 @@ class MangadexEntry:
         self.title: str = payload.get("title")
 
     @property
-    def mangadex_id(self) -> int:
+    def manga_id(self) -> int:
         return int(self._id.rsplit("/", 1)[1])
 
     @property
@@ -34,6 +34,20 @@ class MangadexEntry:
         print(self._published_at)
         return datetime.datetime.strptime(self._published_at, "%a, %d %b %Y %H:%M:%S %z")
 
+class MangadexEmbed(discord.Embed):
+    @classmethod
+    def from_mangadex(cls, entry: MangadexEntry) -> "MangadexEmbed":
+        """ Return a custom Embed based on a Mangadex entry. """
+
+        embed = cls(colour=0xe91e63)
+        embed.title = entry.title
+        embed.description = entry.summary
+        embed.url = entry.chapter_url
+        embed.add_field(name="Manga URL", value=f"[Here]({entry.manga_url})")
+        embed.timestamp = entry.published_at
+        embed.set_footer(text=entry.manga_id)
+
+        return embed
 
 class Manga(commands.Cog):
     """ . """
@@ -45,19 +59,8 @@ class Manga(commands.Cog):
             bot.config.mangadex_webhook, adapter=discord.AsyncWebhookAdapter(bot.session))
         self.rss_parser.start()
 
-    def _gen_embed(self, entry: MangadexEntry) -> discord.Embed:
-        embed = discord.Embed(colour=discord.Colour(0x000001))
-        embed.title = entry.title
-        embed.description = entry.summary
-        embed.url = entry.chapter_url
-        embed.add_field(name="Manga URL", value=f"[Here]({entry.manga_url})")
-        embed.timestamp = entry.published_at
-        embed.set_footer(text=entry.mangadex_id)
-
-        return embed
-
     @tasks.loop(minutes=30)
-    async def rss_parser(self):
+    async def rss_parser(self) -> NoReturn:
         """. """
         select_query = """ SELECT * FROM mangadex_feeds; """
         record = await self.bot.pool.fetchrow(select_query)
@@ -73,11 +76,11 @@ class Manga(commands.Cog):
         entries_data: List[Dict] = rss_data['entries']
         for entry in entries_data:
             mangadex_entry = MangadexEntry(entry)
-            if mangadex_entry.mangadex_id in previous_ids:
+            if mangadex_entry.manga_id in previous_ids:
                 continue
-            embed = self._gen_embed(mangadex_entry)
+            embed = MangadexEmbed.from_mangadex(mangadex_entry)
             await self.rss_webhook.send(embed=embed)
-            processed_ids.append(mangadex_entry.mangadex_id)
+            processed_ids.append(mangadex_entry.manga_id)
 
         insert_query = """ UPDATE mangadex_feeds
                            SET previous_ids = $2

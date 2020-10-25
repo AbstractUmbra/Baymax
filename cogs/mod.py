@@ -2073,10 +2073,12 @@ class Mod(commands.Cog):
         for chan in channels:
             try:
                 channel = self.bot.get_channel(chan)
-                await channel.set_permissions(to_unblock,
-                                              send_messages=None,
-                                              add_reactions=None,
-                                              reason=reason)
+                overwrites = channel.overwrites.copy()
+                try:
+                    overwrites.pop(to_unblock)
+                except KeyError:
+                    continue
+                await channel.edit(overwrites=overwrites)
             except Exception as err:
                 real_exc = traceback.print_exception(
                     type(err), err, err.__traceback__, 4)

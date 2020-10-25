@@ -278,6 +278,8 @@ class Baymax(commands.AutoShardedBot):
 
     async def on_message_edit(self, before, after):
         if after.author.id == self.owner_id:
+            if not before.embeds and after.embeds:
+                return
             await self.process_commands(after)
 
     async def on_guild_join(self, guild):

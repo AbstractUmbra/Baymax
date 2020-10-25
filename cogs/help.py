@@ -136,7 +136,6 @@ class PaginatedHelpCommand(commands.HelpCommand):
         embed.set_footer(text=f'Use "{self.clean_prefix}help <command>" for more information.')
         await self.context.send(embed=embed)
 
-
 def setup(bot):
     bot._original_help_command = bot.help_command
     bot.help_command = PaginatedHelpCommand()

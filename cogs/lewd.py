@@ -77,7 +77,7 @@ def campfire_only():
         if not ctx.channel.is_nsfw():
             if ctx.author.id == ctx.bot.owner_id:
                 return True
-            raise commands.NSFWChannelRequired("No lewdie outside lewdie channels!")
+            raise commands.NSFWChannelRequired(ctx.channel)
 
         return True
     return commands.check(predicate)
@@ -124,7 +124,7 @@ class Lewd(commands.Cog):
         elif isinstance(error, commands.BadArgument):
             return await ctx.send(error)
         elif isinstance(error, commands.NSFWChannelRequired):
-            return await ctx.send(error)
+            return await ctx.send(f"{error.channel} is not a horny channel. No lewdie outside lewdie channels!")
 
     @cache.cache()
     async def get_gelbooru_config(self, guild_id, *, connection=None):

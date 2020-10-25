@@ -25,14 +25,14 @@ DEALINGS IN THE SOFTWARE.
 import random
 from datetime import datetime
 
-import pytz
-from fuzzywuzzy import process
-
 import discord
+import pytz
 from discord.ext import commands, menus
+from fuzzywuzzy import process
 from utils import db, time
 
 PYTZ_LOWER_TIMEZONES = [*map(str.lower, pytz.all_timezones)]
+
 
 class TZMenuSource(menus.ListPageSource):
     """ Okay let's make it embeds, I guess. """
@@ -58,13 +58,15 @@ class TimeTable(db.Table, table_name="tz_store"):
 
 class TimezoneConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
+        query = process.extract(query=argument.lower(),
+                                choices=pytz.all_timezones_set, limit=5)
         if argument.lower() not in {timezone.lower() for timezone in pytz.all_timezones_set}:
             matches = '\n'.join([f'`{index + 1}.` {match[0]}' for index, match in enumerate(
-                process.extract(query=argument.lower(), choices=pytz.all_timezones_set, limit=5))])
+                query)])
             raise commands.BadArgument(
                 f'That was not a recognised timezone. Maybe you meant one of these?\n{matches}')
 
-        return pytz.timezone(argument)
+        return pytz.timezone(query[0][0])
 
 
 class Time(commands.Cog):
