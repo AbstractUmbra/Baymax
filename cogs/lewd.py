@@ -40,7 +40,7 @@ class BlacklistedGelbooru(commands.CommandError):
     def __init__(self, tags: set):
         self.blacklisted_tags = tags
         self.blacklist_tags_fmt = " | ".join(list(tags))
-        super().__init__("Bad Bootu tags.")
+        super().__init__("Bad Booru tags.")
 
     def __str__(self):
         return f"Found blacklisted tags in query: `{self.blacklist_tags_fmt}`."
@@ -177,7 +177,7 @@ class Lewd(commands.Cog):
         `*` denotes it is a mandatory argument.
 
         `+t | ++tags`: The tags to search Gelbooru for. `*` (uses logical AND per tag)
-        `+l | ++limit`: The limit of the amount of posts to search for, limits to 30 max.
+        `+l | ++limit`: The maximum amount of posts to show. Cannot be higher than 30.
         `+p | ++pid`: Page ID to search. Handy when posts begin to repeat.
         `+c | ++cid`: Change ID of the post to search for(?)
 

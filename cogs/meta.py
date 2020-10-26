@@ -29,7 +29,6 @@ DEALINGS IN THE SOFTWARE.
 
 import asyncio
 import inspect
-import itertools
 import json
 import os
 import textwrap
@@ -38,7 +37,7 @@ from collections import Counter
 from typing import Union
 
 import discord
-from discord.ext import commands, menus
+from discord.ext import commands
 from utils import checks, formats, time
 
 
@@ -178,7 +177,7 @@ class Meta(commands.Cog):
         await self.bot.set_guild_prefixes(ctx.guild, [])
         await ctx.send(ctx.tick(True))
 
-    @commands.command()
+    @commands.command(enabled=False)
     async def source(self, ctx, *, command: str = None):
         """Displays my full source code or for a specific command.
 
@@ -286,7 +285,7 @@ class Meta(commands.Cog):
         if guild_id is not None and await self.bot.is_owner(ctx.author):
             guild = self.bot.get_guild(guild_id)
             if guild is None:
-                return await ctx.send(f'Invalid Guild ID given.')
+                return await ctx.send('Invalid Guild ID given.')
         else:
             guild = ctx.guild
 
@@ -565,9 +564,9 @@ class Meta(commands.Cog):
         """ Quickly return the raw content of the specific message. """
         try:
             msg = await ctx.bot.http.get_message(ctx.channel.id, message_id)
-        except discord.NotFound:
+        except discord.NotFound as err:
             raise commands.BadArgument(
-                f"Message with the ID of {message_id} cannot be found in {ctx.channel.mention}.")
+                f"Message with the ID of {message_id} cannot be found in {ctx.channel.mention}.") from err
 
         await ctx.send(f"```json\n{formats.clean_triple_backtick(formats.escape_invis_chars(json.dumps(msg, indent=2, ensure_ascii=False, sort_keys=True)))}\n```")
 

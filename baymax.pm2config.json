@@ -2,7 +2,7 @@
     "apps": [
         {
             "name": "Baymax",
-            "cwd": "/home/penumbra/Baymax/",
+            "cwd": "/home/penumbra/projects/personal/baymax/",
             "script": "launcher.py",
             "autorestart": true,
             "max_restart": 5,

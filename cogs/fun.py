@@ -144,8 +144,16 @@ class Fun(commands.Cog):
         embed = discord.Embed(title='Translated', colour=0x000001)
         src = googletrans.LANGUAGES.get(ret.src, '(auto-detected)').title()
         dest = googletrans.LANGUAGES.get(ret.dest, 'Unknown').title()
-        embed.add_field(name=f'From {src}', value=ret.origin, inline=False)
-        embed.add_field(name=f'To {dest}', value=ret.text, inline=False)
+        source_text = ret.origin if len(
+            ret.origin) < 1000 else "Too long to display."
+        if len(ret.text) > 1000:
+            lines = "\n".join(textwrap.wrap(ret.text))
+            url = await self.bot.mb_client.post(lines, syntax="text")
+            dest_text = f"[Here!]({url})"
+        else:
+            dest_text = ret.text
+        embed.add_field(name=f'From {src}', value=source_text, inline=False)
+        embed.add_field(name=f'To {dest}', value=dest_text, inline=False)
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
