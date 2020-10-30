@@ -47,7 +47,7 @@ class Token(commands.Cog):
     async def github_request(self, method, url, *, params=None, data=None, headers=None):
         hdrs = {
             'Accept': 'application/vnd.github.inertia-preview+json',
-            'User-Agent': 'Baymax Discord.py Bot',
+            'User-Agent': 'Okayu Discord.py Bot',
             'Authorization': f'token {self.bot.config.github_token}'
         }
 

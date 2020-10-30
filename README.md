@@ -1,4 +1,4 @@
-# Baymax
+# Okayu
 
 A personal bot for Discord, written with love and fun.
 
@@ -20,8 +20,8 @@ Nevertheless; installation steps are below.
 3. Install required dependencies
 4. Create the database in PostgreSQL
    ```sql
-   CREATE ROLE baymax WITH LOGIN PASSWORD 'mypasswd';
-   CREATE DATABASE baymax OWNER baymax;
+   CREATE ROLE okayu WITH LOGIN PASSWORD 'mypasswd';
+   CREATE DATABASE okayu OWNER okayu;
    CREATE EXTENSION pg_trgm;
     ```
 5. Set up configuration.

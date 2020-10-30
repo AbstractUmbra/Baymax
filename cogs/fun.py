@@ -81,6 +81,7 @@ class Fun(commands.Cog):
         async with self.bot.session.get("https://api.tsu.sh/google/ocr", params={"q": url}) as resp:
             data = await resp.json()
         ocr_text = data.get("text")
+        ocr_text = ocr_text if (len(ocr_text) < 4000) else str(await self.bot.mb_client.post(ocr_text))
         return ocr_text
 
     @commands.group(invoke_without_command=True, skip_extra=False)
@@ -116,7 +117,7 @@ class Fun(commands.Cog):
     async def ocr(self, ctx, *, image_url: str = None):
         if not image_url and not ctx.message.attachments:
             raise commands.BadArgument("Url or attachment required.")
-        image_url = image_url or ctx.message.attachments[0].Url
+        image_url = image_url or ctx.message.attachments[0].url
         data = await self.do_ocr(image_url) or "No text returned."
         await ctx.send(embed=discord.Embed(description=data, colour=self.bot.colour['dsc']))
 
@@ -167,7 +168,7 @@ class Fun(commands.Cog):
             return
         if self.bot.user in message.mentions:
             channel = self.bot.get_channel(MENTION_CHANNEL_ID)
-            embed = discord.Embed(title="Baymax was mentioned!")
+            embed = discord.Embed(title="Okayu was mentioned!")
             embed.set_author(name=message.author.name,
                              icon_url=message.author.avatar_url)
             embed.description = f"{message.content}\n\n[Jump!]({message.jump_url})"
@@ -175,7 +176,7 @@ class Fun(commands.Cog):
             await channel.send(embed=embed)
         elif not message.guild:
             channel = self.bot.get_channel(DM_CHANNEL_ID)
-            embed = discord.Embed(title="Baymax was DM'd.")
+            embed = discord.Embed(title="Okayu was DM'd.")
             embed.set_author(name=message.author.name,
                              icon_url=message.author.avatar_url)
             embed.description = f"{message.content})"
@@ -258,7 +259,7 @@ class Fun(commands.Cog):
         channel_creates = stat_record['channel_creates'] + self.channel_creates
         command_count = stat_record['command_count'] + self.command_count
 
-        embed = discord.Embed(title="Baymax Stats")
+        embed = discord.Embed(title="Okayu Stats")
         embed.description = "Hello! Since 6th of July, 2020, I have witnessed the following events."
         message_str = f"""
         ```prolog
@@ -283,7 +284,7 @@ class Fun(commands.Cog):
 
         await ctx.send(embed=embed)
 
-    @commands.command()
+    @commands.command(enabled=False)
     async def point(self, ctx, member: discord.Member):
         """ Point. """
         length = 1 + len(member.display_name)

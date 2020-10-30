@@ -55,7 +55,6 @@ os.environ["PY_PRETTIFY_EXC"] = "True"
 COGS = (
     'jishaku',
     'cogs.admin',
-    'cogs.baymax',
     'cogs.config',
     'cogs.dunston',
     'cogs.external',
@@ -65,6 +64,7 @@ COGS = (
     'cogs.manga',
     'cogs.meta',
     'cogs.mod',
+    'cogs.okayu',
     'cogs.private',
     'cogs.reactionroles',
     'cogs.reddit',
@@ -95,7 +95,7 @@ def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> typing.List[str
     return base
 
 
-class Baymax(commands.AutoShardedBot):
+class Okayu(commands.AutoShardedBot):
     """ The actual robot himself! """
 
     def __init__(self):

@@ -305,7 +305,7 @@ class Snipe(commands.Cog):
     @commands.has_guild_permissions(manage_messages=True)
     @show_snipes.command(name="setup")
     async def set_up_snipe(self, ctx):
-        """ Opts in to the snipe capabilities of Baymax. Requires Manage Messages. """
+        """ Opts in to the snipe capabilities of Okayu. Requires Manage Messages. """
         self.get_snipe_config.invalidate(self, ctx.guild.id)
 
         config = await self.get_snipe_config(ctx.guild.id, connection=ctx.db)

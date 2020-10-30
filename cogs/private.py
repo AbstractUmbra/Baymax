@@ -38,14 +38,15 @@ class Private(commands.Cog):
                         ModActions.unbanned: 0x000001,
                         ModActions.muted: 0xc95e71,
                         ModActions.helpblocked: 0x9e9f9d}
-        self.webhook = Webhook.from_url(
-            "https://ptb.discord.com/api/webhooks/769318883173597246/fZwPi5kC1k59tFElk3rCougOfQ2kjSGTDm4a9O_eUnCBrxUf2q6eetZpFjxDtguGadC6", adapter=AsyncWebhookAdapter(self.bot.session))
+        self.webhook = Webhook.from_url(bot.config.silly_webhook, adapter=AsyncWebhookAdapter(self.bot.session))
 
     async def cog_check(self, ctx):  # pylint: disable=W0236
         """ All commands are owner only. """
         return await self.bot.is_owner(ctx.author)
 
-    async def find_block(self, *, guild: Guild, channel: GuildChannel, action: AuditLogAction) -> Optional[AuditLogEntry]:
+    async def find_block(self, *, guild: Guild, channel: GuildChannel, action: AuditLogAction, debug: bool=False) -> Optional[AuditLogEntry]:
+        if debug:
+            await self.bot.get_user(self.bot.owner_id).send("find_start")
         async for entry in guild.audit_logs(action=action, limit=3):
             if entry.target.id == channel.id:
                 # help 1 entry
@@ -53,8 +54,12 @@ class Private(commands.Cog):
                     continue  # no reason | not a helpblock
                 if not bool(re.match(r"\b(temp)?block\b", entry.reason.lower())):
                     continue  # no match to tempblock / block. Usually means an unblock or manual removal
-                if (entry.created_at - datetime.datetime.utcnow()).seconds <= 300:
+                if debug:
+                    await self.bot.get_user(self.bot.owner_id).send("find_done")
                     return entry
+                else:
+                    if (datetime.datetime.utcnow() - entry.created_at).seconds <= 30:
+                        return entry
 
     def gen_embed(self, event: ModActions, *, member: Union[Member, User], entry: AuditLogEntry, **kwargs):
         """ Gen the embed for the events. """
@@ -155,7 +160,9 @@ class Private(commands.Cog):
     async def on_guild_channel_update(self,
                                       before: Union[VoiceChannel, TextChannel, CategoryChannel],
                                       after: Union[VoiceChannel,
-                                                   TextChannel, CategoryChannel]
+                                                   TextChannel, CategoryChannel],
+                                      *,
+                                      debug: bool = False
                                       ) -> Message:
         """ Someone is help blocked. """
         if before.id != 381965515721146390:
@@ -167,9 +174,13 @@ class Private(commands.Cog):
 
         await asyncio.sleep(3)  # to allow the audit log to actually... create.
 
-        real_entry = await self.find_block(guild=before.guild, channel=after, action=AuditLogAction.overwrite_update) or await self.find_block(guild=before.guild, channel=after, action=AuditLogAction.overwrite_create)
+        if debug:
+            await self.bot.get_user(self.bot.owner_id).send("main start")
+        real_entry = await self.find_block(guild=before.guild, channel=after, action=AuditLogAction.overwrite_update, debug=debug) or await self.find_block(guild=before.guild, channel=after, action=AuditLogAction.overwrite_create, debug=debug)
 
         if not real_entry:
+            if debug:
+                await self.bot.get_user(self.bot.owner_id).send("no entry")
             return
 
         new_overwrite_for = real_entry.extra if isinstance(

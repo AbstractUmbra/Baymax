@@ -273,11 +273,9 @@ class Lewd(commands.Cog):
                 """
         list_tags = tags.split(" ")
         iterable = [(ctx.guild.id, [tag.lower()]) for tag in list_tags]
-        try:
-            await self.bot.pool.executemany(query, iterable)
-        finally:
-            self.get_gelbooru_config.invalidate()
-            await ctx.message.add_reaction(self.bot.emoji[True])
+        await self.bot.pool.executemany(query, iterable)
+        self.get_gelbooru_config.invalidate(self, ctx.guild.id)
+        await ctx.message.add_reaction(self.bot.emoji[True])
 
     @blacklist.command()
     @campfire_only()
@@ -290,11 +288,9 @@ class Lewd(commands.Cog):
                 """
         tags = tags.split(" ")
         iterable = [(ctx.guild.id, tag) for tag in tags]
-        try:
-            await self.bot.pool.executemany(query, iterable)
-        finally:
-            self.get_gelbooru_config.invalidate()
-            await ctx.message.add_reaction(self.bot.emoji[True])
+        await self.bot.pool.executemany(query, iterable)
+        self.get_gelbooru_config.invalidate(self, ctx.guild.id)
+        await ctx.message.add_reaction(self.bot.emoji[True])
 
 
 def setup(bot):

@@ -22,15 +22,15 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+import json
 import textwrap
 from datetime import datetime
 
+import discord
 from aiohttp import ContentTypeError
 from currency_converter import CurrencyConverter
-
-import discord
 from discord.ext import commands
-from utils import db, cache, time
+from utils import cache, db, time
 
 
 class Feeds(db.Table):
@@ -38,6 +38,7 @@ class Feeds(db.Table):
     channel_id = db.Column(db.Integer(big=True))
     role_id = db.Column(db.Integer(big=True))
     name = db.Column(db.String)
+
 
 class PypiObject:
     """ Pypi objects. """
@@ -86,8 +87,10 @@ class External(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.headers = {"User-Agent": "Baymax Discord bot."}
+        self.headers = {"User-Agent": "Okayu Discord bot."}
         self.currency_conv = CurrencyConverter()
+        self.currency_codes = json.loads(
+            open("utils/currency_codes.json").read())
 
     @commands.command()
     @commands.cooldown(1, 10, commands.BucketType.user)
@@ -132,13 +135,13 @@ class External(commands.Cog):
         return await ctx.send(embed=embed)
 
     @commands.command()
-    async def currency(self, ctx, amount: int, source: str, dest: str):
+    async def currency(self, ctx, amount: float, source: str, dest: str):
         """ Currency converter. """
         source = source.upper()
         dest = dest.upper()
         new_amount = self.currency_conv.convert(amount, source, dest)
-        prefix = "$" if dest.endswith("D") else ""
-        await ctx.send(f"{prefix}{round(new_amount, 2)}")
+        prefix = next((curr for curr in self.currency_codes if curr['cc'] == dest), None).get('symbol')
+        await ctx.send(f"{prefix}{round(new_amount, 2):.2f}")
 
     @pypi.error
     async def pypi_error(self, ctx, error):

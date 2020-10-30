@@ -1,0 +1,15 @@
+{
+    "apps": [
+        {
+            "name": "Okayu",
+            "cwd": "/home/penumbra/projects/personal/okayu/",
+            "script": "launcher.py",
+            "autorestart": true,
+            "max_restart": 5,
+            "instances": 1,
+            "interpreter": "/home/penumbra/.poetry/bin/poetry",
+            "interpreter_args": ["run", "python"],
+            "log_date_format": "DD-MM-YYYY HH:mm:ss"
+        }
+    ]
+}
