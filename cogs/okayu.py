@@ -33,21 +33,12 @@ class Okayu(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(aliases=["fistbump"])
-    async def boop(self, ctx: commands.Context):
-        """ Boops to you. """
-        embed = discord.Embed(colour=self.bot.colour['dsc'])
-        file = discord.File("./static/boop.gif", filename="fistbump.gif")
-        embed.set_image(url="attachment://fistbump.gif")
-        await ctx.send(file=file, embed=embed)
-
-    @commands.command()
+    @commands.command(name="hello")
     async def hello(self, ctx: commands.Context):
-        """ Hello from Okayu. """
+        file = discord.File("static/okayu.jpg", filename="okayu.jpg")
         embed = discord.Embed(colour=self.bot.colour['dsc'])
-        file = discord.File("./static/hello.gif", filename="hello.gif")
-        embed.set_image(url="attachment://hello.gif")
-        await ctx.send("Hi, I'm Okayu. Umbra#0009 created me.", file=file, embed=embed)
+        embed.set_image(url="attachment://okayu.jpg")
+        await ctx.send(f"モグ モグ!\n\n{self.bot.description}", embed=embed, file=file)
 
     @commands.group(invoke_without_command=True)
     async def okayu(self, ctx: commands.Context):
@@ -85,7 +76,7 @@ class Okayu(commands.Cog):
     @commands.is_owner()
     async def sleep(self, ctx):
         """ Okayu naptime. """
-        await ctx.send("Goodbye!")
+        await ctx.send("さようなら!")
         await self.bot.logout()
 
 def setup(bot):

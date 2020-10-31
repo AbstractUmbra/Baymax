@@ -78,9 +78,10 @@ class Manga(commands.Cog):
             mangadex_entry = MangadexEntry(entry)
             if mangadex_entry.manga_id in previous_ids:
                 continue
-            embed = MangadexEmbed.from_mangadex(mangadex_entry)
-            await self.rss_webhook.send(embed=embed)
-            processed_ids.append(mangadex_entry.manga_id)
+            if (datetime.datetime.utcnow() - mangadex_entry.published_at).seconds < 2700:
+                embed = MangadexEmbed.from_mangadex(mangadex_entry)
+                await self.rss_webhook.send(embed=embed)
+                processed_ids.append(mangadex_entry.manga_id)
 
         insert_query = """ UPDATE mangadex_feeds
                            SET previous_ids = $2

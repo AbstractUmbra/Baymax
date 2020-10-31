@@ -41,7 +41,7 @@ from utils import context
 from utils.config import Config
 
 DESCRIPTION = """
-Hello! I am a bot written by Umbra#0009 to provide some nice utilities.
+Hello! I am a bot written by Umbreon#0009 to provide some nice utilities.
 """
 
 LOGGER = logging.getLogger(__name__)
@@ -55,6 +55,7 @@ os.environ["PY_PRETTIFY_EXC"] = "True"
 COGS = (
     'jishaku',
     'cogs.admin',
+    'cogs.buttons',
     'cogs.config',
     'cogs.dunston',
     'cogs.external',
@@ -88,10 +89,10 @@ def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> typing.List[str
     user_id = bot.user.id
     base = [f'<@!{user_id}> ', f'<@{user_id}> ']
     if msg.guild is None:
-        base.append('b!')
-        base.append('B!')
+        base.append('o!')
+        base.append('O!')
     else:
-        base.extend(bot.prefixes.get(msg.guild.id, ['b!', 'B!']))
+        base.extend(bot.prefixes.get(msg.guild.id, ['o!', 'O!']))
     return base
 
 
@@ -123,9 +124,9 @@ class Okayu(commands.AutoShardedBot):
         self.emoji = {True: "<:TickYes:735498312861351937>",
                       False: "<:CrossNo:735498453181923377>",
                       None: "<:QuestionMaybe:738038828928860269>"}
-        self.colour = {'dsc': discord.Colour(0xF38474),
-                       'rgb': (244, 128, 115),
-                       'hsv': (6, 85, 70)}
+        self.colour = {'dsc': discord.Colour(0xEC9FED),
+                       'rgb': (236, 159, 237),
+                       'hsv': (299, 33, 93)}
 
         # in case of even further spam, add a cooldown mapping
         # for people who excessively spam commands

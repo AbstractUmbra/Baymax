@@ -166,6 +166,10 @@ class Fun(commands.Cog):
     async def on_message(self, message):
         if message.author.id in (self.bot.user.id, self.bot.owner_id):
             return
+        if self.bot.blacklist.get(message.author.id):
+            # Blocked.
+            return
+
         if self.bot.user in message.mentions:
             channel = self.bot.get_channel(MENTION_CHANNEL_ID)
             embed = discord.Embed(title="Okayu was mentioned!")
@@ -179,7 +183,7 @@ class Fun(commands.Cog):
             embed = discord.Embed(title="Okayu was DM'd.")
             embed.set_author(name=message.author.name,
                              icon_url=message.author.avatar_url)
-            embed.description = f"{message.content})"
+            embed.description = f"{message.content}"
             embed.timestamp = message.created_at
             await channel.send(embed=embed)
 

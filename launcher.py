@@ -104,8 +104,8 @@ def init(cogs, quiet):
             importlib.import_module(ext)
         except Exception:
             click.echo(
-                f'Could not load {ext}.\n{traceback.format_exc()}', err=True)
-            return
+                f'Could not load {ext}.\n{traceback.format_exc()}', err=False)
+            continue
 
     for table in Table.all_tables():
         try:
