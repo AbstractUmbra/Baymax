@@ -59,7 +59,7 @@ class Welcome(commands.Cog):
 
         if not channel:
             return await ctx.send("It seems the welcome channel has been deleted.")
-            
+
         return await ctx.send(f"Message is being sent to {channel.mention}. Message is:\n\n{record['welcome_message']}")
 
 

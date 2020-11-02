@@ -1,4 +1,5 @@
 import datetime
+import traceback
 from typing import Dict, List, NoReturn
 
 import aiohttp
@@ -31,8 +32,8 @@ class MangadexEntry:
 
     @property
     def published_at(self) -> datetime.datetime:
-        print(self._published_at)
         return datetime.datetime.strptime(self._published_at, "%a, %d %b %Y %H:%M:%S %z")
+
 
 class MangadexEmbed(discord.Embed):
     @classmethod
@@ -48,6 +49,7 @@ class MangadexEmbed(discord.Embed):
         embed.set_footer(text=entry.manga_id)
 
         return embed
+
 
 class Manga(commands.Cog):
     """ . """
@@ -78,7 +80,8 @@ class Manga(commands.Cog):
             mangadex_entry = MangadexEntry(entry)
             if mangadex_entry.manga_id in previous_ids:
                 continue
-            if (datetime.datetime.utcnow() - mangadex_entry.published_at).seconds < 2700:
+            print(mangadex_entry.published_at.tzinfo)
+            if ((datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)) - mangadex_entry.published_at).seconds < 2700:
                 embed = MangadexEmbed.from_mangadex(mangadex_entry)
                 await self.rss_webhook.send(embed=embed)
                 processed_ids.append(mangadex_entry.manga_id)
@@ -100,9 +103,11 @@ class Manga(commands.Cog):
 
     @rss_parser.error
     async def rss_parser_error(self, error):
+        tb_str = "".join(traceback.format_exception(
+            type(error), error, error.__traceback__, 4))
         stats = self.bot.get_cog("Stats")
         if stats:
-            await stats.webhook.send(str(error))
+            await stats.webhook.send(f"```py\n{tb_str}\n```")
 
     def cog_unload(self):
         self.rss_parser.cancel()

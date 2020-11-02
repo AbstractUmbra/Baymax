@@ -1,32 +1,3 @@
-"""
-This utility and all contents are responsibly sourced from
-RoboDanny discord bot and author
-(https://github.com/Rapptz) | (https://github.com/Rapptz/RoboDanny)
-RoboDanny licensing below:
-
-The MIT License(MIT)
-
-Copyright(c) 2015 Rapptz
-
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files(the "Software"),
-to deal in the Software without restriction, including without limitation
-the rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the
-Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-DEALINGS IN THE SOFTWARE.
-"""
-
 import asyncio
 import copy
 import io
@@ -108,6 +79,29 @@ class GlobalChannel(commands.Converter):
                     raise commands.BadArgument(
                         f'Could not find a channel by ID {argument!r}.')
                 return channel
+
+class AssetConverter(commands.Converter):
+    async def convert(self, ctx: commands.Context, argumment: str) -> discord.Message:
+        split = argumment.rsplit("/", 3)
+        if len(split) < 2:
+            raise commands.BadArgument("Not a valid CDN / Message URL.")
+
+        try:
+            channel_id = int(split[1])
+            message_id = int(split[2])
+        except IndexError as error:
+            raise commands.BadArgument("Incomplete CDN / Message URL.") from error
+
+        channel = ctx.bot.get_channel(channel_id)
+        if not channel:
+            raise commands.BadArgument("No access to that Channel.")
+
+        try:
+            message = await channel.fetch_message(message_id)
+        except discord.NotFound as error:
+            raise commands.BadArgument("No access to that Message or it doesn't exist.") from error
+
+        return message
 
 
 class Admin(commands.Cog):
@@ -335,6 +329,14 @@ class Admin(commands.Cog):
                 coros.append(config.global_unblock(ctx, user_id))
         await asyncio.gather(*coros)
         return await ctx.message.add_reaction(self.bot.emoji[True])
+
+    @commands.command()
+    async def ir(self, ctx, *, asset: AssetConverter):
+        await asset.delete()
+        try:
+            await ctx.message.delete()
+        except discord.Forbidden:
+            return
 
 
 def setup(bot):

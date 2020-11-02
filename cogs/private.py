@@ -1,4 +1,3 @@
-""" No license because private. """
 import asyncio
 import datetime
 import re
