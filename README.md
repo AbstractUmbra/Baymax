@@ -3,11 +3,10 @@
 A personal bot for Discord, written with love and fun.
 
 Originally a fork of [Robo Danny](https://github.com/Rapptz/RoboDanny) with some edits.
-All items used from Robo Danny have been cited as such within each file.
 
 ## Running
 
-First things first: I would prefer (and will not support) you running instances of my Bot. Just call the `invite` command and invite it to your server.
+First things first: I would prefer (and will not support) you running instances of my Bot.
 
 As such, the setup of my config file is not public.
 
@@ -31,7 +30,7 @@ Nevertheless; installation steps are below.
 
 ## Requirements
 
-    - Python 3.6.1+
+    - Python 3.7+
     - PostgreSQL server/access with a minimum of v9
     - Minimum version of Discord.py v1.3.0
-    - Modules within `Pipfile` or `requirements.txt`
+    - Modules within `pyproject.toml`
