@@ -68,6 +68,10 @@ class EmbedMenu(menus.Menu):
 
 
 class PaginatedHelpCommand(commands.HelpCommand):
+    def __init__(self):
+        self.verify_checks = True
+        super().__init__()
+
     def recursive_command_format(self, command, *, indent=1, subc=0):
         yield ('' if indent == 1 else '├' if subc != 0 else '└') + f'`{command.qualified_name}`: {command.short_doc}'
         if isinstance(command, commands.Group):
@@ -94,7 +98,6 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
     async def send_bot_help(self, mapping):
         pages = []
-        ctx = self.context
 
         for cog, cmds in mapping.items():
             cmds = await self.filter_commands(cmds, sort=True)
@@ -109,7 +112,6 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
     async def send_cog_help(self, cog):
         pages = []
-        ctx = self.context
         self.format_commands(cog, await self.filter_commands(cog.get_commands(), sort=True), pages=pages)
 
         total = len(pages)
@@ -119,7 +121,9 @@ class PaginatedHelpCommand(commands.HelpCommand):
         pg = EmbedMenu(pages)
         await pg.start(self.context)
 
-    async def send_group_help(self, group):
+    async def send_group_help(self, group: commands.Group):
+        if not await group.can_run(self.context):
+            return await self.context.send(f"No command called \"{group}\" found.")
         if not group.commands:
             return await self.send_command_help(group)
         embed = discord.Embed(colour=discord.Colour.blurple())
@@ -129,20 +133,29 @@ class PaginatedHelpCommand(commands.HelpCommand):
         embed.add_field(name='Subcommands', value='\n'.join(f'`{c.qualified_name}`: {c.short_doc}' for c in group.commands))
         await self.context.send(embed=embed)
 
-    async def send_command_help(self, command):
+    async def send_command_help(self, command: commands.Command):
+        if not await command.can_run(self.context):
+            return await self.context.send(f"No command called \"{command}\" found.")
         embed = discord.Embed(colour=discord.Colour.blurple())
         embed.title = f'{self.clean_prefix}{command.qualified_name} {command.signature}'
         embed.description = command.help or 'No help provided'
         embed.set_footer(text=f'Use "{self.clean_prefix}help <command>" for more information.')
         await self.context.send(embed=embed)
 
+class Help(commands.Cog):
+    """
+    Okayu's help command!
+    """
+
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+        self.bot._original_help_command = bot.help_command
+        self.bot.help_command = PaginatedHelpCommand()
+        self.bot.help_command.cog = self
+
+
+    def cog_unload(self):
+        self.bot.help_command = self.bot._original_help_command
+
 def setup(bot):
-    bot._original_help_command = bot.help_command
-    bot.help_command = PaginatedHelpCommand()
-    help_cog = bot.get_cog("Meta")
-    if help_cog:
-        bot.help_command.cog = help_cog
-
-
-def teardown(bot):
-    bot.help_command = bot._original_help_command
+    bot.add_cog(Help(bot))
