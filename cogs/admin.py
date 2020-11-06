@@ -80,30 +80,6 @@ class GlobalChannel(commands.Converter):
                         f'Could not find a channel by ID {argument!r}.')
                 return channel
 
-class AssetConverter(commands.Converter):
-    async def convert(self, ctx: commands.Context, argumment: str) -> discord.Message:
-        split = argumment.rsplit("/", 3)
-        if len(split) < 2:
-            raise commands.BadArgument("Not a valid CDN / Message URL.")
-
-        try:
-            channel_id = int(split[1])
-            message_id = int(split[2])
-        except IndexError as error:
-            raise commands.BadArgument("Incomplete CDN / Message URL.") from error
-
-        channel = ctx.bot.get_channel(channel_id)
-        if not channel:
-            raise commands.BadArgument("No access to that Channel.")
-
-        try:
-            message = await channel.fetch_message(message_id)
-        except discord.NotFound as error:
-            raise commands.BadArgument("No access to that Message or it doesn't exist.") from error
-
-        return message
-
-
 class Admin(commands.Cog):
     """Admin-only commands that make the bot dynamic."""
 
@@ -329,15 +305,6 @@ class Admin(commands.Cog):
                 coros.append(config.global_unblock(ctx, user_id))
         await asyncio.gather(*coros)
         return await ctx.message.add_reaction(self.bot.emoji[True])
-
-    @commands.command()
-    async def ir(self, ctx, *, asset: AssetConverter):
-        await asset.delete()
-        try:
-            await ctx.message.delete()
-        except discord.Forbidden:
-            return
-
 
 def setup(bot):
     """ Cog entrypoint. """
