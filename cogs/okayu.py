@@ -5,12 +5,13 @@ from discord.ext import commands
 
 
 class Okayu(commands.Cog):
-    """ Okayu admin commands. """
+    """ Okayu specific commands. """
     def __init__(self, bot):
         self.bot = bot
 
     @commands.command(name="hello")
     async def hello(self, ctx: commands.Context):
+        """ Say hello to Okayu-sama. """
         file = discord.File("static/okayu.jpg", filename="okayu.jpg")
         embed = discord.Embed(colour=self.bot.colour['dsc'])
         embed.set_image(url="attachment://okayu.jpg")
