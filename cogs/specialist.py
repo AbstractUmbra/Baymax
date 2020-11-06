@@ -75,7 +75,7 @@ class Specialist(commands.Cog):
             return await ctx.send("This command requires a subcommand.")
 
     @commands.command(name="events")
-    @checks.mick_and_me()
+    @checks.specialist()
     async def event_list(self, ctx: commands.Context):
         """ Shortcut to event list. """
         return await self.events_list(ctx)
