@@ -192,18 +192,22 @@ class RTFX(commands.Cog):
 
     @rtfm.command(name="asyncpg")
     async def rtfm_asyncpg(self, ctx, *, obj: str = None):
+        """ Gives you the documentation link for an `asyncpg` entity. """
         await self.do_rtfm(ctx, 'asyncpg', obj)
 
     @rtfm.command(name="twitchio")
     async def rtfm_twitchio(self, ctx, *, obj: str = None):
+        """ Gives you the documentation link for a `twitchio` entity. """
         await self.do_rtfm(ctx, 'twitchio', obj)
 
     @rtfm.command(name="aiohttp")
     async def rtfm_aiohttp(self, ctx, *, obj: str = None):
+        """ Gives you the documentation link for an `aiohttp` entity. """
         await self.do_rtfm(ctx, 'aiohttp', obj)
 
     @rtfm.command(name="wavelink")
     async def rtfm_wavelink(self, ctx, *, obj: str = None):
+        """ Gives you the documentation link for a `Wavelink` entity. """
         await self.do_rtfm(ctx, 'wavelink', obj)
 
     async def _member_stats(self, ctx, member, total_uses):
@@ -226,6 +230,7 @@ class RTFX(commands.Cog):
 
     @commands.command()
     async def rtfs(self, ctx, *, search: str):
+        """ Read the fuckin' source of discord.py. """
         embed = discord.Embed(
             title="Read the f*ckin source",
             colour=self.bot.colour['dsc']
