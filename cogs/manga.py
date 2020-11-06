@@ -1,24 +1,67 @@
 import datetime
 import traceback
-from typing import Dict, List, NoReturn
+from typing import Any, Dict, List, Optional
 
 import aiohttp
+import attrdict
 import discord
 import feedparser
 from discord.ext import commands, tasks
 from utils import db
 
 MANGADEX_RSS_BASE = "https://mangadex.org/rss/follows/{}"
+MANGADEX_API_BASE = "https://mangadex.org/api/"
+MANGADEX_BASE = "https://mangadex.org"
 
 
-class MangadexFeeds(db.Table, table_name="mangadex_feeds"):
-    id = db.Column(db.Integer(big=True), primary_key=True)
-    previous_ids = db.Column(db.Array(db.Integer))
-
-
-class MangadexEntry:
+class MangadexAPIResponse:
     def __init__(self, payload: Dict):
-        """ Data returns from the Mangadex API, just a generic object. """
+        """ Data response from the Mangadex API. """
+        self._chapters: Optional[Dict[str, Dict[str, Any]]] = payload.get('chapter') # private because not gonna use... yet?
+        self.group: Optional[Dict[str, Dict[str, str]]] = payload.get("group")
+        self.manga: attrdict.AttrDict = attrdict.AttrDict(payload['manga'])
+        self.status: Optional[str] = payload.get("status")
+
+
+    @property
+    def name(self) -> str:
+        return self.manga.title
+
+    @property
+    def artist(self) -> str:
+        return self.manga.artist
+
+    @property
+    def author(self) -> str:
+        return self.manga.author
+
+    @property
+    def cover(self) -> str:
+        return f"{MANGADEX_BASE}{self.manga.cover_url}"
+
+    @property
+    def alt_covers(self) -> List[str]:
+        return [f"{MANGADEX_BASE}{alt_cover}" for alt_cover in self.manga.covers]
+
+    @property
+    def alt_names(self) -> List[str]:
+        return self.manga.alt_names
+
+    @property
+    def hentai(self) -> bool:
+        return bool(self.manga.hentai)
+
+    @property
+    def lang_name(self) -> str:
+        return self.manga.lang_name
+
+    @property
+    def last_updated(self) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(self.manga.last_updated)
+
+class MangadexRSSEntry:
+    def __init__(self, payload: Dict):
+        """ Data returns from the Mangadex RSS feed, just a generic object. """
         self._id: str = payload.get("id")
         self.chapter_url: str = payload.get("link")
         self.manga_url: str = payload.get("mangalink")
@@ -37,7 +80,7 @@ class MangadexEntry:
 
 class MangadexEmbed(discord.Embed):
     @classmethod
-    def from_mangadex(cls, entry: MangadexEntry) -> "MangadexEmbed":
+    def from_mangadex(cls, entry: MangadexRSSEntry) -> "MangadexEmbed":
         """ Return a custom Embed based on a Mangadex entry. """
 
         embed = cls(colour=0xe91e63)
@@ -61,40 +104,47 @@ class Manga(commands.Cog):
             bot.config.mangadex_webhook, adapter=discord.AsyncWebhookAdapter(bot.session))
         self.rss_parser.start()
 
+    @commands.command()
+    async def mangadex(self, ctx: commands.Context, *, mangadex_id: int):
+        try:
+            response = await self.bot.session.get(f"{MANGADEX_API_BASE}manga/{mangadex_id}")
+            data = await response.json()
+        except Exception as err: #TODO get real exc
+            raise commands.BadArgument("Provided Mangadex ID is invalid.") from err
+
+        mangadex_entry = MangadexAPIResponse(data)
+        alt_covers = " | ".join([f"[{index}]({url})" for index, url in enumerate(
+            mangadex_entry.alt_covers, start=1)])
+        embed = discord.Embed(title=mangadex_entry.name, colour=discord.Colour.dark_magenta())
+        embed.set_author(name=mangadex_entry.author)
+        embed.set_image(url=mangadex_entry.cover)
+        embed.set_footer(text="Last updated:")
+        embed.timestamp = mangadex_entry.last_updated
+        embed.add_field(name="Artist", value=mangadex_entry.artist or "Not listed.")
+        embed.add_field(name="Hentai", value=("Yes" if mangadex_entry.hentai else "No"))
+        embed.add_field(name="Language of origin", value=mangadex_entry.lang_name.capitalize())
+        embed.add_field(name="Alternate names", value="\n".join(mangadex_entry.alt_names))
+        embed.add_field(name="Alternate cover URLs", value=alt_covers or "N/A")
+        await ctx.send(embed=embed)
+
     @tasks.loop(minutes=30)
-    async def rss_parser(self) -> NoReturn:
+    async def rss_parser(self):
         """. """
-        select_query = """ SELECT * FROM mangadex_feeds; """
-        record = await self.bot.pool.fetchrow(select_query)
-
-        previous_ids: List[int] = [_id for _id in record['previous_ids']]
-
         async with self.bot.session.get(self.rss_url, timeout=aiohttp.ClientTimeout(total=10)) as response:
             response_text = await response.text()
 
-        processed_ids: List[int] = []
-
         rss_data: Dict[str, List] = feedparser.parse(response_text)
         entries_data: List[Dict] = rss_data['entries']
+
         for entry in entries_data:
-            mangadex_entry = MangadexEntry(entry)
-            if mangadex_entry.manga_id in previous_ids:
-                continue
-            print(mangadex_entry.published_at.tzinfo)
-            if ((datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)) - mangadex_entry.published_at).seconds < 2700:
+            mangadex_entry = MangadexRSSEntry(entry)
+            manga_td = ((datetime.datetime.now().replace(
+                tzinfo=datetime.timezone.utc)) - mangadex_entry.published_at)
+
+            if manga_td.total_seconds() < 2700:
+                await self.rss_webhook.send(f"{mangadex_entry.title}: {mangadex_entry.manga_id} -> {manga_td}::{manga_td.total_seconds()}")
                 embed = MangadexEmbed.from_mangadex(mangadex_entry)
                 await self.rss_webhook.send(embed=embed)
-                processed_ids.append(mangadex_entry.manga_id)
-
-        insert_query = """ UPDATE mangadex_feeds
-                           SET previous_ids = $2
-                           WHERE id = $1;
-                       """
-
-        all_ids_unique = set(previous_ids + processed_ids)
-        all_ids = list(all_ids_unique)
-
-        await self.bot.pool.execute(insert_query, 1, all_ids)
 
     @rss_parser.before_loop
     async def before_rss_parser(self):
