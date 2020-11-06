@@ -29,6 +29,10 @@ class TodoPageSource(menus.ListPageSource):
 
 
 class Todo(commands.Cog):
+    """
+    A cog for 'todo' management and information.
+    """
+
     def __init__(self, bot):
         self.bot = bot
 
