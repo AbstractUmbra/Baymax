@@ -72,18 +72,22 @@ def is_in_guilds(*guild_ids):
         return guild.id in guild_ids
     return commands.check(predicate)
 
-
-def moogs_and_me():
+def specialist():
     def predicate(ctx):
-        if ctx.author.id in (361158149371199488, 155863164544614402) and ctx.guild.id in (658130291315048448, 710235595733074111):
+        if ctx.author.id in (361158149371199488, 155863164544614402) and ctx.guild.id == 690566307409821697:
             return True
         return False
     return commands.check(predicate)
 
 
-def mick_and_me():
+def can_use_spoiler():
     def predicate(ctx):
-        if ctx.author.id in (361158149371199488, 155863164544614402) and ctx.guild.id == 690566307409821697:
-            return True
-        return False
+        if ctx.guild is None:
+            raise commands.BadArgument('Cannot be used in private messages.')
+
+        my_permissions = ctx.channel.permissions_for(ctx.guild.me)
+        if not (my_permissions.read_message_history and my_permissions.manage_messages and my_permissions.add_reactions):
+            raise commands.BadArgument('Need Read Message History, Add Reactions and Manage Messages '
+                                       'to permission to use this. Sorry if I spoiled you.')
+        return True
     return commands.check(predicate)
