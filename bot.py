@@ -55,7 +55,6 @@ os.environ["PY_PRETTIFY_EXC"] = "True"
 COGS = (
     'jishaku',
     'cogs.admin',
-    'cogs.buttons',
     'cogs.config',
     'cogs.dunston',
     'cogs.external',
@@ -81,6 +80,7 @@ COGS = (
     'cogs.todo',
     'cogs.token',
     'cogs.twitch',
+    'cogs.urban',
     'cogs.welcome',
 )
 
