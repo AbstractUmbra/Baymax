@@ -103,7 +103,6 @@ class External(commands.Cog):
             name="License", value=pypi_details.module_licese)
 
         if pypi_details.raw_classifiers:
-            print(pypi_details.raw_classifiers)
             embed.add_field(name="Classifiers",
                             value=pypi_details.classifiers, inline=False)
 
