@@ -3,9 +3,9 @@ from discord.ext import commands
 from utils.config import Config
 
 BMOJI = "\N{NEGATIVE SQUARED LATIN CAPITAL LETTER B}\N{VARIATION SELECTOR-16}"
-#DUNSTON = 705500489248145459
+# DUNSTON = 705500489248145459
 DUNSTON = 364412422540361729
-#BCHAN = 705501796159848541
+# BCHAN = 705501796159848541
 BCHAN = 748996615502823616
 
 
@@ -15,7 +15,9 @@ class Dunston(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.b_words = Config("dunston_b.json")
-        self.cheater_cd = commands.CooldownMapping.from_cooldown(1, 10, commands.BucketType.user)
+        self.cheater_cd = commands.CooldownMapping.from_cooldown(
+            1, 10, commands.BucketType.user
+        )
 
     def b_replace(self, in_str: str):
         """ Replace the BMOJI. """
@@ -30,7 +32,9 @@ class Dunston(commands.Cog):
         if retry:
             return
         else:
-            await cheater_message.channel.send(f"{cheater_message.author} is a filthy cheater.")
+            await cheater_message.channel.send(
+                f"{cheater_message.author} is a filthy cheater."
+            )
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message):

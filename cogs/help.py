@@ -64,7 +64,10 @@ class EmbedMenu(menus.Menu):
                 pass
 
     async def send_initial_message(self, ctx, channel):
-        return await channel.send(embed=self.pages[self.current_page])
+        if self.pages:
+            return await channel.send(embed=self.pages[self.current_page])
+        await channel.send("No matching command, group or Cog.")
+        self.stop()
 
 
 class PaginatedHelpCommand(commands.HelpCommand):
@@ -122,19 +125,23 @@ class PaginatedHelpCommand(commands.HelpCommand):
         await pg.start(self.context)
 
     async def send_group_help(self, group: commands.Group):
-        if not await group.can_run(self.context):
+        try:
+            await group.can_run(self.context)
+        except (commands.CommandError, commands.CheckFailure):
             return await self.context.send(f"No command called \"{group}\" found.")
         if not group.commands:
             return await self.send_command_help(group)
+        subs = '\n'.join(f'`{c.qualified_name}`: {c.short_doc}' for c in group.commands)
         embed = discord.Embed(colour=discord.Colour.blurple())
         embed.title = f'{self.clean_prefix}{group.qualified_name} {group.signature}'
-        embed.description = group.help or 'No help provided'
+        embed.description = f"{group.help or ''}\n\n**Subcommands**\n\n{subs}"
         embed.set_footer(text=f'Use "{self.clean_prefix}help <command>" for more information.')
-        embed.add_field(name='Subcommands', value='\n'.join(f'`{c.qualified_name}`: {c.short_doc}' for c in group.commands))
         await self.context.send(embed=embed)
 
     async def send_command_help(self, command: commands.Command):
-        if not await command.can_run(self.context):
+        try:
+            await command.can_run(self.context)
+        except (commands.CommandError, commands.CheckFailure):
             return await self.context.send(f"No command called \"{command}\" found.")
         embed = discord.Embed(colour=discord.Colour.blurple())
         embed.title = f'{self.clean_prefix}{command.qualified_name} {command.signature}'

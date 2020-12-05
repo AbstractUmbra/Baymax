@@ -16,7 +16,9 @@ class RNG(commands.Cog):
     async def random(self, ctx):
         """Displays a random thing you request."""
         if ctx.invoked_subcommand is None:
-            await ctx.send(f'Incorrect random subcommand passed. Try {ctx.prefix}help random')
+            await ctx.send(
+                f"Incorrect random subcommand passed. Try {ctx.prefix}help random"
+            )
 
     @random.command()
     async def tag(self, ctx):
@@ -24,13 +26,13 @@ class RNG(commands.Cog):
 
         A tag showing up in this does not get its usage count increased.
         """
-        tags = self.bot.get_cog('Tags')
+        tags = self.bot.get_cog("Tags")
         if tags is None:
-            return await ctx.send('Tag commands currently disabled.')
+            return await ctx.send("Tag commands currently disabled.")
 
         tag = await tags.get_random_tag(ctx.guild, connection=ctx.db)
         if tag is None:
-            return await ctx.send('This server has no tags.')
+            return await ctx.send("This server has no tags.")
 
         await ctx.send(f'Random tag found: {tag["name"]}\n{tag["content"]}')
 
@@ -44,7 +46,7 @@ class RNG(commands.Cog):
 
         maximum = min(maximum, 1000)
         if minimum >= maximum:
-            await ctx.send('Maximum is smaller than minimum.')
+            await ctx.send("Maximum is smaller than minimum.")
             return
 
         await ctx.send(rng.randint(minimum, maximum))
@@ -56,12 +58,14 @@ class RNG(commands.Cog):
         To denote multiple choices, you should use double quotes.
         """
         if len(choices) < 2:
-            return await ctx.send('Not enough choices to pick from.')
+            return await ctx.send("Not enough choices to pick from.")
 
         await ctx.send(rng.choice(choices))
 
     @commands.command()
-    async def choosebestof(self, ctx, times: Optional[int], *choices: commands.clean_content):
+    async def choosebestof(
+        self, ctx, times: Optional[int], *choices: commands.clean_content
+    ):
         """Chooses between multiple choices N times.
 
         To denote multiple choices, you should use double quotes.
@@ -69,7 +73,7 @@ class RNG(commands.Cog):
         You can only choose up to 10001 times and only the top 10 results are shown.
         """
         if len(choices) < 2:
-            return await ctx.send('Not enough choices to pick from.')
+            return await ctx.send("Not enough choices to pick from.")
 
         if times is None:
             times = (len(choices) ** 2) + 1
@@ -78,12 +82,11 @@ class RNG(commands.Cog):
         results = Counter(rng.choice(choices) for i in range(times))
         builder = []
         if len(results) > 10:
-            builder.append('Only showing top 10 results...')
+            builder.append("Only showing top 10 results...")
         for index, (elem, count) in enumerate(results.most_common(10), start=1):
-            builder.append(
-                f'{index}. {elem} ({plural(count):time}, {count/times:.2%})')
+            builder.append(f"{index}. {elem} ({plural(count):time}, {count/times:.2%})")
 
-        await ctx.send('\n'.join(builder))
+        await ctx.send("\n".join(builder))
 
 
 def setup(bot):

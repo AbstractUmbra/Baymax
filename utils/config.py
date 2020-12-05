@@ -10,7 +10,7 @@ def _create_encoder(cls):
             return o.to_json()
         return super().default(o)
 
-    return type('_Encoder', (json.JSONEncoder,), {'default': _default})
+    return type("_Encoder", (json.JSONEncoder,), {"default": _default})
 
 
 class Config:
@@ -18,27 +18,27 @@ class Config:
 
     def __init__(self, name, **options):
         self.name = name
-        self.object_hook = options.pop('object_hook', None)
-        self.encoder = options.pop('encoder', None)
+        self.object_hook = options.pop("object_hook", None)
+        self.encoder = options.pop("encoder", None)
 
         try:
-            hook = options.pop('hook')
+            hook = options.pop("hook")
         except KeyError:
             pass
         else:
             self.object_hook = hook.from_json
             self.encoder = _create_encoder(hook)
 
-        self.loop = options.pop('loop', asyncio.get_event_loop())
+        self.loop = options.pop("loop", asyncio.get_event_loop())
         self.lock = asyncio.Lock()
-        if options.pop('load_later', False):
+        if options.pop("load_later", False):
             self.loop.create_task(self.load())
         else:
             self.load_from_file()
 
     def load_from_file(self):
         try:
-            with open(self.name, 'r') as f:
+            with open(self.name, "r") as f:
                 self._db = json.load(f, object_hook=self.object_hook)
         except FileNotFoundError:
             self._db = {}
@@ -48,10 +48,16 @@ class Config:
             await self.loop.run_in_executor(None, self.load_from_file)
 
     def _dump(self):
-        temp = '%s-%s.tmp' % (uuid.uuid4(), self.name)
-        with open(temp, 'w', encoding='utf-8') as tmp:
-            json.dump(self._db.copy(), tmp, ensure_ascii=True,
-                      cls=self.encoder, separators=(',', ':'), indent=4)
+        temp = "%s-%s.tmp" % (uuid.uuid4(), self.name)
+        with open(temp, "w", encoding="utf-8") as tmp:
+            json.dump(
+                self._db.copy(),
+                tmp,
+                ensure_ascii=True,
+                cls=self.encoder,
+                separators=(",", ":"),
+                indent=4,
+            )
 
         # atomically move the file
         os.replace(temp, self.name)

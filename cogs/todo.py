@@ -3,7 +3,6 @@ import typing
 from textwrap import shorten
 
 import asyncpg
-
 import discord
 from discord.ext import commands, menus
 from utils import db
@@ -36,12 +35,22 @@ class Todo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    def _gen_todos(self, records: typing.List[asyncpg.Record]) -> typing.List[discord.Embed]:
+    def _gen_todos(
+        self, records: typing.List[asyncpg.Record]
+    ) -> typing.List[discord.Embed]:
         descs = []
-        list_of_records = [records[x:x+10] for x in range(0, len(records), 10)]
+        list_of_records = [records[x : x + 10] for x in range(0, len(records), 10)]
         for records in list_of_records:
-            descs.append(discord.Embed(description="\n".join(
-                [f"[__`{record['id']}`__]({record['jump_url']}): {shorten(record['content'], width=100)}" for record in records])).set_footer(text="Use todo info ## for more details."))
+            descs.append(
+                discord.Embed(
+                    description="\n".join(
+                        [
+                            f"[__`{record['id']}`__]({record['jump_url']}): {shorten(record['content'], width=100)}"
+                            for record in records
+                        ]
+                    )
+                ).set_footer(text="Use todo info ## for more details.")
+            )
         return descs
 
     @commands.group(invoke_without_command=True)
@@ -58,14 +67,20 @@ class Todo(commands.Cog):
     @commands.cooldown(1, 15, commands.BucketType.user)
     async def todo_list(self, ctx):
         """ A list of todos for you. """
-        query = """ SELECT * FROM todos WHERE owner_id = $1 ORDER BY id ASC LIMIT 100; """
+        query = (
+            """ SELECT * FROM todos WHERE owner_id = $1 ORDER BY id ASC LIMIT 100; """
+        )
         records = await self.bot.pool.fetch(query, ctx.author.id)
 
         if not records:
-            return await ctx.send("You appear to have no active todos, look at how productive you are.")
+            return await ctx.send(
+                "You appear to have no active todos, look at how productive you are."
+            )
         embeds = self._gen_todos(records)
-        pages = menus.MenuPages(source=TodoPageSource(
-            range(0, len(embeds)), embeds), delete_message_after=True)
+        pages = menus.MenuPages(
+            source=TodoPageSource(range(0, len(embeds)), embeds),
+            delete_message_after=True,
+        )
         await pages.start(ctx)
 
     @commands.command(name="todos")
@@ -76,9 +91,17 @@ class Todo(commands.Cog):
     async def todo_add(self, ctx, *, content):
         """ Add me something to do later... """
         query = """ INSERT INTO todos (owner_id, content, added_at, jump_url) VALUES ($1, $2, $3, $4) RETURNING id; """
-        succeed = await self.bot.pool.fetchrow(query, ctx.author.id, content, datetime.datetime.utcnow(), ctx.message.jump_url)
-        if succeed['id']:
-            return await ctx.send(f"{self.bot.emoji[True]}: created todo #__`{succeed['id']}`__ for you!")
+        succeed = await self.bot.pool.fetchrow(
+            query,
+            ctx.author.id,
+            content,
+            datetime.datetime.utcnow(),
+            ctx.message.jump_url,
+        )
+        if succeed["id"]:
+            return await ctx.send(
+                f"{self.bot.emoji[True]}: created todo #__`{succeed['id']}`__ for you!"
+            )
 
     @todo.command(name="delete", aliases=["remove", "bin", "done"])
     async def todo_delete(self, ctx, todo_ids: commands.Greedy[int]):
@@ -88,19 +111,29 @@ class Todo(commands.Cog):
         try:
             await self.bot.pool.executemany(query, iterable)
         finally:
-            await ctx.send(f"Okay well done. I removed the __**`#{'`**__, __**`#'.join(str(tid) for tid in todo_ids)}`**__ todo{'s' if len(todo_ids) > 1 else ''} for you.")
+            await ctx.send(
+                f"Okay well done. I removed the __**`#{'`**__, __**`#'.join(str(tid) for tid in todo_ids)}`**__ todo{'s' if len(todo_ids) > 1 else ''} for you."
+            )
 
     @todo.command(name="edit")
     async def todo_edit(self, ctx, todo_id: int, *, content):
         """ Edit my todo because I would like to change the wording or something. """
-        owner_check = """ SELECT id, owner_id FROM todos WHERE owner_id = $1 AND id = $2; """
+        owner_check = (
+            """ SELECT id, owner_id FROM todos WHERE owner_id = $1 AND id = $2; """
+        )
         owner = await self.bot.pool.fetchrow(owner_check, ctx.author.id, todo_id)
-        if not owner or owner['owner_id'] != ctx.author.id:
-            return await ctx.send("That doesn't seem to be your todo, or the ID is incorrect.")
+        if not owner or owner["owner_id"] != ctx.author.id:
+            return await ctx.send(
+                "That doesn't seem to be your todo, or the ID is incorrect."
+            )
         update_query = """ UPDATE todos SET content = $2, jump_url = $3 WHERE id = $1 RETURNING id; """
-        success = await self.bot.pool.fetchrow(update_query, todo_id, content, ctx.message.jump_url)
+        success = await self.bot.pool.fetchrow(
+            update_query, todo_id, content, ctx.message.jump_url
+        )
         if success:
-            return await ctx.send(f"Neat. So todo #__`{success['id']}`__ has been updated for you. Go be productive!")
+            return await ctx.send(
+                f"Neat. So todo #__`{success['id']}`__ has been updated for you. Go be productive!"
+            )
 
     @todo.command(name="info")
     async def todo_info(self, ctx, todo_id: int):
@@ -110,8 +143,10 @@ class Todo(commands.Cog):
         if not record:
             return await ctx.send("No record for by you with that ID. Is it correct?")
         embed = discord.Embed(title="Extra todo info")
-        embed.description = f"{record['content']}\n[Message link!]({record['jump_url']})"
-        embed.timestamp = record['added_at']
+        embed.description = (
+            f"{record['content']}\n[Message link!]({record['jump_url']})"
+        )
+        embed.timestamp = record["added_at"]
         embed.set_author(name=ctx.author.name, icon_url=ctx.author.avatar_url)
         return await ctx.send(embed=embed)
 
@@ -120,7 +155,9 @@ class Todo(commands.Cog):
     async def todo_clear(self, ctx):
         """ Lets wipe 'em all! """
         query = """ DELETE FROM todos WHERE owner_id = $1; """
-        confirm = await ctx.prompt("This will wipe your todos from my memory. Are you sure?")
+        confirm = await ctx.prompt(
+            "This will wipe your todos from my memory. Are you sure?"
+        )
         if not confirm:
             return
         await self.bot.pool.execute(query, ctx.author.id)
@@ -132,9 +169,13 @@ class Todo(commands.Cog):
         """ Error handler for specific shit. """
         error = getattr(error, "original", error)
         if isinstance(error, commands.MaxConcurrencyReached):
-            return await ctx.send("Whoa, I know you're eager but close your active list first!")
+            return await ctx.send(
+                "Whoa, I know you're eager but close your active list first!"
+            )
         elif isinstance(error, commands.CommandOnCooldown):
-            return await ctx.send(f"Goodness, didn't you just try to view this? Try again in {error.retry_after:.2f} seconds.")
+            return await ctx.send(
+                f"Goodness, didn't you just try to view this? Try again in {error.retry_after:.2f} seconds."
+            )
 
 
 def setup(bot):

@@ -32,9 +32,11 @@ import typing
 from collections import Counter, deque
 
 import aiohttp
+import anekos
 import discord
+import mystbin
+import nhentaio
 from discord.ext import commands
-from mystbin import MystbinClient
 
 import config
 from utils import context
@@ -53,46 +55,47 @@ os.environ["JISHAKU_RETAIN"] = "True"
 os.environ["PY_PRETTIFY_EXC"] = "True"
 
 COGS = (
-    'jishaku',
-    'cogs.admin',
-    'cogs.config',
-    'cogs.dunston',
-    'cogs.external',
-    'cogs.fun',
-    'cogs.help',
-    'cogs.lewd',
-    'cogs.manga',
-    'cogs.meta',
-    'cogs.mod',
-    'cogs.okayu',
-    'cogs.private',
-    'cogs.reactionroles',
-    'cogs.reddit',
-    'cogs.reminders',
-    'cogs.rng',
-    'cogs.rtfx',
-    'cogs.snipe',
-    'cogs.specialist',
-    'cogs.stars',
-    'cogs.stats',
-    'cogs.tags',
-    'cogs.time',
-    'cogs.todo',
-    'cogs.token',
-    'cogs.twitch',
-    'cogs.urban',
-    'cogs.welcome',
+    "jishaku",
+    "cogs.admin",
+    "cogs.campfire",
+    "cogs.config",
+    "cogs.dunston",
+    "cogs.external",
+    "cogs.fun",
+    "cogs.help",
+    "cogs.lewd",
+    "cogs.manga",
+    "cogs.meta",
+    "cogs.mod",
+    "cogs.okayu",
+    "cogs.private",
+    "cogs.reactionroles",
+    "cogs.reddit",
+    "cogs.reminders",
+    "cogs.rng",
+    "cogs.rtfx",
+    "cogs.snipe",
+    "cogs.specialist",
+    "cogs.stars",
+    "cogs.stats",
+    "cogs.tags",
+    "cogs.time",
+    "cogs.todo",
+    "cogs.token",
+    "cogs.twitch",
+    "cogs.urban",
+    "cogs.welcome",
 )
 
 
 def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> typing.List[str]:
     user_id = bot.user.id
-    base = [f'<@!{user_id}> ', f'<@{user_id}> ']
+    base = [f"<@!{user_id}> ", f"<@{user_id}> "]
     if msg.guild is None:
-        base.append('o!')
-        base.append('O!')
+        base.append("o!")
+        base.append("O!")
     else:
-        base.extend(bot.prefixes.get(msg.guild.id, ['o!', 'O!']))
+        base.extend(bot.prefixes.get(msg.guild.id, ["o!", "O!"]))
     return base
 
 
@@ -103,35 +106,44 @@ class Okayu(commands.AutoShardedBot):
         intents = discord.Intents.all()
         intents.presences = False
 
-        super().__init__(command_prefix=_prefix_callable,
-                         description=DESCRIPTION,
-                         help_attrs=dict(hidden=True),
-                         activity=discord.Game(
-                             name="b!help for help."),
-                         allowed_mentions=discord.AllowedMentions(
-                             everyone=False, roles=False, users=False),
-                         intents=intents)
+        super().__init__(
+            command_prefix=_prefix_callable,
+            description=DESCRIPTION,
+            help_attrs=dict(hidden=True),
+            activity=discord.Game(name="o!help for help."),
+            allowed_mentions=discord.AllowedMentions(
+                everyone=False, roles=False, users=False
+            ),
+            intents=intents,
+        )
 
         self.client_id = config.client_id
         self.bots_key = config.bots_key
 
         self.session = aiohttp.ClientSession()
-        self.mb_client = MystbinClient(session=self.session)
+        self.mb_client = mystbin.Client(session=self.session)
+        self.hentai_client = nhentaio.Client()
+        self.neko_client = anekos.NekosLifeClient(session=self.session)
         self._prev_events = deque(maxlen=10)
-        self.prefixes = Config('prefixes.json')
-        self.blacklist = Config('blacklist.json')
+        self.prefixes = Config("prefixes.json")
+        self.blacklist = Config("blacklist.json")
 
-        self.emoji = {True: "<:TickYes:735498312861351937>",
-                      False: "<:CrossNo:735498453181923377>",
-                      None: "<:QuestionMaybe:738038828928860269>"}
-        self.colour = {'dsc': discord.Colour(0xEC9FED),
-                       'rgb': (236, 159, 237),
-                       'hsv': (299, 33, 93)}
+        self.emoji = {
+            True: "<:TickYes:735498312861351937>",
+            False: "<:CrossNo:735498453181923377>",
+            None: "<:QuestionMaybe:738038828928860269>",
+        }
+        self.colour = {
+            "dsc": discord.Colour(0xEC9FED),
+            "rgb": (236, 159, 237),
+            "hsv": (299, 33, 93),
+        }
 
         # in case of even further spam, add a cooldown mapping
         # for people who excessively spam commands
         self.spam_control = commands.CooldownMapping.from_cooldown(
-            10, 12.0, commands.BucketType.user)
+            10, 12.0, commands.BucketType.user
+        )
 
         # A counter to auto-ban frequent spammers
         # Triggering the rate limit 5 times in a row will auto-ban the user from the bot.
@@ -141,8 +153,7 @@ class Okayu(commands.AutoShardedBot):
             try:
                 self.load_extension(extension)
             except Exception:
-                print(
-                    f'Failed to load extension {extension}.', file=sys.stderr)
+                print(f"Failed to load extension {extension}.", file=sys.stderr)
                 traceback.print_exc()
 
     async def on_socket_response(self, msg):
@@ -152,16 +163,15 @@ class Okayu(commands.AutoShardedBot):
     async def on_command_error(self, ctx, error):
         """ When a command errors out. """
         if isinstance(error, commands.NoPrivateMessage):
-            await ctx.author.send('This command cannot be used in private messages.')
+            await ctx.author.send("This command cannot be used in private messages.")
         elif isinstance(error, commands.DisabledCommand):
             pass
         elif isinstance(error, commands.CommandInvokeError):
             original = error.original
             if not isinstance(original, discord.HTTPException):
-                print(f'In {ctx.command.qualified_name}:', file=sys.stderr)
+                print(f"In {ctx.command.qualified_name}:", file=sys.stderr)
                 traceback.print_tb(original.__traceback__)
-                print(f'{original.__class__.__name__}: {original}',
-                      file=sys.stderr)
+                print(f"{original.__class__.__name__}: {original}", file=sys.stderr)
         elif isinstance(error, commands.ArgumentParsingError):
             await ctx.send(error)
 
@@ -173,14 +183,14 @@ class Okayu(commands.AutoShardedBot):
 
     def get_raw_guild_prefixes(self, guild_id):
         """ The raw prefixes. """
-        return self.prefixes.get(guild_id, ['b!', 'B!'])
+        return self.prefixes.get(guild_id, ["b!", "B!"])
 
     async def set_guild_prefixes(self, guild, prefixes):
         """ Set the prefixes. """
         if not prefixes:
             await self.prefixes.put(guild.id, [])
         elif len(prefixes) > 10:
-            raise RuntimeError('Cannot have more than 10 custom prefixes.')
+            raise RuntimeError("Cannot have more than 10 custom prefixes.")
         else:
             await self.prefixes.put(guild.id, sorted(set(prefixes), reverse=True))
 
@@ -200,38 +210,47 @@ class Okayu(commands.AutoShardedBot):
         if not hasattr(self, "uptime"):
             self.uptime = datetime.datetime.utcnow()
 
-        print(f'Ready: {self.user} (ID: {self.user.id})')
+        print(f"Ready: {self.user} (ID: {self.user.id})")
 
     async def on_resumed(self):
         """ When the websocket resumes a connection. """
-        print('Resumed...')
+        print("Resumed...")
 
     @property
     def stat_webhook(self):
         """ Get webhook stats. """
         wh_id, wh_token = self.config.stat_webhook
         hook = discord.Webhook.partial(
-            id=wh_id, token=wh_token, adapter=discord.AsyncWebhookAdapter(self.session))
+            id=wh_id, token=wh_token, adapter=discord.AsyncWebhookAdapter(self.session)
+        )
         return hook
 
     def log_spammer(self, ctx, message, retry_after, *, autoblock=False):
         """ Deals with events that spam the log. """
-        guild_name = getattr(ctx.guild, 'name', 'No Guild (DMs)')
-        guild_id = getattr(ctx.guild, 'id', None)
-        fmt = 'User %s (ID %s) in guild %r (ID %s) spamming, retry_after: %.2fs'
-        LOGGER.warning(fmt, message.author, message.author.id,
-                       guild_name, guild_id, retry_after)
+        guild_name = getattr(ctx.guild, "name", "No Guild (DMs)")
+        guild_id = getattr(ctx.guild, "id", None)
+        fmt = "User %s (ID %s) in guild %r (ID %s) spamming, retry_after: %.2fs"
+        LOGGER.warning(
+            fmt, message.author, message.author.id, guild_name, guild_id, retry_after
+        )
         if not autoblock:
             return
 
         webhook = self.stat_webhook
-        embed = discord.Embed(title='Auto-blocked Member', colour=0xDDA453)
+        embed = discord.Embed(title="Auto-blocked Member", colour=0xDDA453)
         embed.add_field(
-            name='Member', value=f'{message.author} (ID: {message.author.id})', inline=False)
-        embed.add_field(name='Guild Info',
-                        value=f'{guild_name} (ID: {guild_id})', inline=False)
+            name="Member",
+            value=f"{message.author} (ID: {message.author.id})",
+            inline=False,
+        )
         embed.add_field(
-            name='Channel Info', value=f'{message.channel} (ID: {message.channel.id}', inline=False)
+            name="Guild Info", value=f"{guild_name} (ID: {guild_id})", inline=False
+        )
+        embed.add_field(
+            name="Channel Info",
+            value=f"{message.channel} (ID: {message.channel.id}",
+            inline=False,
+        )
         embed.timestamp = datetime.datetime.utcnow()
         return webhook.send(embed=embed)
 
@@ -249,8 +268,7 @@ class Okayu(commands.AutoShardedBot):
             return
 
         bucket = self.spam_control.get_bucket(message)
-        current = message.created_at.replace(
-            tzinfo=datetime.timezone.utc).timestamp()
+        current = message.created_at.replace(tzinfo=datetime.timezone.utc).timestamp()
         retry_after = bucket.update_rate_limit(current)
         author_id = message.author.id
         if retry_after and author_id != self.owner_id:
@@ -298,17 +316,16 @@ class Okayu(commands.AutoShardedBot):
         try:
             super().run(config.token, reconnect=True)
         finally:
-            with open('prev_events.log', 'w', encoding='utf-8') as file_path:
+            with open("prev_events.log", "w", encoding="utf-8") as file_path:
                 for data in self._prev_events:
                     try:
-                        last_log = json.dumps(
-                            data, ensure_ascii=True, indent=4)
+                        last_log = json.dumps(data, ensure_ascii=True, indent=4)
                     except:
-                        file_path.write(f'{data}\n')
+                        file_path.write(f"{data}\n")
                     else:
-                        file_path.write(f'{last_log}\n')
+                        file_path.write(f"{last_log}\n")
 
     @property
     def config(self):
         """ Bot's config. """
-        return __import__('config')
+        return __import__("config")

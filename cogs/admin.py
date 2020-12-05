@@ -12,6 +12,7 @@ from utils import db, formats
 
 class BlockTable(db.Table, table_name="owner_blocked"):
     """ Keeping track of whom I blocked and why. """
+
     user_id = db.Column(db.Integer(big=True), primary_key=True)
     reason = db.Column(db.String)
 
@@ -40,7 +41,7 @@ class PerformanceMocker:
         return self
 
     def __repr__(self):
-        return '<PerformanceMocker>'
+        return "<PerformanceMocker>"
 
     def __await__(self):
         future = self.loop.create_future()
@@ -62,6 +63,7 @@ class PerformanceMocker:
 
 class GlobalChannel(commands.Converter):
     """ GlobalChannel converter object. """
+
     async def convert(self, ctx, argument):
         """ Perform conversion. """
         try:
@@ -72,13 +74,16 @@ class GlobalChannel(commands.Converter):
                 channel_id = int(argument, base=10)
             except ValueError:
                 raise commands.BadArgument(
-                    f'Could not find a channel by ID {argument!r}.')
+                    f"Could not find a channel by ID {argument!r}."
+                )
             else:
                 channel = ctx.bot.get_channel(channel_id)
                 if channel is None:
                     raise commands.BadArgument(
-                        f'Could not find a channel by ID {argument!r}.')
+                        f"Could not find a channel by ID {argument!r}."
+                    )
                 return channel
+
 
 class Admin(commands.Cog):
     """Admin-only commands that make the bot dynamic."""
@@ -90,11 +95,11 @@ class Admin(commands.Cog):
 
     def cleanup_code(self, content):
         """Automatically removes code blocks from the code."""
-        if content.startswith('```') and content.endswith('```'):
-            return '\n'.join(content.split('\n')[1:-1])
+        if content.startswith("```") and content.endswith("```"):
+            return "\n".join(content.split("\n")[1:-1])
 
         # remove `foo`
-        return content.strip('` \n')
+        return content.strip("` \n")
 
     async def cog_check(self, ctx):
         return await self.bot.is_owner(ctx.author)
@@ -102,8 +107,10 @@ class Admin(commands.Cog):
     def get_syntax_error(self, err):
         """ Grabs the syntax error. """
         if err.text is None:
-            return f'```py\n{err.__class__.__name__}: {err}\n```'
-        return f'```py\n{err.text}{"^":>{err.offset}}\n{err.__class__.__name__}: {err}```'
+            return f"```py\n{err.__class__.__name__}: {err}\n```"
+        return (
+            f'```py\n{err.text}{"^":>{err.offset}}\n{err.__class__.__name__}: {err}```'
+        )
 
     @commands.command(hidden=True)
     async def leave(self, ctx):
@@ -117,7 +124,7 @@ class Admin(commands.Cog):
         try:
             self.bot.load_extension(module)
         except commands.ExtensionError as err:
-            await ctx.send(f'{err.__class__.__name__}: {err}')
+            await ctx.send(f"{err.__class__.__name__}: {err}")
         else:
             await ctx.message.add_reaction(self.bot.emoji[True])
 
@@ -129,11 +136,11 @@ class Admin(commands.Cog):
         try:
             self.bot.unload_extension(module)
         except commands.ExtensionError as err:
-            await ctx.send(f'{err.__class__.__name__}: {err}')
+            await ctx.send(f"{err.__class__.__name__}: {err}")
         else:
             await ctx.message.add_reaction(self.bot.emoji[True])
 
-    @commands.group(name='reload', hidden=True, invoke_without_command=True)
+    @commands.group(name="reload", hidden=True, invoke_without_command=True)
     async def _reload(self, ctx, *, module):
         """Reloads a module."""
         module = f"cogs.{module}"
@@ -143,7 +150,7 @@ class Admin(commands.Cog):
         except commands.ExtensionNotLoaded:
             return self.bot.load_extension(module)
         except commands.ExtensionError as err:
-            await ctx.send(f'{err.__class__.__name__}: {err}')
+            await ctx.send(f"{err.__class__.__name__}: {err}")
         else:
             await ctx.message.add_reaction(self.bot.emoji[True])
 
@@ -152,7 +159,7 @@ class Admin(commands.Cog):
         """Run some SQL."""
         query = self.cleanup_code(query)
 
-        is_multistatement = query.count(';') > 1
+        is_multistatement = query.count(";") > 1
         if is_multistatement:
             # fetch does not support multiple statements
             strategy = ctx.db.execute
@@ -164,11 +171,11 @@ class Admin(commands.Cog):
             results = await strategy(query)
             dati = (time.perf_counter() - start) * 1000.0
         except Exception:
-            return await ctx.send(f'```py\n{traceback.format_exc()}\n```')
+            return await ctx.send(f"```py\n{traceback.format_exc()}\n```")
 
         rows = len(results)
         if is_multistatement or rows == 0:
-            return await ctx.send(f'`{dati:.2f}ms: {results}`')
+            return await ctx.send(f"`{dati:.2f}ms: {results}`")
 
         headers = list(results[0].keys())
         table = formats.TabularData()
@@ -176,10 +183,14 @@ class Admin(commands.Cog):
         table.add_rows(list(r.values()) for r in results)
         render = table.render()
 
-        fmt = f'```\n{render}\n```\n*Returned {formats.plural(rows):row} in {dati:.2f}ms*'
+        fmt = (
+            f"```\n{render}\n```\n*Returned {formats.plural(rows):row} in {dati:.2f}ms*"
+        )
         if len(fmt) > 2000:
-            filep = io.BytesIO(fmt.encode('utf-8'))
-            await ctx.send('Too many results...', file=discord.File(filep, 'results.txt'))
+            filep = io.BytesIO(fmt.encode("utf-8"))
+            await ctx.send(
+                "Too many results...", file=discord.File(filep, "results.txt")
+            )
         else:
             await ctx.send(fmt)
 
@@ -199,15 +210,19 @@ class Admin(commands.Cog):
         table.add_rows(list(r.values()) for r in results)
         render = table.render()
 
-        fmt = f'```\n{render}\n```'
+        fmt = f"```\n{render}\n```"
         if len(fmt) > 2000:
-            filep = io.BytesIO(fmt.encode('utf-8'))
-            await ctx.send('Too many results...', file=discord.File(filep, 'results.txt'))
+            filep = io.BytesIO(fmt.encode("utf-8"))
+            await ctx.send(
+                "Too many results...", file=discord.File(filep, "results.txt")
+            )
         else:
             await ctx.send(fmt)
 
     @commands.command(hidden=True)
-    async def sudo(self, ctx, channel: Optional[GlobalChannel], who: discord.User, *, command: str):
+    async def sudo(
+        self, ctx, channel: Optional[GlobalChannel], who: discord.User, *, command: str
+    ):
         """Run a command as another user optionally in another channel."""
         msg = copy.copy(ctx.message)
         channel = channel or ctx.channel
@@ -233,7 +248,7 @@ class Admin(commands.Cog):
         new_ctx.channel = PerformanceMocker()
 
         if new_ctx.command is None:
-            return await ctx.send('No command found')
+            return await ctx.send("No command found")
 
         start = time.perf_counter()
         try:
@@ -242,14 +257,16 @@ class Admin(commands.Cog):
             end = time.perf_counter()
             success = False
             try:
-                await ctx.send(f'```py\n{traceback.format_exc()}\n```')
+                await ctx.send(f"```py\n{traceback.format_exc()}\n```")
             except discord.HTTPException:
                 pass
         else:
             end = time.perf_counter()
             success = True
 
-        await ctx.send(f'Status: {ctx.tick(success)} Time: {(end - start) * 1000:.2f}ms')
+        await ctx.send(
+            f"Status: {ctx.tick(success)} Time: {(end - start) * 1000:.2f}ms"
+        )
 
     async def ban_all(self, dick_id):
         """ Ban em from all your guilds. """
@@ -263,16 +280,15 @@ class Admin(commands.Cog):
             g = self.bot.get_guild(gid)
             await g.unban(discord.Object(id=not_dick_id))
 
-    @commands.group(name="blocked", invoke_without_command=True, aliases=["pmulgat"])
-    async def _blocked(self, ctx: commands.Context, user_id: int, *, reason: str):
+    @commands.group(name="ublock", invoke_without_command=True, aliases=["pmulgat"])
+    async def _block(self, ctx: commands.Context, user_id: int, *, reason: str):
         """ Let's make a private 'why I blocked them case'. """
         query = """ INSERT INTO owner_blocked (user_id, reason)
                     VALUES ($1, $2)
                     ON CONFLICT (user_id)
                     DO UPDATE SET reason = $2
                 """
-        coros = [self.bot.pool.execute(
-            query, user_id, reason), self.ban_all(user_id)]
+        coros = [self.bot.pool.execute(query, user_id, reason), self.ban_all(user_id)]
         config = self.bot.get_cog("Config")
         if config:
             coros.append(config.global_block(ctx, user_id))
@@ -282,29 +298,30 @@ class Admin(commands.Cog):
         except discord.Forbidden:
             pass
 
-    @_blocked.command(name="query", aliases=["q"])
-    async def _blocked_query(self, ctx, user_id: int):
+    @_block.command(name="query", aliases=["q"])
+    async def _block_query(self, ctx, user_id: int):
         query = """ SELECT reason FROM owner_blocked WHERE user_id = $1; """
         result = await self.bot.pool.fetchrow(query, user_id)
 
         if not result:
             return await ctx.send("Huh, you've not complained about them yet.")
 
-        embed = discord.Embed(description=result['reason'])
+        embed = discord.Embed(description=result["reason"])
         await ctx.send(embed=embed)
 
-    @_blocked.command(name="remove", aliases=["r"])
-    async def _blocked_remove(self, ctx: commands.Context, user_id: int, unban: bool=False):
+    @_block.command(name="remove", aliases=["r"])
+    async def _block_remove(
+        self, ctx: commands.Context, user_id: int, unban: bool = False
+    ):
         """ Remove a block entry. """
         query = """ DELETE FROM owner_blocked WHERE user_id = $1; """
-        coros = [self.bot.pool.execute(
-            query, user_id), self.unban_all(user_id)]
+        coros = [self.bot.pool.execute(query, user_id), self.unban_all(user_id)]
         config = self.bot.get_cog("Config")
-        if unban:
-            if config:
-                coros.append(config.global_unblock(ctx, user_id))
+        if unban and config:
+            coros.append(config.global_unblock(ctx, user_id))
         await asyncio.gather(*coros)
         return await ctx.message.add_reaction(self.bot.emoji[True])
+
 
 def setup(bot):
     """ Cog entrypoint. """

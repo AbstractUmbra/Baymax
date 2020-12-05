@@ -34,13 +34,18 @@ class TimeTable(db.Table, table_name="tz_store"):
 
 class TimezoneConverter(commands.Converter):
     async def convert(self, ctx: commands.Context, argument: str):
-        query = process.extract(query=argument.lower(),
-                                choices=pytz.all_timezones_set, limit=5)
-        if argument.lower() not in {timezone.lower() for timezone in pytz.all_timezones_set}:
-            matches = '\n'.join([f'`{index + 1}.` {match[0]}' for index, match in enumerate(
-                query)])
+        query = process.extract(
+            query=argument.lower(), choices=pytz.all_timezones_set, limit=5
+        )
+        if argument.lower() not in {
+            timezone.lower() for timezone in pytz.all_timezones_set
+        }:
+            matches = "\n".join(
+                [f"`{index + 1}.` {match[0]}" for index, match in enumerate(query)]
+            )
             raise commands.BadArgument(
-                f'That was not a recognised timezone. Maybe you meant one of these?\n{matches}')
+                f"That was not a recognised timezone. Maybe you meant one of these?\n{matches}"
+            )
 
         return pytz.timezone(query[0][0])
 
@@ -74,47 +79,48 @@ class Time(commands.Cog):
         if isinstance(error, commands.BadArgument):
             return await ctx.send(str(error))
 
-    def _gen_tz_embeds(self,
-                       requester: str,
-                       iterable: list):
+    def _gen_tz_embeds(self, requester: str, iterable: list):
         embeds = []
 
         for item in iterable:
-            embed = discord.Embed(
-                title="Timezone lists",
-                colour=discord.Colour.green()
-            )
+            embed = discord.Embed(title="Timezone lists", colour=discord.Colour.green())
             embed.description = "\n".join(item)
             fmt = f"Page {iterable.index(item)+1}/{len(iterable)}"
             embed.set_footer(text=f"{fmt} | Requested by: {requester}")
             embeds.append(embed)
         return embeds
 
-    def _curr_tz_time(self, curr_timezone: pytz.tzinfo.BaseTzInfo, *, ret_datetime: bool = False):
+    def _curr_tz_time(
+        self, curr_timezone: pytz.tzinfo.BaseTzInfo, *, ret_datetime: bool = False
+    ):
         """ We assume it's a good tz here. """
         dt_obj = datetime.now(curr_timezone)
         if ret_datetime:
             return dt_obj
         return time.hf_time(dt_obj)
 
-    @commands.command(aliases=['tz'])
-    async def timezone(self, ctx: commands.Context, *, timezone: TimezoneConverter = None) -> discord.Message:
+    @commands.command(aliases=["tz"])
+    async def timezone(
+        self, ctx: commands.Context, *, timezone: TimezoneConverter = None
+    ) -> discord.Message:
         """ This will return the time in a specified timezone. """
         if not timezone:
             timezone = random.choice(pytz.all_timezones)
         embed = discord.Embed(
             title=f"Current time in {timezone}",
-            description=f"```\n{self._curr_tz_time(timezone, ret_datetime=False)}\n```"
+            description=f"```\n{self._curr_tz_time(timezone, ret_datetime=False)}\n```",
         )
         embed.set_footer(text=f"Requested by: {ctx.author}")
         embed.timestamp = datetime.utcnow()
         return await ctx.send(embed=embed)
 
-    @commands.command(aliases=['tzs'])
+    @commands.command(aliases=["tzs"])
     @commands.cooldown(1, 15, commands.BucketType.channel)
     async def timezones(self, ctx: commands.Context):
         """ List all possible timezones... """
-        return await ctx.send("Nah bro, no more menu for this:\n<https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568>")
+        return await ctx.send(
+            "Nah bro, no more menu for this:\n<https://gist.github.com/heyalexej/8bf688fd67d7199be4a1682b3eec7568>"
+        )
 
     @commands.group(invoke_without_command=True)
     @commands.guild_only()
@@ -130,13 +136,15 @@ class Time(commands.Cog):
                 """
         result = await self.bot.pool.fetchrow(query, member.id, ctx.guild.id)
         if not result:
-            return await ctx.send(f"No timezone for {member} set or it's not public in this guild.")
-        member_timezone = result['tz']
+            return await ctx.send(
+                f"No timezone for {member} set or it's not public in this guild."
+            )
+        member_timezone = result["tz"]
         tz = await TimezoneConverter().convert(ctx, member_timezone)
         current_time = self._curr_tz_time(tz, ret_datetime=False)
         embed = discord.Embed(
-            title=f"Time for {member}",
-            description=f"```\n{current_time}\n```")
+            title=f"Time for {member}", description=f"```\n{current_time}\n```"
+        )
         embed.set_footer(text=member_timezone)
         embed.timestamp = datetime.utcnow()
         return await ctx.send(embed=embed)
@@ -151,11 +159,15 @@ class Time(commands.Cog):
                     SET guild_ids = tz_store.guild_ids || $2, tz = $3
                     WHERE tz_store.user_id = $1;
                 """
-        confirm = await ctx.prompt("This will make your timezone public in this guild, confirm?",
-                                   reacquire=False)
+        confirm = await ctx.prompt(
+            "This will make your timezone public in this guild, confirm?",
+            reacquire=False,
+        )
         if not confirm:
             return
-        await self.bot.pool.execute(query, ctx.author.id, [ctx.guild.id], set_timezone.zone)
+        await self.bot.pool.execute(
+            query, ctx.author.id, [ctx.guild.id], set_timezone.zone
+        )
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
     @time.command(name="remove")
@@ -183,7 +195,9 @@ class Time(commands.Cog):
     async def _clear(self, ctx):
         """ Clears your timezones from all guilds. """
         query = "DELETE FROM tz_store WHERE user_id = $1;"
-        confirm = await ctx.prompt("Are you sure you wish to purge your timezone from all guilds?")
+        confirm = await ctx.prompt(
+            "Are you sure you wish to purge your timezone from all guilds?"
+        )
         if not confirm:
             return
         await self.bot.pool.execute(query, ctx.author.id)
@@ -193,7 +207,9 @@ class Time(commands.Cog):
         """ Quick error handling for timezones. """
         error = getattr(error, "original", error)
         if isinstance(error, commands.MissingRequiredArgument):
-            return await ctx.send("How am I supposed to do this if you don't supply the timezone?")
+            return await ctx.send(
+                "How am I supposed to do this if you don't supply the timezone?"
+            )
 
 
 def setup(bot):

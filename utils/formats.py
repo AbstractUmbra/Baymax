@@ -5,8 +5,16 @@ import unicodedata
 
 from discord.utils import escape_markdown
 
-CONTROL_CHARS = re.compile('[%s]' % re.escape(''.join(chr(i) for i in range(
-    sys.maxunicode) if unicodedata.category(chr(i)).startswith('C'))))
+CONTROL_CHARS = re.compile(
+    "[%s]"
+    % re.escape(
+        "".join(
+            chr(i)
+            for i in range(sys.maxunicode)
+            if unicodedata.category(chr(i)).startswith("C")
+        )
+    )
+)
 
 
 def group(iterable, page_len=50):
@@ -23,25 +31,25 @@ class plural:
 
     def __format__(self, format_spec):
         v = self.value
-        singular, sep, plural = format_spec.partition('|')
-        plural = plural or f'{singular}s'
+        singular, sep, plural = format_spec.partition("|")
+        plural = plural or f"{singular}s"
         if abs(v) != 1:
-            return f'{v} {plural}'
-        return f'{v} {singular}'
+            return f"{v} {plural}"
+        return f"{v} {singular}"
 
 
-def human_join(seq, delim=', ', final='or'):
+def human_join(seq, delim=", ", final="or"):
     size = len(seq)
     if size == 0:
-        return ''
+        return ""
 
     if size == 1:
         return seq[0]
 
     if size == 2:
-        return f'{seq[0]} {final} {seq[1]}'
+        return f"{seq[0]} {final} {seq[1]}"
 
-    return delim.join(seq[:-1]) + f' {final} {seq[-1]}'
+    return delim.join(seq[:-1]) + f" {final} {seq[-1]}"
 
 
 class TabularData:
@@ -77,14 +85,14 @@ class TabularData:
         +-------+-----+
         """
 
-        sep = '+'.join('-' * w for w in self._widths)
-        sep = f'+{sep}+'
+        sep = "+".join("-" * w for w in self._widths)
+        sep = f"+{sep}+"
 
         to_draw = [sep]
 
         def get_entry(d):
-            elem = '|'.join(f'{e:^{self._widths[i]}}' for i, e in enumerate(d))
-            return f'|{elem}|'
+            elem = "|".join(f"{e:^{self._widths[i]}}" for i, e in enumerate(d))
+            return f"|{elem}|"
 
         to_draw.append(get_entry(self._columns))
         to_draw.append(sep)
@@ -93,35 +101,40 @@ class TabularData:
             to_draw.append(get_entry(row))
 
         to_draw.append(sep)
-        return '\n'.join(to_draw)
+        return "\n".join(to_draw)
 
 
-def to_codeblock(content, language='py', replace_existing=True, escape_md=True, new="'''"):
+def to_codeblock(
+    content, language="py", replace_existing=True, escape_md=True, new="'''"
+):
     if replace_existing:
-        content = content.replace('```', new)
+        content = content.replace("```", new)
     if escape_md:
         content = escape_markdown(content)
-    return f'```{language}\n{content}\n```'
+    return f"```{language}\n{content}\n```"
 
 
 def escape_invis(decode_error):
     decode_error.end = decode_error.start + 1
-    if CONTROL_CHARS.match(decode_error.object[decode_error.start:decode_error.end]):
+    if CONTROL_CHARS.match(decode_error.object[decode_error.start : decode_error.end]):
         return codecs.backslashreplace_errors(decode_error)
-    return decode_error.object[decode_error.start:decode_error.end].encode('utf-8'), decode_error.end
+    return (
+        decode_error.object[decode_error.start : decode_error.end].encode("utf-8"),
+        decode_error.end,
+    )
 
 
-codecs.register_error('escape-invis', escape_invis)
+codecs.register_error("escape-invis", escape_invis)
 
 
 def escape_invis_chars(content):
     """Escape invisible/control characters."""
-    return content.encode('ascii', 'escape-invis').decode('utf-8')
+    return content.encode("ascii", "escape-invis").decode("utf-8")
 
 
 def clean_emojis(line):
     """Escape custom emojis."""
-    return re.sub(r'<(a)?:([a-zA-Z0-9_]+):([0-9]+)>', '<\u200b\\1:\\2:\\3>', line)
+    return re.sub(r"<(a)?:([a-zA-Z0-9_]+):([0-9]+)>", "<\u200b\\1:\\2:\\3>", line)
 
 
 def clean_single_backtick(line):
@@ -129,12 +142,12 @@ def clean_single_backtick(line):
     Clean backticks so we don't accidentally escape, and escape custom emojis
     that would be discordified.
     """
-    if re.search('[^`]`[^`]', line) is not None:
+    if re.search("[^`]`[^`]", line) is not None:
         return "`%s`" % clean_double_backtick(line)
-    if (line[:2] == '``'):
-        line = '\u200b' + line
-    if (line[-1] == '`'):
-        line = line + '\u200b'
+    if line[:2] == "``":
+        line = "\u200b" + line
+    if line[-1] == "`":
+        line = line + "\u200b"
     return clean_emojis(line)
 
 
@@ -143,11 +156,11 @@ def clean_double_backtick(line):
     Clean backticks so we don't accidentally escape, and escape custom emojis
     that would be discordified.
     """
-    line.replace('``', '`\u200b`')
-    if (line[0] == '`'):
-        line = '\u200b' + line
-    if (line[-1] == '`'):
-        line = line + '\u200b'
+    line.replace("``", "`\u200b`")
+    if line[0] == "`":
+        line = "\u200b" + line
+    if line[-1] == "`":
+        line = line + "\u200b"
 
     return clean_emojis(line)
 
@@ -163,15 +176,15 @@ def clean_triple_backtick(line):
     i = 0
     n = 0
     while i < len(line):
-        if (line[i]) == '`':
+        if (line[i]) == "`":
             n += 1
         if n == 3:
-            line = line[:i] + '\u200b' + line[i:]
+            line = line[:i] + "\u200b" + line[i:]
             n = 1
             i += 1
         i += 1
 
-    if line[-1] == '`':
-        line += '\n'
+    if line[-1] == "`":
+        line += "\n"
 
     return clean_emojis(line)

@@ -1,11 +1,11 @@
-from jishaku.codeblocks import codeblock_converter
-
 import discord
 from discord.ext import commands
+from jishaku.codeblocks import codeblock_converter
 
 
 class Okayu(commands.Cog):
     """ Okayu specific commands. """
+
     def __init__(self, bot):
         self.bot = bot
 
@@ -13,7 +13,7 @@ class Okayu(commands.Cog):
     async def hello(self, ctx: commands.Context):
         """ Say hello to Okayu-sama. """
         file = discord.File("static/okayu.jpg", filename="okayu.jpg")
-        embed = discord.Embed(colour=self.bot.colour['dsc'])
+        embed = discord.Embed(colour=self.bot.colour["dsc"])
         embed.set_image(url="attachment://okayu.jpg")
         await ctx.send(f"モグ モグ!\n\n{self.bot.description}", embed=embed, file=file)
 
@@ -55,6 +55,7 @@ class Okayu(commands.Cog):
         """ Okayu naptime. """
         await ctx.send("さようなら!")
         await self.bot.logout()
+
 
 def setup(bot):
     bot.add_cog(Okayu(bot))

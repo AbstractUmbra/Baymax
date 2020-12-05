@@ -18,19 +18,24 @@ class RoboPages(menus.MenuPages):
         except discord.HTTPException:
             pass
 
-    @menus.button('\N{INFORMATION SOURCE}\ufe0f', position=menus.Last(3))
+    @menus.button("\N{INFORMATION SOURCE}\ufe0f", position=menus.Last(3))
     async def show_help(self, payload):
         """shows this message"""
-        embed = discord.Embed(title='Paginator help',
-                              description='Hello! Welcome to the help page.')
+        embed = discord.Embed(
+            title="Paginator help", description="Hello! Welcome to the help page."
+        )
         messages = []
         for (emoji, button) in self.buttons.items():
-            messages.append(f'{emoji}: {button.action.__doc__}')
+            messages.append(f"{emoji}: {button.action.__doc__}")
 
-        embed.add_field(name='What are these reactions for?',
-                        value='\n'.join(messages), inline=False)
+        embed.add_field(
+            name="What are these reactions for?",
+            value="\n".join(messages),
+            inline=False,
+        )
         embed.set_footer(
-            text=f'We were on page {self.current_page + 1} before this message.')
+            text=f"We were on page {self.current_page + 1} before this message."
+        )
         await self.message.edit(content=None, embed=embed)
 
         async def go_back_to_current_page():
@@ -39,23 +44,25 @@ class RoboPages(menus.MenuPages):
 
         self.bot.loop.create_task(go_back_to_current_page())
 
-    @menus.button('\N{INPUT SYMBOL FOR NUMBERS}', position=menus.Last(1.5))
+    @menus.button("\N{INPUT SYMBOL FOR NUMBERS}", position=menus.Last(1.5))
     async def numbered_page(self, payload):
         """lets you type a page number to go to"""
         channel = self.message.channel
         author_id = payload.user_id
         to_delete = []
-        to_delete.append(await channel.send('What page do you want to go to?'))
+        to_delete.append(await channel.send("What page do you want to go to?"))
 
         def message_check(m):
-            return m.author.id == author_id and \
-                channel == m.channel and \
-                m.content.isdigit()
+            return (
+                m.author.id == author_id
+                and channel == m.channel
+                and m.content.isdigit()
+            )
 
         try:
-            msg = await self.bot.wait_for('message', check=message_check, timeout=30.0)
+            msg = await self.bot.wait_for("message", check=message_check, timeout=30.0)
         except asyncio.TimeoutError:
-            to_delete.append(await channel.send('Took too long.'))
+            to_delete.append(await channel.send("Took too long."))
             await asyncio.sleep(5)
         else:
             page = int(msg.content)
@@ -84,17 +91,18 @@ class FieldPageSource(menus.ListPageSource):
 
         maximum = self.get_max_pages()
         if maximum > 1:
-            text = f'Page {menu.current_page + 1}/{maximum} ({len(self.entries)} entries)'
+            text = (
+                f"Page {menu.current_page + 1}/{maximum} ({len(self.entries)} entries)"
+            )
             self.embed.set_footer(text=text)
 
         return self.embed
 
 
 class TextPageSource(menus.ListPageSource):
-    def __init__(self, text, *, prefix='```', suffix='```', max_size=2000):
-        pages = CommandPaginator(
-            prefix=prefix, suffix=suffix, max_size=max_size - 200)
-        for line in text.split('\n'):
+    def __init__(self, text, *, prefix="```", suffix="```", max_size=2000):
+        pages = CommandPaginator(prefix=prefix, suffix=suffix, max_size=max_size - 200)
+        for line in text.split("\n"):
             pages.add_line(line)
 
         super().__init__(entries=pages, per_page=1)
@@ -102,7 +110,7 @@ class TextPageSource(menus.ListPageSource):
     async def format_page(self, menu, content):
         maximum = self.get_max_pages()
         if maximum > 1:
-            return f'{content}\nPage {menu.current_page + 1}/{maximum}'
+            return f"{content}\nPage {menu.current_page + 1}/{maximum}"
         return content
 
 
@@ -114,20 +122,21 @@ class SimplePageSource(menus.ListPageSource):
     async def format_page(self, menu, entries):
         pages = []
         for index, entry in enumerate(entries, start=menu.current_page * self.per_page):
-            pages.append(f'{index + 1}. {entry}')
+            pages.append(f"{index + 1}. {entry}")
 
         maximum = self.get_max_pages()
         if maximum > 1:
-            footer = f'Page {menu.current_page + 1}/{maximum} ({len(self.entries)} entries)'
+            footer = (
+                f"Page {menu.current_page + 1}/{maximum} ({len(self.entries)} entries)"
+            )
             menu.embed.set_footer(text=footer)
 
         if self.initial_page and self.is_paginating():
-            pages.append('')
-            pages.append(
-                'Confused? React with \N{INFORMATION SOURCE} for more info.')
+            pages.append("")
+            pages.append("Confused? React with \N{INFORMATION SOURCE} for more info.")
             self.initial_page = False
 
-        menu.embed.description = '\n'.join(pages)
+        menu.embed.description = "\n".join(pages)
         return menu.embed
 
 

@@ -13,7 +13,8 @@ class Campfire(commands.Cog):
     def __init__(self, bot: commands.Command):
         self.bot = bot
         self._campfire_cd = commands.CooldownMapping.from_cooldown(
-            rate=3, per=10.0, type=commands.BucketType.user)
+            rate=3, per=10.0, type=commands.BucketType.user
+        )
 
     def strip(self, content: str) -> str:
         return content.strip("\u200b")
@@ -25,11 +26,15 @@ class Campfire(commands.Cog):
         if retry:
             return
         else:
-            await cheater_message.channel.send(f"{cheater_message.author.mention} is a fucking cheater.")
+            await cheater_message.channel.send(
+                f"{cheater_message.author.mention} is a fucking cheater."
+            )
 
     @commands.Cog.listener("on_message")
     @commands.Cog.listener("on_message_edit")
-    async def message_memes(self, before: discord.Message, after: discord.Message = None) -> None:
+    async def message_memes(
+        self, before: discord.Message, after: discord.Message = None
+    ) -> None:
         if not before.guild or not before.guild.id == 766520806289178646:
             return
         if before.author.bot:
@@ -51,6 +56,15 @@ class Campfire(commands.Cog):
                     await before.add_reaction("❌")
                 except discord.Forbidden:
                     return await self.cheater(message)
+
+    # Bonfire
+    @commands.Cog.listener()
+    async def on_member_join(self, member):
+        if member.guild.id == 766520806289178646:
+            if member.bot:
+                return await member.add_roles(discord.Object(id=766522043143290900))
+            return await member.add_roles(discord.Object(id=766525464092868628))
+
 
 def setup(bot: commands.Bot):
     bot.add_cog(Campfire(bot))

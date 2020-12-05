@@ -2,7 +2,6 @@ import typing
 from asyncio import TimeoutError as AsynTimeOut
 
 import asyncpg
-
 import discord
 from discord.ext import commands
 from utils import cache, db
@@ -14,6 +13,7 @@ class ReactionRoleError(commands.CheckFailure):
 
 def requires_reactionroles():
     """ Reactionrole decorator check. """
+
     async def pred(ctx):
         """ Quick predicate, returns boolean. """
         if not ctx.guild:
@@ -24,14 +24,17 @@ def requires_reactionroles():
         ctx.reactionroles = await cog.get_reactionroles_config(ctx.guild.id)
         if not ctx.reactionroles.channel:
             raise ReactionRoleError(
-                "\N{WARNING SIGN} reactionroles have not been set up for this guild.")
+                "\N{WARNING SIGN} reactionroles have not been set up for this guild."
+            )
 
         return True
+
     return commands.check(pred)
 
 
 class ReactionRolesConfig:
     """ Generic config object - dataclass. """
+
     __slots__ = ("bot", "guild_id", "channel_id", "message_id")
 
     def __init__(self, *, guild_id, bot, record=None):
@@ -39,8 +42,8 @@ class ReactionRolesConfig:
         self.bot = bot
 
         if record:
-            self.channel_id = record['channel_id']
-            self.message_id = record['message_id']
+            self.channel_id = record["channel_id"]
+            self.message_id = record["message_id"]
         else:
             self.channel_id = None
 
@@ -53,6 +56,7 @@ class ReactionRolesConfig:
 
 class ReactionRolesConfigTable(db.Table, table_name="reactionroles_config"):
     """ Creates the config table. """
+
     id = db.PrimaryKeyColumn()
 
     guild_id = db.Column(db.Integer(big=True), index=True)
@@ -62,6 +66,7 @@ class ReactionRolesConfigTable(db.Table, table_name="reactionroles_config"):
 
 class ReactionRolesTable(db.Table, table_name="reactionroles"):
     """ Creates the reactionroles table. """
+
     id = db.PrimaryKeyColumn()
 
     guild_id = db.Column(db.Integer(big=True), index=True)
@@ -91,18 +96,27 @@ class ReactionRoles(commands.Cog):
         await self.bot.pool.execute(conf_query, guild.id)
 
     @commands.Cog.listener()
-    async def on_guild_channel_delete(self, channel: typing.Union[discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel]):
+    async def on_guild_channel_delete(
+        self,
+        channel: typing.Union[
+            discord.TextChannel, discord.VoiceChannel, discord.CategoryChannel
+        ],
+    ):
         if not isinstance(channel, discord.TextChannel):
             return
-        conf_query = "DELETE FROM reactionroles_config WHERE channel_id = $1 RETURNING guild_id;"
+        conf_query = (
+            "DELETE FROM reactionroles_config WHERE channel_id = $1 RETURNING guild_id;"
+        )
         role_query = "DELETE FROM reactionroles WHERE guild_id = $1;"
         guild_id = await self.bot.pool.fetchrow(conf_query, channel.id)
         if not guild_id:
             return
-        return await self.bot.pool.execute(role_query, guild_id['guild_id'])
+        return await self.bot.pool.execute(role_query, guild_id["guild_id"])
 
     @cache.cache()
-    async def get_reactionroles_config(self, guild_id: int, *, connection=None) -> ReactionRolesConfig:
+    async def get_reactionroles_config(
+        self, guild_id: int, *, connection=None
+    ) -> ReactionRolesConfig:
         """ Gets the guild config from postgres. """
         connection = connection or self.bot.pool
         query = """SELECT *
@@ -112,7 +126,9 @@ class ReactionRoles(commands.Cog):
         results = await connection.fetchrow(query, guild_id)
         return ReactionRolesConfig(guild_id=guild_id, bot=self.bot, record=results)
 
-    async def get_reactionroles(self, guild_id: int, *, connection=None) -> typing.List[asyncpg.Record]:
+    async def get_reactionroles(
+        self, guild_id: int, *, connection=None
+    ) -> typing.List[asyncpg.Record]:
         """ Gets the reactionroles for the current guild. """
         connection = connection or self.bot.pool
         query = """SELECT *
@@ -141,53 +157,73 @@ class ReactionRoles(commands.Cog):
             return
         if member.guild.owner_id == member.id:
             # guild owner
-            return await reactionrole_config.channel.send("Can't edit the guild owner lmao.", delete_after=3)
-        reaction_message = await reactionrole_config.channel.fetch_message(reactionrole_config.message_id)
+            return await reactionrole_config.channel.send(
+                "Can't edit the guild owner lmao.", delete_after=3
+            )
+        reaction_message = await reactionrole_config.channel.fetch_message(
+            reactionrole_config.message_id
+        )
         if getattr(payload.emoji, "id") is not None:
             for record in reactionrole_deets:
                 try:
-                    int(record['role_emoji'])
+                    int(record["role_emoji"])
                 except ValueError:
                     continue
                 else:
-                    if int(record['role_emoji']) == payload.emoji.id:
+                    if int(record["role_emoji"]) == payload.emoji.id:
                         rrole_record = record
                         break
         else:
             for record in reactionrole_deets:
-                if str(record['role_emoji']) == str(payload.emoji):
+                if str(record["role_emoji"]) == str(payload.emoji):
                     rrole_record = record
                     break
-        requested_role = guild.get_role(rrole_record['role_id'])
-        if rrole_record['approval_req']:
-            approval_channel = guild.get_channel(
-                rrole_record['approval_channel_id'])
-            message = await approval_channel.send(f"{member.name} has requested access to the {requested_role.mention} role. Do you accept?")
+        requested_role = guild.get_role(rrole_record["role_id"])
+        if rrole_record["approval_req"]:
+            approval_channel = guild.get_channel(rrole_record["approval_channel_id"])
+            message = await approval_channel.send(
+                f"{member.name} has requested access to the {requested_role.mention} role. Do you accept?"
+            )
             await message.add_reaction("👍")
             await message.add_reaction("👎")
 
             def check(reaction, user):
                 """ Approval check. """
-                return reaction.message.channel.id == approval_channel.id and requested_role in user.roles
+                return (
+                    reaction.message.channel.id == approval_channel.id
+                    and requested_role in user.roles
+                )
 
             try:
                 reaction, react_member = await self.bot.wait_for(
-                    "reaction_add", timeout=28800.0, check=check)
+                    "reaction_add", timeout=28800.0, check=check
+                )
             except AsynTimeOut:
                 await approval_channel.send(
                     f"Approval for {member.name} not gained within 24 hours. "
-                    f"Cancelling request.", delete_after=10)
+                    f"Cancelling request.",
+                    delete_after=10,
+                )
                 return await message.delete()
             else:
                 if str(reaction.emoji) == "👎":
-                    await approval_channel.send(f"Approval for {member.name} has been rejected by {react_member.name}.", delete_after=5)
+                    await approval_channel.send(
+                        f"Approval for {member.name} has been rejected by {react_member.name}.",
+                        delete_after=5,
+                    )
                     await reaction_message.remove_reaction(payload.emoji, member)
                     return await message.delete(delay=5)
                 elif str(reaction.emoji) == "👍":
-                    await member.add_roles(requested_role, reason=f"Reactionrole - approved by {member.name}", atomic=True)
+                    await member.add_roles(
+                        requested_role,
+                        reason=f"Reactionrole - approved by {member.name}",
+                        atomic=True,
+                    )
                     return await message.delete(delay=5)
         else:
-            return await member.add_roles(requested_role, reason="Reactionrole", atomic=True)
+            return await member.add_roles(
+                requested_role, reason="Reactionrole", atomic=True
+            )
 
     @commands.Cog.listener()
     async def on_raw_reaction_remove(self, payload: discord.RawReactionActionEvent):
@@ -208,24 +244,28 @@ class ReactionRoles(commands.Cog):
             return
         if member.guild.owner_id == member.id:
             # guild owner
-            return await reactionrole_config.channel.send("Can't edit the guild owner.", delete_after=3)
-        reaction_message = await reactionrole_config.channel.fetch_message(reactionrole_config.message_id)
+            return await reactionrole_config.channel.send(
+                "Can't edit the guild owner.", delete_after=3
+            )
+        reaction_message = await reactionrole_config.channel.fetch_message(
+            reactionrole_config.message_id
+        )
         if getattr(payload.emoji, "id") is not None:
             for record in reactionrole_deets:
                 try:
-                    int(record['role_emoji'])
+                    int(record["role_emoji"])
                 except ValueError:
                     continue
                 else:
-                    if int(record['role_emoji']) == payload.emoji.id:
+                    if int(record["role_emoji"]) == payload.emoji.id:
                         rrole_record = record
                         break
         else:
             for record in reactionrole_deets:
-                if str(record['role_emoji']) == str(payload.emoji):
+                if str(record["role_emoji"]) == str(payload.emoji):
                     rrole_record = record
                     break
-        deleting_role = guild.get_role(rrole_record['role_id'])
+        deleting_role = guild.get_role(rrole_record["role_id"])
         await member.remove_roles(deleting_role)
         return await reaction_message.remove_reaction(payload.emoji, member)
 
@@ -247,38 +287,64 @@ class ReactionRoles(commands.Cog):
     @requires_reactionroles()
     @reactrole.command(name="add")
     @commands.has_guild_permissions(manage_roles=True)
-    async def rrole_add(self,
-                        ctx: commands.Context,
-                        role: discord.Role,
-                        emoji: typing.Union[discord.Emoji, discord.PartialEmoji, str],
-                        approval_channel: typing.Optional[discord.TextChannel]):
+    async def rrole_add(
+        self,
+        ctx: commands.Context,
+        role: discord.Role,
+        emoji: typing.Union[discord.Emoji, discord.PartialEmoji, str],
+        approval_channel: typing.Optional[discord.TextChannel],
+    ):
         """ Add a reaction role for this guild. """
         current_reactionroles = await self.get_reactionroles(ctx.guild.id)
         current_config = await self.get_reactionroles_config(ctx.guild.id)
         message_channel = current_config.channel
         message = await message_channel.fetch_message(current_config.message_id)
-        roles = [record['role_id'] for record in current_reactionroles]
-        emojis = [record['role_emoji'] for record in current_reactionroles]
+        roles = [record["role_id"] for record in current_reactionroles]
+        emojis = [record["role_emoji"] for record in current_reactionroles]
         if role.id in roles:
-            return await ctx.send("\N{CROSS MARK} This role is already set up for reactionroles.")
+            return await ctx.send(
+                "\N{CROSS MARK} This role is already set up for reactionroles."
+            )
         if isinstance(emoji, str):
             if emoji in emojis:
-                return await ctx.send("\N{CROSS MARK} This emoji is already set up for reactionroles.")
+                return await ctx.send(
+                    "\N{CROSS MARK} This emoji is already set up for reactionroles."
+                )
         elif isinstance(emoji, (discord.Emoji, discord.PartialEmoji)):
             if not hasattr(emoji, "guild_id"):
-                return await ctx.send("You must use an emoji that belongs to this guild, if custom.")
+                return await ctx.send(
+                    "You must use an emoji that belongs to this guild, if custom."
+                )
             if str(emoji.id) in emojis:
-                return await ctx.send("\N{CROSS MARK} This emoji is already set up for reactionroles.")
+                return await ctx.send(
+                    "\N{CROSS MARK} This emoji is already set up for reactionroles."
+                )
         if approval_channel:
             query = """INSERT INTO reactionroles (guild_id, role_id, role_emoji, approval_req, approval_channel_id)
                     VALUES ($1, $2, $3, $4, $5)
                     """
             if isinstance(emoji, str):
-                await ctx.db.execute(query, ctx.guild.id, role.id, emoji, True, approval_channel.id)
+                await ctx.db.execute(
+                    query, ctx.guild.id, role.id, emoji, True, approval_channel.id
+                )
             elif isinstance(emoji, discord.Emoji):
-                await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), True, approval_channel.id)
+                await ctx.db.execute(
+                    query,
+                    ctx.guild.id,
+                    role.id,
+                    str(emoji.id),
+                    True,
+                    approval_channel.id,
+                )
             elif isinstance(emoji, discord.PartialEmoji):
-                await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), True, approval_channel.id)
+                await ctx.db.execute(
+                    query,
+                    ctx.guild.id,
+                    role.id,
+                    str(emoji.id),
+                    True,
+                    approval_channel.id,
+                )
         else:
             query = """INSERT INTO reactionroles(guild_id, role_id, role_emoji, approval_req)
                     VALUES($1, $2, $3, $4)
@@ -287,7 +353,9 @@ class ReactionRoles(commands.Cog):
                 await ctx.db.execute(query, ctx.guild.id, role.id, emoji, False)
             elif isinstance(emoji, discord.Emoji):
                 if not emoji.guild_id == ctx.guild.id:
-                    return await ctx.send("You must use an emoji that belongs to this guild, if custom.")
+                    return await ctx.send(
+                        "You must use an emoji that belongs to this guild, if custom."
+                    )
                 await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), False)
             elif isinstance(emoji, discord.PartialEmoji):
                 await ctx.db.execute(query, ctx.guild.id, role.id, str(emoji.id), False)
@@ -305,25 +373,32 @@ class ReactionRoles(commands.Cog):
             return await self.rrole_list(ctx)
         query = """ SELECT guild_id FROM reactionroles WHERE id = $1; """
         results = await ctx.db.fetchrow(query, record_id)
-        if results['guild_id'] != ctx.guild.id:
-            return await ctx.send("Invalid reactionroles ID. It must belong to your guild.")
-        delete_query = """DELETE FROM reactionroles WHERE id = $1 RETURNING role_id, role_emoji;"""
+        if results["guild_id"] != ctx.guild.id:
+            return await ctx.send(
+                "Invalid reactionroles ID. It must belong to your guild."
+            )
+        delete_query = (
+            """DELETE FROM reactionroles WHERE id = $1 RETURNING role_id, role_emoji;"""
+        )
         deletion = await ctx.db.fetchrow(delete_query, record_id)
         if deletion:
-            role = ctx.guild.get_role(deletion['role_id'])
+            role = ctx.guild.get_role(deletion["role_id"])
             await ctx.send(f"Deleted the entry {record_id} for role: {role.name}.")
         else:
             return await ctx.send("Invalid record ID.")
         current_config = await self.get_reactionroles_config(ctx.guild.id)
         channel = current_config.channel
         message = await channel.fetch_message(current_config.message_id)
-        emoji = deletion['role_emoji']
+        emoji = deletion["role_emoji"]
         try:
             emoji = await ctx.guild.fetch_emoji(int(emoji))
         except ValueError:
             # it's a string...
             pass
-        await ctx.send("Done. Just remember to edit the message and remove that reaction!", delete_after=5)
+        await ctx.send(
+            "Done. Just remember to edit the message and remove that reaction!",
+            delete_after=5,
+        )
         return await message.remove_reaction(emoji, ctx.me)
 
     @requires_reactionroles()
@@ -335,8 +410,7 @@ class ReactionRoles(commands.Cog):
         rrole_stuff = await ctx.db.fetch(query, ctx.guild.id)
         if not rrole_stuff:
             return await ctx.send("This guild has no reaction roles set up.")
-        embed = discord.Embed(title="Guild ReactRoles",
-                              colour=discord.Colour.blurple())
+        embed = discord.Embed(title="Guild ReactRoles", colour=discord.Colour.blurple())
         for _id, _, role_id, role_emoji, approval, approval_channel in rrole_stuff:
             role = ctx.guild.get_role(role_id)
             try:
@@ -346,11 +420,15 @@ class ReactionRoles(commands.Cog):
                 emoji = role_emoji
             if approval:
                 channel = ctx.guild.get_channel(approval_channel)
-                embed.add_field(name=f"{_id} - {role.name}",
-                                value=f"{emoji} | approval in: {channel.mention}", inline=False)
+                embed.add_field(
+                    name=f"{_id} - {role.name}",
+                    value=f"{emoji} | approval in: {channel.mention}",
+                    inline=False,
+                )
             else:
-                embed.add_field(name=f"{_id} - {role.name}",
-                                value=f"{emoji}", inline=False)
+                embed.add_field(
+                    name=f"{_id} - {role.name}", value=f"{emoji}", inline=False
+                )
 
         return await ctx.send(embed=embed)
 

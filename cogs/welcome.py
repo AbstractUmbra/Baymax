@@ -1,12 +1,10 @@
 import discord
 from discord.ext import commands
-
 from utils import db
 
 
 class WelcomeTable(db.Table, table_name="welcome_config"):
-    guild_id = db.Column(db.Integer(big=True), index=False,
-                         primary_key=True)
+    guild_id = db.Column(db.Integer(big=True), index=False, primary_key=True)
     welcome_channel = db.Column(db.Integer(big=True))
     welcome_message = db.Column(db.String)
 
@@ -24,8 +22,11 @@ class Welcome(commands.Cog):
         if not results:
             return
 
-        channel = member.guild.get_channel(results['welcome_channel'])
-        return await channel.send(f"Hey {member.mention}\n\n{results['welcome_message']}", allowed_mentions=discord.AllowedMentions(users=True))
+        channel = member.guild.get_channel(results["welcome_channel"])
+        return await channel.send(
+            f"Hey {member.mention}\n\n{results['welcome_message']}",
+            allowed_mentions=discord.AllowedMentions(users=True),
+        )
 
     @commands.group(name="welcome", invoke_without_command=True)
     async def welcome_group(self, ctx, channel: discord.TextChannel, *, message: str):
@@ -55,12 +56,14 @@ class Welcome(commands.Cog):
         """ Command. Let's have a look at your active help message. """
         query = "SELECT * FROM welcome_config WHERE guild_id = $1"
         record = await self.bot.pool.fetchrow(query, ctx.guild.id)
-        channel = ctx.guild.get_channel(record['welcome_channel'])
+        channel = ctx.guild.get_channel(record["welcome_channel"])
 
         if not channel:
             return await ctx.send("It seems the welcome channel has been deleted.")
 
-        return await ctx.send(f"Message is being sent to {channel.mention}. Message is:\n\n{record['welcome_message']}")
+        return await ctx.send(
+            f"Message is being sent to {channel.mention}. Message is:\n\n{record['welcome_message']}"
+        )
 
 
 def setup(bot):

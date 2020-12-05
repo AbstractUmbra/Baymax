@@ -33,53 +33,56 @@ class StatisticsTable(db.Table, table_name="statistics"):
 
 
 class SpoilerCache:
-    __slots__ = ('author_id', 'channel_id', 'title', 'text', 'attachments')
+    __slots__ = ("author_id", "channel_id", "title", "text", "attachments")
 
     def __init__(self, data):
-        self.author_id = data['author_id']
-        self.channel_id = data['channel_id']
-        self.title = data['title']
-        self.text = data['text']
-        self.attachments = data['attachments']
+        self.author_id = data["author_id"]
+        self.channel_id = data["channel_id"]
+        self.title = data["title"]
+        self.text = data["text"]
+        self.attachments = data["attachments"]
 
     def has_single_image(self):
-        return self.attachments and self.attachments[0].filename.lower().endswith(('.gif', '.png', '.jpg', '.jpeg'))
+        return self.attachments and self.attachments[0].filename.lower().endswith(
+            (".gif", ".png", ".jpg", ".jpeg")
+        )
 
     def to_embed(self, bot):
-        embed = discord.Embed(title=f'{self.title} Spoiler', colour=0x01AEEE)
+        embed = discord.Embed(title=f"{self.title} Spoiler", colour=0x01AEEE)
         if self.text:
             embed.description = self.text
 
         if self.has_single_image():
             if self.text is None:
-                embed.title = f'{self.title} Spoiler Image'
+                embed.title = f"{self.title} Spoiler Image"
             embed.set_image(url=self.attachments[0].url)
             attachments = self.attachments[1:]
         else:
             attachments = self.attachments
 
         if attachments:
-            value = '\n'.join(f'[{a.filename}]({a.url})' for a in attachments)
-            embed.add_field(name='Attachments', value=value, inline=False)
+            value = "\n".join(f"[{a.filename}]({a.url})" for a in attachments)
+            embed.add_field(name="Attachments", value=value, inline=False)
 
         user = bot.get_user(self.author_id)
         if user:
-            embed.set_author(
-                name=str(user), icon_url=user.avatar_url_as(format='png'))
+            embed.set_author(name=str(user), icon_url=user.avatar_url_as(format="png"))
 
         return embed
 
     def to_spoiler_embed(self, ctx, storage_message):
-        description = 'React with <:QuestionMaybe:738038828928860269> to reveal the spoiler.'
-        embed = discord.Embed(
-            title=f'{self.title} Spoiler', description=description)
+        description = (
+            "React with <:QuestionMaybe:738038828928860269> to reveal the spoiler."
+        )
+        embed = discord.Embed(title=f"{self.title} Spoiler", description=description)
         if self.has_single_image() and self.text is None:
-            embed.title = f'{self.title} Spoiler Image'
+            embed.title = f"{self.title} Spoiler Image"
 
         embed.set_footer(text=storage_message.id)
         embed.colour = 0x01AEEE
         embed.set_author(
-            name=ctx.author, icon_url=ctx.author.avatar_url_as(format='png'))
+            name=ctx.author, icon_url=ctx.author.avatar_url_as(format="png")
+        )
         return embed
 
 
@@ -110,30 +113,50 @@ class Fun(commands.Cog):
         self.channel_creates = 0
         self.command_count = 0
         self.bulk_update.start()
-        self.pepe = {'up': "<:pepePoint_up:728347439391572000>",
-                     'down': "<:pepePoint_down:728347439571927122>",
-                     'left': "<:pepePoint_left:728347439387377737>",
-                     'right': "<:pepePoint:728347439903277056>"}
+        self.pepe = {
+            "up": "<:pepePoint_up:728347439391572000>",
+            "down": "<:pepePoint_down:728347439571927122>",
+            "left": "<:pepePoint_left:728347439387377737>",
+            "right": "<:pepePoint:728347439903277056>",
+        }
         self.translator = googletrans.Translator()
         self._spoiler_cache = LRU(128)
         self._spoiler_cooldown = SpoilerCooldown()
 
     async def do_ocr(self, url: str) -> Optional[str]:
-        async with self.bot.session.get("https://api.tsu.sh/google/ocr", params={"q": url}) as resp:
-            data = await resp.json()
+        async with self.bot.session.get(
+            "https://api.tsu.sh/google/ocr", params={"q": url}
+        ) as resp:
+            # data = await resp.json()
+            data = await resp.text()
+            return data
         ocr_text = data.get("text")
-        ocr_text = ocr_text if (len(ocr_text) < 4000) else str(await self.bot.mb_client.post(ocr_text))
+        ocr_text = (
+            ocr_text
+            if (len(ocr_text) < 4000)
+            else str(await self.bot.mb_client.post(ocr_text))
+        )
         return ocr_text
 
     async def redirect_post(self, ctx, title, text):
-        storage = self.bot.get_guild(
-            705500489248145459).get_channel(772045165049020416)
+        storage = self.bot.get_guild(705500489248145459).get_channel(772045165049020416)
 
         supported_attachments = (
-            '.png', '.jpg', '.jpeg', '.webm', '.gif', '.mp4', '.txt')
-        if not all(attach.filename.lower().endswith(supported_attachments) for attach in ctx.message.attachments):
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".webm",
+            ".gif",
+            ".mp4",
+            ".txt",
+        )
+        if not all(
+            attach.filename.lower().endswith(supported_attachments)
+            for attach in ctx.message.attachments
+        ):
             raise RuntimeError(
-                f'Unsupported file in attachments. Only {", ".join(supported_attachments)} supported.')
+                f'Unsupported file in attachments. Only {", ".join(supported_attachments)} supported.'
+            )
 
         files = []
         total_bytes = 0
@@ -143,7 +166,7 @@ class Fun(commands.Cog):
                 if resp.status != 200:
                     continue
 
-                content_length = int(resp.headers.get('Content-Length'))
+                content_length = int(resp.headers.get("Content-Length"))
 
                 # file too big, skip it
                 if (total_bytes + content_length) > eight_mib:
@@ -170,14 +193,15 @@ class Fun(commands.Cog):
             message = await storage.send(embed=data, files=files)
         except discord.HTTPException as e:
             raise RuntimeError(
-                f'Sorry. Could not store message due to {e.__class__.__name__}: {e}.') from e
+                f"Sorry. Could not store message due to {e.__class__.__name__}: {e}."
+            ) from e
 
         to_dict = {
-            'author_id': ctx.author.id,
-            'channel_id': ctx.channel.id,
-            'attachments': message.attachments,
-            'title': title,
-            'text': text
+            "author_id": ctx.author.id,
+            "channel_id": ctx.channel.id,
+            "attachments": message.attachments,
+            "title": title,
+            "text": text,
         }
 
         cache = SpoilerCache(to_dict)
@@ -189,8 +213,7 @@ class Fun(commands.Cog):
         except KeyError:
             pass
 
-        storage = self.bot.get_guild(
-            182325885867786241).get_channel(430229522340773899)
+        storage = self.bot.get_guild(182325885867786241).get_channel(430229522340773899)
 
         # slow path requires 2 lookups
         # first is looking up the message_id of the original post
@@ -210,11 +233,11 @@ class Fun(commands.Cog):
 
         data = message.embeds[0]
         to_dict = {
-            'author_id': int(data.author.name),
-            'channel_id': int(data.footer.text),
-            'attachments': message.attachments,
-            'title': data.title,
-            'text': None if not data.description else data.description
+            "author_id": int(data.author.name),
+            "channel_id": int(data.footer.text),
+            "attachments": message.attachments,
+            "title": data.title,
+            "text": None if not data.description else data.description,
         }
         cache = SpoilerCache(to_dict)
         self._spoiler_cache[message_id] = cache
@@ -255,16 +278,18 @@ class Fun(commands.Cog):
         """
 
         if len(title) > 100:
-            return await ctx.send('Sorry. Title has to be shorter than 100 characters.')
+            return await ctx.send("Sorry. Title has to be shorter than 100 characters.")
 
         try:
             storage_message, cache = await self.redirect_post(ctx, title, text)
         except Exception as e:
             return await ctx.send(str(e))
 
-        spoiler_message = await ctx.send(embed=cache.to_spoiler_embed(ctx, storage_message))
+        spoiler_message = await ctx.send(
+            embed=cache.to_spoiler_embed(ctx, storage_message)
+        )
         self._spoiler_cache[spoiler_message.id] = cache
-        await spoiler_message.add_reaction(':spoiler:430469957042831371')
+        await spoiler_message.add_reaction(":spoiler:430469957042831371")
 
     @commands.group(invoke_without_command=True, skip_extra=False)
     async def abt(self, ctx, *, content: commands.clean_content):
@@ -276,6 +301,7 @@ class Fun(commands.Cog):
             if get.isupper():
                 return lang.ab_charmap[get.lower()].upper()
             return lang.ab_charmap[get]
+
         repl = re.sub("[a-zA-Z]", trans, content)
         fin = re.sub(ABT_REG, lambda m: keep.pop(0), repl)
         await ctx.send(fin)
@@ -289,8 +315,9 @@ class Fun(commands.Cog):
             if char == "~":
                 br = not br
             if br and (char.lower() in ascii_lowercase):
-                new_str += [key for key,
-                            val in lang.ab_charmap.items() if val == char.lower()][0]
+                new_str += [
+                    key for key, val in lang.ab_charmap.items() if val == char.lower()
+                ][0]
             else:
                 new_str += char
         await ctx.send(new_str.replace("~", "").capitalize())
@@ -301,7 +328,9 @@ class Fun(commands.Cog):
             raise commands.BadArgument("Url or attachment required.")
         image_url = image_url or ctx.message.attachments[0].url
         data = await self.do_ocr(image_url) or "No text returned."
-        await ctx.send(embed=discord.Embed(description=data, colour=self.bot.colour['dsc']))
+        await ctx.send(
+            embed=discord.Embed(description=data, colour=self.bot.colour["dsc"])
+        )
 
     @commands.command()
     async def ocrt(self, ctx, *, image_url: str = None):
@@ -316,21 +345,22 @@ class Fun(commands.Cog):
     @commands.command(hidden=True)
     async def translate(self, ctx, *, message: commands.clean_content):
         """Translates a message to English using Google translate."""
-        ret = await self.bot.loop.run_in_executor(None, self.translator.translate, message)
+        ret = await self.bot.loop.run_in_executor(
+            None, self.translator.translate, message
+        )
 
-        embed = discord.Embed(title='Translated', colour=0x000001)
-        src = googletrans.LANGUAGES.get(ret.src, '(auto-detected)').title()
-        dest = googletrans.LANGUAGES.get(ret.dest, 'Unknown').title()
-        source_text = ret.origin if len(
-            ret.origin) < 1000 else "Too long to display."
+        embed = discord.Embed(title="Translated", colour=0x000001)
+        src = googletrans.LANGUAGES.get(ret.src, "(auto-detected)").title()
+        dest = googletrans.LANGUAGES.get(ret.dest, "Unknown").title()
+        source_text = ret.origin if len(ret.origin) < 1000 else "Too long to display."
         if len(ret.text) > 1000:
             lines = "\n".join(textwrap.wrap(ret.text))
             url = await self.bot.mb_client.post(lines, syntax="text")
             dest_text = f"[Here!]({url})"
         else:
             dest_text = ret.text
-        embed.add_field(name=f'From {src}', value=source_text, inline=False)
-        embed.add_field(name=f'To {dest}', value=dest_text, inline=False)
+        embed.add_field(name=f"From {src}", value=source_text, inline=False)
+        embed.add_field(name=f"To {dest}", value=dest_text, inline=False)
         await ctx.send(embed=embed)
 
     @commands.Cog.listener()
@@ -349,16 +379,18 @@ class Fun(commands.Cog):
         if self.bot.user in message.mentions:
             channel = self.bot.get_channel(MENTION_CHANNEL_ID)
             embed = discord.Embed(title="Okayu was mentioned!")
-            embed.set_author(name=message.author.name,
-                             icon_url=message.author.avatar_url)
+            embed.set_author(
+                name=message.author.name, icon_url=message.author.avatar_url
+            )
             embed.description = f"{message.content}\n\n[Jump!]({message.jump_url})"
             embed.timestamp = message.created_at
             await channel.send(embed=embed)
         elif not message.guild:
             channel = self.bot.get_channel(DM_CHANNEL_ID)
             embed = discord.Embed(title="Okayu was DM'd.")
-            embed.set_author(name=message.author.name,
-                             icon_url=message.author.avatar_url)
+            embed.set_author(
+                name=message.author.name, icon_url=message.author.avatar_url
+            )
             embed.description = f"{message.content}"
             embed.timestamp = message.created_at
             await channel.send(embed=embed)
@@ -413,7 +445,17 @@ class Fun(commands.Cog):
                     WHERE id = 1;
                 """
         async with self.lock:
-            await self.bot.pool.execute(query, self.message_deletes, self.bulk_message_deletes, self.message_edits, self.bans, self.unbans, self.channel_deletes, self.channel_creates, self.command_count)
+            await self.bot.pool.execute(
+                query,
+                self.message_deletes,
+                self.bulk_message_deletes,
+                self.message_edits,
+                self.bans,
+                self.unbans,
+                self.channel_deletes,
+                self.channel_creates,
+                self.command_count,
+            )
             self.message_deletes = 0
             self.bulk_message_deletes = 0
             self.message_edits = 0
@@ -429,18 +471,21 @@ class Fun(commands.Cog):
         query = "SELECT * FROM statistics LIMIT 1;"
         stat_record = await self.bot.pool.fetchrow(query)
 
-        message_deletes = stat_record['message_deletes'] + self.message_deletes
-        bulk_message_deletes = stat_record['bulk_message_deletes'] + \
-            self.bulk_message_deletes
-        message_edits = stat_record['message_edits'] + self.message_edits
-        bans = stat_record['bans'] + self.bans
-        unbans = stat_record['unbans'] + self.unbans
-        channel_deletes = stat_record['channel_deletes'] + self.channel_deletes
-        channel_creates = stat_record['channel_creates'] + self.channel_creates
-        command_count = stat_record['command_count'] + self.command_count
+        message_deletes = stat_record["message_deletes"] + self.message_deletes
+        bulk_message_deletes = (
+            stat_record["bulk_message_deletes"] + self.bulk_message_deletes
+        )
+        message_edits = stat_record["message_edits"] + self.message_edits
+        bans = stat_record["bans"] + self.bans
+        unbans = stat_record["unbans"] + self.unbans
+        channel_deletes = stat_record["channel_deletes"] + self.channel_deletes
+        channel_creates = stat_record["channel_creates"] + self.channel_creates
+        command_count = stat_record["command_count"] + self.command_count
 
         embed = discord.Embed(title="Okayu Stats")
-        embed.description = "Hello! Since 6th of July, 2020, I have witnessed the following events."
+        embed.description = (
+            "Hello! Since 6th of July, 2020, I have witnessed the following events."
+        )
         message_str = f"""
         ```prolog
         Message Deletes      : {message_deletes:,}
@@ -456,10 +501,12 @@ class Fun(commands.Cog):
         Channel Deletion     : {channel_deletes:,}
         ```
         """
-        embed.add_field(name="**Messages**",
-                        value=textwrap.dedent(message_str), inline=False)
-        embed.add_field(name="**Guilds**",
-                        value=textwrap.dedent(guild_str), inline=False)
+        embed.add_field(
+            name="**Messages**", value=textwrap.dedent(message_str), inline=False
+        )
+        embed.add_field(
+            name="**Guilds**", value=textwrap.dedent(guild_str), inline=False
+        )
         embed.set_footer(text=f"I have also run {command_count:,} commands!")
 
         await ctx.send(embed=embed)
@@ -468,7 +515,7 @@ class Fun(commands.Cog):
     async def point(self, ctx, member: discord.Member):
         """ Point. """
         length = 1 + len(member.display_name)
-        x_length = math.ceil(math.ceil(length/2) * 0.9)
+        x_length = math.ceil(math.ceil(length / 2) * 0.9)
         msg = f"""
         {self.pepe['down']}{self.pepe['down']*x_length}{self.pepe['down']}
         {self.pepe['right']}{member.mention}{self.pepe['left']}
