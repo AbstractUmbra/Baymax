@@ -448,17 +448,22 @@ class Snipe(commands.Cog):
         await pages.start(ctx)
 
     @show_snipes.command(name="clear", aliases=["remove", "delete"], hidden=True)
-    @commands.has_guild_permissions(manage_messages=True)
     @requires_snipe()
     async def _snipe_clear(
-        self, ctx, target: typing.Union[discord.Member, discord.TextChannel]
+        self, ctx, target: typing.Union[discord.Member, discord.TextChannel] = None
     ):
         """
         Remove all data stored on snipes, including edits for the target Member or TextChannel.
-        Must have the 'manage_messages' permission to do this.
+        Must have the `manage_messages` permission to specify a non-self target.
         """
         member = False
         channel = False
+        if target:
+            if not ctx.author.guild_permissions.manage_messages:
+                raise commands.MissingPermissions([discord.Permissions.manage_messages])
+        else:
+            target = ctx.author
+
         if isinstance(target, discord.Member):
             deletes = "DELETE FROM snipe_deletes WHERE guild_id = $1 and user_id = $2;"
             edits = "DELETE FROM snipe_edits WHERE guild_id = $1 and user_id = $2;"
@@ -488,17 +493,6 @@ class Snipe(commands.Cog):
                     self.snipe_deletes.remove(item)
 
         return await ctx.message.add_reaction(self.bot.emoji[True])
-
-    @snipe.command()
-    async def delete(self, ctx: commands.Context):
-        """ This will erase all current data stored for the author. This is NOT opting out, see the help command for more info. """
-        deletes = "DELETE FROM snipe_deletes WHERE guild_id = $1 and user_id = $2;"
-        edits = "DELETE FROM snipe_edits WHERE guild_id = $1 and user_id = $2;"
-
-        await self.bot.pool.execute(deletes, ctx.guild.id, ctx.author.id)
-        await self.bot.pool.execute(edits, ctx.guild.id, ctx.author.id)
-
-        await ctx.message.add_reaction(self.bot.emoji[True])
 
     @tasks.loop(minutes=1)
     async def snipe_delete_update(self):

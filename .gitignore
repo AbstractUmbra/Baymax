@@ -6,4 +6,3 @@ prefixes.json
 *.log
 config.py
 blacklist.json
-cogs/lewd.py

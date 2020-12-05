@@ -57,9 +57,7 @@ os.environ["PY_PRETTIFY_EXC"] = "True"
 COGS = (
     "jishaku",
     "cogs.admin",
-    "cogs.campfire",
     "cogs.config",
-    "cogs.dunston",
     "cogs.external",
     "cogs.fun",
     "cogs.help",
@@ -68,14 +66,12 @@ COGS = (
     "cogs.meta",
     "cogs.mod",
     "cogs.okayu",
-    "cogs.private",
     "cogs.reactionroles",
     "cogs.reddit",
     "cogs.reminders",
     "cogs.rng",
     "cogs.rtfx",
     "cogs.snipe",
-    "cogs.specialist",
     "cogs.stars",
     "cogs.stats",
     "cogs.tags",
@@ -85,6 +81,9 @@ COGS = (
     "cogs.twitch",
     "cogs.urban",
     "cogs.welcome",
+    "cogs.private.campfire",
+    "cogs.private.dunston",
+    "cogs.private.private"
 )
 
 

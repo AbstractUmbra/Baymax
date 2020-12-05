@@ -1,8 +1,10 @@
+import datetime
 import re
 
 import discord
 from discord.ext import commands
 
+CAMPFIRE_ID = 766520806289178646
 BRO_RE = re.compile(r"^bro\?$")
 GAMING_RE = re.compile(r"^\"gaming\"$")
 
@@ -35,7 +37,7 @@ class Campfire(commands.Cog):
     async def message_memes(
         self, before: discord.Message, after: discord.Message = None
     ) -> None:
-        if not before.guild or not before.guild.id == 766520806289178646:
+        if not before.guild or not before.guild.id == CAMPFIRE_ID:
             return
         if before.author.bot:
             return
@@ -60,10 +62,22 @@ class Campfire(commands.Cog):
     # Bonfire
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        if member.guild.id == 766520806289178646:
+        if member.guild.id == CAMPFIRE_ID:
             if member.bot:
                 return await member.add_roles(discord.Object(id=766522043143290900))
             return await member.add_roles(discord.Object(id=766525464092868628))
+
+    @commands.Cog.listener()
+    async def on_member_remove(self, member: discord.Member):
+        if member.guild.id != CAMPFIRE_ID:
+            return
+        now = datetime.datetime.utcnow()
+        channel = self.bot.get_channel(784907406164754463)
+        embed = discord.Embed(title="Member left", colour=discord.Colour(0x000001))
+        embed.set_author(name=member.name, icon_url=member.avatar_url)
+        embed.add_field(name="Left at:", value=now)
+        embed.timestamp = now
+        await channel.send(embed=embed)
 
 
 def setup(bot: commands.Bot):
