@@ -1,4 +1,4 @@
-# Okayu
+# Akane
 
 A personal bot for Discord, written with love and fun.
 
@@ -19,8 +19,8 @@ Nevertheless; installation steps are below.
 3. Install required dependencies
 4. Create the database in PostgreSQL
    ```sql
-   CREATE ROLE okayu WITH LOGIN PASSWORD 'mypasswd';
-   CREATE DATABASE okayu OWNER okayu;
+   CREATE ROLE akane WITH LOGIN PASSWORD 'mypasswd';
+   CREATE DATABASE akane OWNER Akane;
    CREATE EXTENSION pg_trgm;
     ```
 5. Set up configuration.

@@ -1,8 +1,8 @@
 {
     "apps": [
         {
-            "name": "Okayu",
-            "cwd": "/home/penumbra/projects/personal/okayu/",
+            "name": "Akane",
+            "cwd": "/home/penumbra/projects/personal/akane/",
             "script": "launcher.py",
             "autorestart": true,
             "max_restart": 5,

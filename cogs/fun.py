@@ -113,12 +113,6 @@ class Fun(commands.Cog):
         self.channel_creates = 0
         self.command_count = 0
         self.bulk_update.start()
-        self.pepe = {
-            "up": "<:pepePoint_up:728347439391572000>",
-            "down": "<:pepePoint_down:728347439571927122>",
-            "left": "<:pepePoint_left:728347439387377737>",
-            "right": "<:pepePoint:728347439903277056>",
-        }
         self.translator = googletrans.Translator()
         self._spoiler_cache = LRU(128)
         self._spoiler_cooldown = SpoilerCooldown()
@@ -289,7 +283,7 @@ class Fun(commands.Cog):
             embed=cache.to_spoiler_embed(ctx, storage_message)
         )
         self._spoiler_cache[spoiler_message.id] = cache
-        await spoiler_message.add_reaction(":spoiler:430469957042831371")
+        await spoiler_message.add_reaction("<:QuestionMaybe:738038828928860269>")
 
     @commands.group(invoke_without_command=True, skip_extra=False)
     async def abt(self, ctx, *, content: commands.clean_content):
@@ -378,7 +372,7 @@ class Fun(commands.Cog):
 
         if self.bot.user in message.mentions:
             channel = self.bot.get_channel(MENTION_CHANNEL_ID)
-            embed = discord.Embed(title="Okayu was mentioned!")
+            embed = discord.Embed(title="Akane was mentioned!")
             embed.set_author(
                 name=message.author.name, icon_url=message.author.avatar_url
             )
@@ -387,7 +381,7 @@ class Fun(commands.Cog):
             await channel.send(embed=embed)
         elif not message.guild:
             channel = self.bot.get_channel(DM_CHANNEL_ID)
-            embed = discord.Embed(title="Okayu was DM'd.")
+            embed = discord.Embed(title="Akane was DM'd.")
             embed.set_author(
                 name=message.author.name, icon_url=message.author.avatar_url
             )
@@ -482,7 +476,7 @@ class Fun(commands.Cog):
         channel_creates = stat_record["channel_creates"] + self.channel_creates
         command_count = stat_record["command_count"] + self.command_count
 
-        embed = discord.Embed(title="Okayu Stats")
+        embed = discord.Embed(title="Akane Stats")
         embed.description = (
             "Hello! Since 6th of July, 2020, I have witnessed the following events."
         )

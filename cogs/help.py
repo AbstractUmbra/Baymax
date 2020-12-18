@@ -17,38 +17,47 @@ class EmbedMenu(menus.Menu):
         embed = self.pages[self.current_page]
         await self.message.edit(embed=embed)
 
-
-    @menus.button("\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f", skip_if=_skip_when)
+    @menus.button(
+        "<:LL:785744371453919243>", skip_if=_skip_when, position=menus.First(0)
+    )
     async def jump_to_first(self, payload):
         self.current_page = 0
         await self.update_page()
 
-    @menus.button("\N{BLACK LEFT-POINTING TRIANGLE}\ufe0f")
+    @menus.button("<:L_:785744338487214104>", position=menus.First(1))
     async def previous_page(self, payload):
         if self.current_page > 0:
             self.current_page -= 1
             await self.update_page()
 
-    @menus.button('\N{BLACK SQUARE FOR STOP}\ufe0f')
+    @menus.button("<:Stop:785018971119157300>", position=menus.First(2))
     async def stop_pages(self, payload):
         self.stop()
 
-    @menus.button("\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f")
+    @menus.button("<:R_:785744271579414528>", position=menus.Last(0))
     async def next_page(self, payload):
         if self.current_page < len(self.pages) - 1:
             self.current_page += 1
             await self.update_page()
 
-    @menus.button("\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f", skip_if=_skip_when)
+    @menus.button(
+        "<:RR:785742013089185812>", skip_if=_skip_when, position=menus.Last(1)
+    )
     async def jump_to_last(self, payload):
         self.current_page = len(self.pages) - 1
         await self.update_page()
 
-    @menus.button("\N{INPUT SYMBOL FOR NUMBERS}")
+    @menus.button("<:1234:787170360013225996>", position=menus.Last(2))
     async def jump_to(self, payload):
         m = await self.message.channel.send("Which page would you like to go to?")
         try:
-            n = await self.bot.wait_for("message", check=lambda m: m.author == self.ctx.author and m.channel == self.ctx.channel and m.content.isdigit(), timeout=30)
+            n = await self.bot.wait_for(
+                "message",
+                check=lambda m: m.author == self.ctx.author
+                and m.channel == self.ctx.channel
+                and m.content.isdigit(),
+                timeout=30,
+            )
         except asyncio.TimeoutError:
             return
         except:
@@ -73,30 +82,47 @@ class EmbedMenu(menus.Menu):
 class PaginatedHelpCommand(commands.HelpCommand):
     def __init__(self):
         self.verify_checks = True
+        self.show_hidden = False
         super().__init__()
 
     def recursive_command_format(self, command, *, indent=1, subc=0):
-        yield ('' if indent == 1 else '├' if subc != 0 else '└') + f'`{command.qualified_name}`: {command.short_doc}'
+        yield (
+            "" if indent == 1 else "├" if subc != 0 else "└"
+        ) + f"`{command.qualified_name}`: {command.short_doc}"
         if isinstance(command, commands.Group):
             last = len(command.commands) - 1
-            for i, command in enumerate(command.commands):
-                yield from self.recursive_command_format(command, indent=indent+1, subc=last)
+            for _, command in enumerate(command.commands):
+                yield from self.recursive_command_format(
+                    command, indent=indent + 1, subc=last
+                )
                 last -= 1
 
-    def format_commands(self, cog, cmds, *, pages):
+    async def format_commands(self, cog, cmds, *, pages):
         if not cmds:
             return
 
-        pg = commands.Paginator(max_size=2000, prefix='', suffix='')
+        pg = commands.Paginator(max_size=2000, prefix="", suffix="")
 
         for command in cmds:
-            for line in self.recursive_command_format(command):
-                pg.add_line(line)
+            try:
+                await command.can_run(self.context)
+            except (discord.Forbidden, commands.CheckFailure, commands.CommandError):
+                continue
+            else:
+                for line in self.recursive_command_format(command):
+                    pg.add_line(line)
 
         for desc in pg.pages:
-            embed = discord.Embed(colour=discord.Colour.blurple(), title=cog.qualified_name if cog else 'Unsorted')
-            embed.description = f'> {cog.description}\n{desc}' if cog else f'> No description\n{desc}'
-            embed.set_footer(text=f'Use "{self.clean_prefix}help <command>" for more information.')
+            embed = discord.Embed(
+                colour=discord.Colour.blurple(),
+                title=cog.qualified_name if cog else "Unsorted",
+            )
+            embed.description = (
+                f"> {cog.description}\n{desc}" if cog else f"> No description\n{desc}"
+            )
+            embed.set_footer(
+                text=f'Use "{self.clean_prefix}help <command>" for more information.'
+            )
             pages.append(embed)
 
     async def send_bot_help(self, mapping):
@@ -104,22 +130,25 @@ class PaginatedHelpCommand(commands.HelpCommand):
 
         for cog, cmds in mapping.items():
             cmds = await self.filter_commands(cmds, sort=True)
-            self.format_commands(cog, cmds, pages=pages)
+            await self.format_commands(cog, cmds, pages=pages)
 
         total = len(pages)
         for i, embed in enumerate(pages, start=1):
-            embed.title = f'Page {i}/{total}: {embed.title}'
+            embed.title = f"Page {i}/{total}: {embed.title}"
 
         pg = EmbedMenu(pages)
         await pg.start(self.context)
 
     async def send_cog_help(self, cog):
         pages = []
-        self.format_commands(cog, await self.filter_commands(cog.get_commands(), sort=True), pages=pages)
+
+        self.format_commands(
+            cog, await self.filter_commands(cog.get_commands(), sort=True), pages=pages
+        )
 
         total = len(pages)
         for i, embed in enumerate(pages, start=1):
-            embed.title = f'Page {i}/{total}: {embed.title}'
+            embed.title = f"Page {i}/{total}: {embed.title}"
 
         pg = EmbedMenu(pages)
         await pg.start(self.context)
@@ -128,30 +157,35 @@ class PaginatedHelpCommand(commands.HelpCommand):
         try:
             await group.can_run(self.context)
         except (commands.CommandError, commands.CheckFailure):
-            return await self.context.send(f"No command called \"{group}\" found.")
+            return await self.context.send(f'No command called "{group}" found.')
         if not group.commands:
             return await self.send_command_help(group)
-        subs = '\n'.join(f'`{c.qualified_name}`: {c.short_doc}' for c in group.commands)
+        subs = "\n".join(f"`{c.qualified_name}`: {c.short_doc}" for c in group.commands)
         embed = discord.Embed(colour=discord.Colour.blurple())
-        embed.title = f'{self.clean_prefix}{group.qualified_name} {group.signature}'
+        embed.title = f"{self.clean_prefix}{group.qualified_name} {group.signature}"
         embed.description = f"{group.help or ''}\n\n**Subcommands**\n\n{subs}"
-        embed.set_footer(text=f'Use "{self.clean_prefix}help <command>" for more information.')
+        embed.set_footer(
+            text=f'Use "{self.clean_prefix}help <command>" for more information.'
+        )
         await self.context.send(embed=embed)
 
     async def send_command_help(self, command: commands.Command):
         try:
             await command.can_run(self.context)
         except (commands.CommandError, commands.CheckFailure):
-            return await self.context.send(f"No command called \"{command}\" found.")
+            return await self.context.send(f'No command called "{command}" found.')
         embed = discord.Embed(colour=discord.Colour.blurple())
-        embed.title = f'{self.clean_prefix}{command.qualified_name} {command.signature}'
-        embed.description = command.help or 'No help provided'
-        embed.set_footer(text=f'Use "{self.clean_prefix}help <command>" for more information.')
+        embed.title = f"{self.clean_prefix}{command.qualified_name} {command.signature}"
+        embed.description = command.help or "No help provided"
+        embed.set_footer(
+            text=f'Use "{self.clean_prefix}help <command>" for more information.'
+        )
         await self.context.send(embed=embed)
+
 
 class Help(commands.Cog):
     """
-    Okayu's help command!
+    Akane's help command!
     """
 
     def __init__(self, bot: commands.Bot):
@@ -160,9 +194,9 @@ class Help(commands.Cog):
         self.bot.help_command = PaginatedHelpCommand()
         self.bot.help_command.cog = self
 
-
     def cog_unload(self):
         self.bot.help_command = self.bot._original_help_command
+
 
 def setup(bot):
     bot.add_cog(Help(bot))

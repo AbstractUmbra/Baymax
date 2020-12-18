@@ -57,6 +57,7 @@ os.environ["PY_PRETTIFY_EXC"] = "True"
 COGS = (
     "jishaku",
     "cogs.admin",
+    "cogs.akane",
     "cogs.config",
     "cogs.external",
     "cogs.fun",
@@ -65,7 +66,7 @@ COGS = (
     "cogs.manga",
     "cogs.meta",
     "cogs.mod",
-    "cogs.okayu",
+    "cogs.nihongo",
     "cogs.reactionroles",
     "cogs.reddit",
     "cogs.reminders",
@@ -83,7 +84,7 @@ COGS = (
     "cogs.welcome",
     "cogs.private.campfire",
     "cogs.private.dunston",
-    "cogs.private.private"
+    "cogs.private.private",
 )
 
 
@@ -91,15 +92,15 @@ def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> typing.List[str
     user_id = bot.user.id
     base = [f"<@!{user_id}> ", f"<@{user_id}> "]
     if msg.guild is None:
-        base.append("o!")
-        base.append("O!")
+        base.append("a!")
+        base.append("A!")
     else:
-        base.extend(bot.prefixes.get(msg.guild.id, ["o!", "O!"]))
+        base.extend(bot.prefixes.get(msg.guild.id, ["a!", "A!"]))
     return base
 
 
-class Okayu(commands.AutoShardedBot):
-    """ The actual robot himself! """
+class Akane(commands.AutoShardedBot):
+    """ The actual robot herself! """
 
     def __init__(self):
         intents = discord.Intents.all()
@@ -109,16 +110,12 @@ class Okayu(commands.AutoShardedBot):
             command_prefix=_prefix_callable,
             description=DESCRIPTION,
             help_attrs=dict(hidden=True),
-            activity=discord.Game(name="o!help for help."),
+            activity=discord.Game(name="a!help for help."),
             allowed_mentions=discord.AllowedMentions(
                 everyone=False, roles=False, users=False
             ),
             intents=intents,
         )
-
-        self.client_id = config.client_id
-        self.bots_key = config.bots_key
-
         self.session = aiohttp.ClientSession()
         self.mb_client = mystbin.Client(session=self.session)
         self.hentai_client = nhentaio.Client()
@@ -182,7 +179,7 @@ class Okayu(commands.AutoShardedBot):
 
     def get_raw_guild_prefixes(self, guild_id):
         """ The raw prefixes. """
-        return self.prefixes.get(guild_id, ["b!", "B!"])
+        return self.prefixes.get(guild_id, ["a!", "A!"])
 
     async def set_guild_prefixes(self, guild, prefixes):
         """ Set the prefixes. """
@@ -311,7 +308,7 @@ class Okayu(commands.AutoShardedBot):
         await self.session.close()
 
     def run(self):
-        """ Run my roboboy please. """
+        """ Run my Akane please. """
         try:
             super().run(config.token, reconnect=True)
         finally:

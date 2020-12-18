@@ -257,7 +257,7 @@ class Stats(commands.Cog):
             commit_time.astimezone(datetime.timezone.utc).replace(tzinfo=None),
             accuracy=1,
         )
-        return f"[`{short_sha2}`](https://github.com/AbstractUmbra/Okayu/commit/{commit.hex}) {short} ({offset})"
+        return f"[`{short_sha2}`](https://github.com/AbstractUmbra/Akane/commit/{commit.hex}) {short} ({offset})"
 
     def get_last_commits(self, count=3):
         repo = pygit2.Repository(".git")
@@ -289,7 +289,7 @@ class Stats(commands.Cog):
                                 pylines += 1
         embed = discord.Embed(
             colour=discord.Colour.red(),
-            description="Total source line count for Okayu.",
+            description="Total source line count for Akane.",
         )
         embed.set_footer(
             text=f"{pyfiles} files with a total of {pylines} lines of code."

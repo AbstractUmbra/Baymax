@@ -68,7 +68,7 @@ class External(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-        self.headers = {"User-Agent": "Okayu Discord bot."}
+        self.headers = {"User-Agent": "Akane Discord bot."}
         self.currency_conv = CurrencyConverter()
         self.currency_codes = json.loads(open("utils/currency_codes.json").read())
 
@@ -116,6 +116,8 @@ class External(commands.Cog):
             urls = "\n".join(
                 [f"[{key}]({value})" for key, value in pypi_details.urls.items()]
             )
+        else:
+            urls = "N/A"
 
         embed.add_field(name="Relevant URLs", value=urls)
         embed.add_field(name="License", value=pypi_details.module_licese)

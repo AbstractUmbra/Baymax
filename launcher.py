@@ -4,22 +4,12 @@ import importlib
 import logging
 import sys
 import traceback
-from pathlib import Path
 
-import asyncpg
 import click
-import discord
 
 import config
-from bot import COGS, Okayu
+from bot import COGS, Akane
 from utils.db import Table
-
-try:
-    import uvloop
-except ImportError:
-    pass
-else:
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 @contextlib.contextmanager
@@ -31,7 +21,7 @@ def setup_logging():
 
         log = logging.getLogger()
         log.setLevel(logging.INFO)
-        handler = logging.FileHandler(filename="Okayu.log", encoding="utf-8", mode="w")
+        handler = logging.FileHandler(filename="Akane.log", encoding="utf-8", mode="w")
         dt_fmt = "%Y-%m-%d %H:%M:%S"
         fmt = logging.Formatter(
             "[{asctime}] [{levelname:<7}] {name}: {message}", dt_fmt, style="{"
@@ -65,7 +55,7 @@ def run_bot():
         log.exception("Could not set up PostgreSQL. Exiting.")
         return
 
-    bot = Okayu()
+    bot = Akane()
     bot.pool = pool
     bot.run()
 
