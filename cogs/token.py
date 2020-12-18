@@ -50,7 +50,7 @@ class Token(commands.Cog):
     ):
         hdrs = {
             "Accept": "application/vnd.github.inertia-preview+json",
-            "User-Agent": "Okayu Discord.py Bot",
+            "User-Agent": "Akane Discord.py Bot",
             "Authorization": f"token {self.bot.config.github_token}",
         }
 

@@ -1,9 +1,37 @@
-import random as rng
+import random
+import re
 from collections import Counter
-from typing import Optional
+from typing import Dict, List, Optional, Union
 
+import discord
 from discord.ext import commands
-from utils.formats import plural
+from utils.formats import plural, to_codeblock
+
+DICE_RE = re.compile(r"^(?P<rolls>\d+)[d|D](?P<die>\d+)$")
+
+
+class DiceRoll(commands.Converter):
+    async def convert(
+        self, ctx: commands.Context, argument: str
+    ) -> Dict[str, Union[int, List[int]]]:
+        search = DICE_RE.fullmatch(argument)
+        if not search:
+            raise commands.BadArgument(
+                "Dice roll doesn't seem valid, please use it in the format of `2d20`."
+            )
+
+        search = search.groupdict()
+        rolls = int(search["rolls"])
+        die = int(search["die"])
+
+        if not (0 < rolls < 15 or 0 < die < 1000):
+            raise commands.BadArgument(
+                f"The Die or amount of Rolls cannot be less than 1 or exceed 15/1000. Roll `{argument}` is invalid."
+            )
+
+        totals = random.choices(range(1, die), k=rolls)
+
+        return {"rolls": rolls, "die": die, "totals": totals}
 
 
 class RNG(commands.Cog):
@@ -49,7 +77,7 @@ class RNG(commands.Cog):
             await ctx.send("Maximum is smaller than minimum.")
             return
 
-        await ctx.send(rng.randint(minimum, maximum))
+        await ctx.send(random.randint(minimum, maximum))
 
     @commands.command()
     async def choose(self, ctx, *choices: commands.clean_content):
@@ -60,7 +88,7 @@ class RNG(commands.Cog):
         if len(choices) < 2:
             return await ctx.send("Not enough choices to pick from.")
 
-        await ctx.send(rng.choice(choices))
+        await ctx.send(random.choice(choices))
 
     @commands.command()
     async def choosebestof(
@@ -79,7 +107,7 @@ class RNG(commands.Cog):
             times = (len(choices) ** 2) + 1
 
         times = min(10001, max(1, times))
-        results = Counter(rng.choice(choices) for i in range(times))
+        results = Counter(random.choice(choices) for i in range(times))
         builder = []
         if len(results) > 10:
             builder.append("Only showing top 10 results...")
@@ -87,6 +115,45 @@ class RNG(commands.Cog):
             builder.append(f"{index}. {elem} ({plural(count):time}, {count/times:.2%})")
 
         await ctx.send("\n".join(builder))
+
+    @commands.command()
+    async def roll(self, ctx: commands.Context, *dice: DiceRoll):
+        """ Roll DnD die! """
+        if len(dice) >= 25:
+            return await ctx.send("No more than 25 rolls per invoke, please.")
+
+        embed = discord.Embed(title="Rolls", colour=discord.Colour.random())
+
+        for i in dice:
+            fmt = ""
+            total = i["totals"]
+            die = i["die"]
+            rolls = i["rolls"]
+            # split = [total[x:x+5] for x in range(0, len(total), 5)]
+
+            builder = []
+            roll_sum = 0
+            for count, roll in enumerate(total, start=1):
+                builder.append(f"{count}: {roll}")
+                roll_sum += roll
+            fmt += "\n".join(builder)
+            fmt += f"\nSum: {roll_sum}\n"
+
+            embed.add_field(
+                name=f"{rolls}d{die}", value=to_codeblock(fmt, language="prolog")
+            )
+
+        # embed.description = to_codeblock(fmt, language="prolog")
+        embed.set_footer(text=ctx.author.display_name, icon_url=ctx.author.avatar_url)
+
+        await ctx.send(embed=embed)
+
+    @roll.error
+    async def roll_error(self, ctx: commands.Context, error: BaseException):
+        error = getattr(error, "original", error)
+
+        if isinstance(error, commands.BadArgument):
+            return await ctx.send(error, delete_after=5)
 
 
 def setup(bot):
