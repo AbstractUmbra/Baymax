@@ -24,6 +24,19 @@ class Akane(commands.Cog):
     def cog_unload(self):
         self.akane_task.cancel()
 
+
+    async def meme(self):
+        dt = datetime.datetime.utcnow()
+        while True:
+            if nara := dt.hour >= 6 and dt.hour < 18:
+                dt.replace(hour=18, minute=0, second=0, microsecond=0)
+            else:
+                dt.replace(hour=6, minute=0, second=0, microsecond=0)
+            await discord.utils.sleep_until(dt)
+            self.bot.dispatch("dawn" if nara else "dusk")
+            dt += datetime.timedelta(hours=12, seconds=1)
+
+
     @commands.command(name="hello")
     async def hello(self, ctx: commands.Context):
         """ Say hello to Akane. """
@@ -77,7 +90,7 @@ class Akane(commands.Cog):
         await ctx.send("さようなら!")
         await self.bot.logout()
 
-    @tasks.loop(hours=1)
+    @tasks.loop(minutes=1)
     async def akane_task(self):
         now = datetime.datetime.utcnow()
         if nara := (now.hour >= 6 and now.hour < 18):
@@ -94,12 +107,12 @@ class Akane(commands.Cog):
 
         await discord.utils.sleep_until(then)
 
-        profile = self.akane_details[nara]
+        profile = self.akane_details[not nara]
 
         name = profile.name
         path = profile.path
 
-        await self.webhook_send(name)
+        await self.webhook_send(f"Performing change to: {name}")
 
         with open(path, "rb") as buffer:
             return await self.bot.user.edit(username=name, avatar=buffer.read())
@@ -110,7 +123,7 @@ class Akane(commands.Cog):
 
         new = datetime.datetime.utcnow()
         if nara := (new.hour >= 6 and new.hour < 18):
-            new = new.replace(hour=18, minute=0, second=0)
+            new = new.replace(hour=18, minute=0, second=0, microsecond=0)
 
         profile = self.akane_details[nara]
 
@@ -124,7 +137,7 @@ class Akane(commands.Cog):
             with open(path, "rb") as buffer:
                 await self.bot.user.edit(username=name, avatar=buffer.read())
 
-        await self.webhook_send(f"waiting til: {new}")
+        await self.webhook_send(f"Before task - waiting til: {new}")
         self.bot.__akane_new = new
 
         await discord.utils.sleep_until(new)
