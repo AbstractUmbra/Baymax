@@ -40,7 +40,7 @@ class Todo(commands.Cog):
         self, records: typing.List[asyncpg.Record]
     ) -> typing.List[discord.Embed]:
         descs = []
-        list_of_records = [records[x : x + 10] for x in range(0, len(records), 10)]
+        list_of_records = [records[x:x + 10] for x in range(0, len(records), 10)]
         for records in list_of_records:
             descs.append(
                 discord.Embed(

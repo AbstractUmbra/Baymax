@@ -83,7 +83,7 @@ class RoboPages(menus.MenuPages):
             await m.delete()
             try:
                 await n.delete()
-            except:
+            except discord.Forbidden:
                 pass
 
 
