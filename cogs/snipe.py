@@ -6,6 +6,7 @@ import typing
 import discord
 from discord.ext import commands, menus, tasks
 from utils import cache, db, formats
+from utils.paginator import RoboPages
 
 
 class RequiresSnipe(commands.CheckFailure):
@@ -313,15 +314,16 @@ class Snipe(commands.Cog):
             full_results, key=lambda d: d["delete_time"], reverse=True
         )[:amount]
         embeds = self._gen_delete_embeds(full_results)
-        pages = menus.MenuPages(
-            source=SnipePageSource(range(0, amount), embeds), delete_message_after=True
+        pages = RoboPages(
+            source=SnipePageSource(range(0, len(embeds)), embeds),
+            delete_message_after=True,
         )
         await pages.start(ctx)
 
     @commands.has_guild_permissions(manage_messages=True)
     @show_snipes.command(name="setup")
     async def set_up_snipe(self, ctx):
-        """ Opts in to the snipe capabilities of Okayu. Requires Manage Messages. """
+        """ Opts in to the snipe capabilities of Akane. Requires Manage Messages. """
         self.get_snipe_config.invalidate(self, ctx.guild.id)
 
         config = await self.get_snipe_config(ctx.guild.id, connection=ctx.db)
@@ -341,7 +343,6 @@ class Snipe(commands.Cog):
     @show_snipes.command(name="destroy", aliases=["desetup"])
     async def snipe_desetup(self, ctx):
         """ remove the ability to snipe here. """
-        query = """ DELETE FROM snipe_config WHERE id = $1; """
         config = await self.get_snipe_config(ctx.guild.id, connection=ctx.db)
         if not config.configured:
             return await ctx.send("Sniping is not enabled for this guild.")
@@ -350,8 +351,13 @@ class Snipe(commands.Cog):
         )
         if not confirm:
             return await ctx.message.add_reaction(self.bot.emoji[False])
+        query = """ DELETE FROM snipe_config WHERE id = $1; """
         await self.bot.pool.execute(query, ctx.guild.id)
         self.get_snipe_config.invalidate(self, ctx.guild.id)
+        query2 = """ DELETE FROM snipe_deletes WHERE guild_id = $1; """
+        query3 = """ DELETE FROM snipe_edits WHERE guild_id = $1; """
+        await self.bot.pool.execute(query2, ctx.guild.id)
+        await self.bot.pool.execute(query3, ctx.guild.id)
         await ctx.message.add_reaction(self.bot.emoji[True])
 
     @show_snipes.command(name="optout", aliases=["out", "disable"])
@@ -428,6 +434,9 @@ class Snipe(commands.Cog):
                 return await ctx.send(
                     "Sorry, you need to have 'Manage Messages' to view another channel."
                 )
+        if not 0 < amount < 15:
+            raise commands.BadArgument("No more than 15 indexes at once.")
+
         channel = channel or ctx.channel
         query = "SELECT * FROM snipe_edits WHERE guild_id = $2 AND channel_id = $3 ORDER BY id DESC LIMIT $1;"
         results = await self.bot.pool.fetch(query, amount, ctx.guild.id, channel.id)
@@ -442,8 +451,9 @@ class Snipe(commands.Cog):
         embeds = await self._gen_edit_embeds(full_results)
         if not embeds:
             return await ctx.send("No edit snipes for this channel.")
-        pages = menus.MenuPages(
-            source=SnipePageSource(range(0, amount), embeds), delete_message_after=True
+        pages = RoboPages(
+            source=SnipePageSource(range(0, len(embeds)), embeds),
+            delete_message_after=True,
         )
         await pages.start(ctx)
 

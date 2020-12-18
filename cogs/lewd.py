@@ -5,6 +5,7 @@ import random
 import shlex
 from collections import namedtuple
 from typing import Any, Dict, List, Optional, Union
+from utils.paginator import RoboPages
 
 import anekos
 import discord
@@ -12,6 +13,7 @@ import nhentaio
 from discord.ext import commands, menus
 from utils import cache, checks, db
 from utils.formats import to_codeblock
+from utils.paginator import RoboPages
 
 RATING = {"e": "explicit", "q": "questionable", "s": "safe"}
 Gelbooru = namedtuple("Gelbooru", "api_key user_id endpoint")
@@ -252,8 +254,8 @@ class Lewd(commands.Cog):
                     "The specified query returned no results.")
 
             embeds = self._gen_embeds(json_data, current_config)
-            pages = menus.MenuPages(source=LewdPageSource(
-                range(0, 30), embeds), delete_message_after=False, clear_reactions_after=True)
+            pages = RoboPages(source=LewdPageSource(
+                range(0, len(embeds[:30])), embeds), delete_message_after=False, clear_reactions_after=True)
             await pages.start(ctx)
 
     @gelbooru.group(invoke_without_command=True)
@@ -329,8 +331,8 @@ class Lewd(commands.Cog):
         data = await asyncio.gather(*coros)
         embeds = [LewdEmbed.from_neko(result) for result in data]
 
-        pages = menus.MenuPages(source=LewdPageSource(
-            range(0, 30), embeds), delete_message_after=True, clear_reactions_after=True)
+        pages = RoboPages(source=LewdPageSource(
+            range(0, len(embeds[:30])), embeds), delete_message_after=True, clear_reactions_after=True)
 
         await pages.start(ctx)
 

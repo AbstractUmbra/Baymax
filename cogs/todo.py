@@ -6,6 +6,7 @@ import asyncpg
 import discord
 from discord.ext import commands, menus
 from utils import db
+from utils.paginator import RoboPages
 
 
 class TodoTable(db.Table, table_name="todos"):
@@ -77,7 +78,7 @@ class Todo(commands.Cog):
                 "You appear to have no active todos, look at how productive you are."
             )
         embeds = self._gen_todos(records)
-        pages = menus.MenuPages(
+        pages = RoboPages(
             source=TodoPageSource(range(0, len(embeds)), embeds),
             delete_message_after=True,
         )

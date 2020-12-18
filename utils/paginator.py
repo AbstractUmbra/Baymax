@@ -6,8 +6,17 @@ from discord.ext.commands import Paginator as CommandPaginator
 
 
 class RoboPages(menus.MenuPages):
-    def __init__(self, source):
-        super().__init__(source=source, check_embeds=True)
+    def __init__(self, source, *args, **kwargs):
+        super().__init__(source=source, check_embeds=True, *args, **kwargs)
+        self.remove_button(
+            "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f"
+        )
+        self.remove_button("\N{BLACK LEFT-POINTING TRIANGLE}\ufe0f")
+        self.remove_button("\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f")
+        self.remove_button(
+            "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f"
+        )
+        self.remove_button("\N{BLACK SQUARE FOR STOP}\ufe0f")
 
     async def finalize(self, timed_out):
         try:
@@ -18,61 +27,64 @@ class RoboPages(menus.MenuPages):
         except discord.HTTPException:
             pass
 
-    @menus.button("\N{INFORMATION SOURCE}\ufe0f", position=menus.Last(3))
-    async def show_help(self, payload):
-        """shows this message"""
-        embed = discord.Embed(
-            title="Paginator help", description="Hello! Welcome to the help page."
-        )
-        messages = []
-        for (emoji, button) in self.buttons.items():
-            messages.append(f"{emoji}: {button.action.__doc__}")
+    def _skip_when(self):
+        return self.source.get_max_pages() <= 2
 
-        embed.add_field(
-            name="What are these reactions for?",
-            value="\n".join(messages),
-            inline=False,
-        )
-        embed.set_footer(
-            text=f"We were on page {self.current_page + 1} before this message."
-        )
-        await self.message.edit(content=None, embed=embed)
+    def _skip_when_short(self):
+        return self.source.get_max_pages() <= 1
 
-        async def go_back_to_current_page():
-            await asyncio.sleep(30.0)
-            await self.show_page(self.current_page)
+    @menus.button(
+        "<:LL:785744371453919243>", position=menus.First(0), skip_if=_skip_when
+    )
+    async def rewind(self, payload: discord.RawReactionActionEvent):
+        await self.show_page(0)
 
-        self.bot.loop.create_task(go_back_to_current_page())
+    @menus.button(
+        "<:L_:785744338487214104>", position=menus.First(1), skip_if=_skip_when_short
+    )
+    async def back(self, payload: discord.RawReactionActionEvent):
+        await self.show_checked_page(self.current_page - 1)
 
-    @menus.button("\N{INPUT SYMBOL FOR NUMBERS}", position=menus.Last(1.5))
-    async def numbered_page(self, payload):
-        """lets you type a page number to go to"""
-        channel = self.message.channel
-        author_id = payload.user_id
-        to_delete = []
-        to_delete.append(await channel.send("What page do you want to go to?"))
+    @menus.button("<:Stop:785018971119157300>", position=menus.First(2))
+    async def stop_menu(self, payload: discord.RawReactionActionEvent):
+        self.stop()
 
-        def message_check(m):
-            return (
-                m.author.id == author_id
-                and channel == m.channel
-                and m.content.isdigit()
+    @menus.button(
+        "<:R_:785744271579414528>", position=menus.Last(0), skip_if=_skip_when_short
+    )
+    async def forward(self, payload: discord.RawReactionActionEvent):
+        await self.show_checked_page(self.current_page + 1)
+
+    @menus.button(
+        "<:RR:785742013089185812>", position=menus.Last(1), skip_if=_skip_when
+    )
+    async def ff(self, payload: discord.RawReactionActionEvent):
+        print("fuck")
+        await self.show_page(self._source.get_max_pages() - 1)
+
+    @menus.button(
+        "<:1234:787170360013225996>", position=menus.Last(2), skip_if=_skip_when
+    )
+    async def jump_to(self, payload):
+        m = await self.message.channel.send("Which page would you like to go to?")
+        try:
+            n = await self.bot.wait_for(
+                "message",
+                check=lambda m: m.author == self.ctx.author
+                and m.channel == self.ctx.channel
+                and m.content.isdigit(),
+                timeout=30,
             )
-
-        try:
-            msg = await self.bot.wait_for("message", check=message_check, timeout=30.0)
         except asyncio.TimeoutError:
-            to_delete.append(await channel.send("Took too long."))
-            await asyncio.sleep(5)
+            return
         else:
-            page = int(msg.content)
-            to_delete.append(msg)
-            await self.show_checked_page(page - 1)
-
-        try:
-            await channel.delete_messages(to_delete)
-        except Exception:
-            pass
+            await self.show_page(int(n.content))
+        finally:
+            await m.delete()
+            try:
+                await n.delete()
+            except:
+                pass
 
 
 class FieldPageSource(menus.ListPageSource):

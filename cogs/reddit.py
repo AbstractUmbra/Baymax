@@ -5,6 +5,8 @@ from textwrap import shorten
 import discord
 from discord.ext import commands, menus
 
+from utils.paginator import RoboPages
+
 
 class SubredditPageSource(menus.ListPageSource):
     """ For discord.ext.menus to format Subreddit queries. """
@@ -152,7 +154,7 @@ class Reddit(commands.Cog):
         )
         if not embeds:
             raise commands.BadArgument("Bad subreddit.", subreddit)
-        pages = menus.MenuPages(
+        pages = RoboPages(
             source=SubredditPageSource(range(0, 10), embeds), delete_message_after=True
         )
         await pages.start(ctx)
