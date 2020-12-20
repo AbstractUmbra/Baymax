@@ -1,7 +1,20 @@
 import asyncio
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 import discord
 from discord.ext import commands, menus
+from utils.paginator import RoboPages
+
+
+class HelpSource(menus.ListPageSource):
+    def __init__(self, data: range, embeds: List[discord.Embed]) -> None:
+        self.data = data
+        self.embeds = embeds
+        super().__init__(data, per_page=1)
+
+    async def format_page(self, menu: menus.Menu, page: int) -> discord.Embed:
+        embed = self.embeds[page]
+        return embed
 
 
 class EmbedMenu(menus.Menu):
@@ -12,6 +25,9 @@ class EmbedMenu(menus.Menu):
 
     def _skip_when(self):
         return len(self.pages) <= 2
+
+    def _skip_when_short(self):
+        return len(self.pages) <= 1
 
     async def update_page(self):
         embed = self.pages[self.current_page]
@@ -24,7 +40,9 @@ class EmbedMenu(menus.Menu):
         self.current_page = 0
         await self.update_page()
 
-    @menus.button("<:L_:785744338487214104>", position=menus.First(1))
+    @menus.button(
+        "<:L_:785744338487214104>", skip_if=_skip_when_short, position=menus.First(1)
+    )
     async def previous_page(self, payload):
         if self.current_page > 0:
             self.current_page -= 1
@@ -34,7 +52,9 @@ class EmbedMenu(menus.Menu):
     async def stop_pages(self, payload):
         self.stop()
 
-    @menus.button("<:R_:785744271579414528>", position=menus.Last(0))
+    @menus.button(
+        "<:R_:785744271579414528>", skip_if=_skip_when_short, position=menus.Last(0)
+    )
     async def next_page(self, payload):
         if self.current_page < len(self.pages) - 1:
             self.current_page += 1
@@ -47,7 +67,9 @@ class EmbedMenu(menus.Menu):
         self.current_page = len(self.pages) - 1
         await self.update_page()
 
-    @menus.button("<:1234:787170360013225996>", position=menus.Last(2))
+    @menus.button(
+        "<:1234:787170360013225996>", skip_if=_skip_when, position=menus.Last(2)
+    )
     async def jump_to(self, payload):
         m = await self.message.channel.send("Which page would you like to go to?")
         try:
@@ -60,7 +82,7 @@ class EmbedMenu(menus.Menu):
             )
         except asyncio.TimeoutError:
             return
-        except:
+        except Exception:
             raise
         else:
             self.current_page = int(n.content) - 1
@@ -69,7 +91,7 @@ class EmbedMenu(menus.Menu):
             await m.delete()
             try:
                 await n.delete()
-            except:
+            except Exception:
                 pass
 
     async def send_initial_message(self, ctx, channel):
@@ -85,7 +107,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         self.show_hidden = False
         super().__init__()
 
-    def recursive_command_format(self, command, *, indent=1, subc=0):
+    def recursive_command_format(self, command: commands.Command, *, indent=1, subc=0):
         yield (
             "" if indent == 1 else "├" if subc != 0 else "└"
         ) + f"`{command.qualified_name}`: {command.short_doc}"
@@ -97,7 +119,13 @@ class PaginatedHelpCommand(commands.HelpCommand):
                 )
                 last -= 1
 
-    async def format_commands(self, cog, cmds, *, pages):
+    async def format_commands(
+        self,
+        cog: commands.Cog,
+        cmds: List[Union[commands.Group, commands.Command]],
+        *,
+        pages,
+    ):
         if not cmds:
             return
 
@@ -125,7 +153,10 @@ class PaginatedHelpCommand(commands.HelpCommand):
             )
             pages.append(embed)
 
-    async def send_bot_help(self, mapping):
+    async def send_bot_help(
+        self,
+        mapping: Mapping[commands.Cog, List[Union[commands.Group, commands.Command]]],
+    ):
         pages = []
 
         for cog, cmds in mapping.items():
@@ -139,10 +170,10 @@ class PaginatedHelpCommand(commands.HelpCommand):
         pg = EmbedMenu(pages)
         await pg.start(self.context)
 
-    async def send_cog_help(self, cog):
+    async def send_cog_help(self, cog: commands.Cog):
         pages = []
 
-        self.format_commands(
+        await self.format_commands(
             cog, await self.filter_commands(cog.get_commands(), sort=True), pages=pages
         )
 
@@ -150,7 +181,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         for i, embed in enumerate(pages, start=1):
             embed.title = f"Page {i}/{total}: {embed.title}"
 
-        pg = EmbedMenu(pages)
+        pg = RoboPages(HelpSource(range(0, len(pages)), pages))
         await pg.start(self.context)
 
     async def send_group_help(self, group: commands.Group):
@@ -198,5 +229,5 @@ class Help(commands.Cog):
         self.bot.help_command = self.bot._original_help_command
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(Help(bot))

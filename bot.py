@@ -22,6 +22,7 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+import asyncio
 import datetime
 import json
 import logging
@@ -109,11 +110,8 @@ class Akane(commands.AutoShardedBot):
         super().__init__(
             command_prefix=_prefix_callable,
             description=DESCRIPTION,
-            help_attrs=dict(hidden=True),
             activity=discord.Game(name="a!help for help."),
-            allowed_mentions=discord.AllowedMentions(
-                everyone=False, roles=False, users=False
-            ),
+            allowed_mentions=discord.AllowedMentions.none(),
             intents=intents,
         )
         self.session = aiohttp.ClientSession()
@@ -304,8 +302,12 @@ class Akane(commands.AutoShardedBot):
 
     async def close(self):
         """ When the bot closes. """
-        await super().close()
-        await self.session.close()
+        await asyncio.gather(
+            super().close(),
+            self.session.close(),
+            self.mb_client.close(),
+            self.hentai_client.close(),
+        )
 
     def run(self):
         """ Run my Akane please. """

@@ -20,10 +20,11 @@ class Akane(commands.Cog):
             False: ProfileState("static/Dusk.png", "Akane Dusk"),
             True: ProfileState("static/Dawn.jpg", "Akane Dawn"),
         }
+        self.akane_time = datetime.datetime.utcnow()
+        self.akane_next = None
 
     def cog_unload(self):
         self.akane_task.cancel()
-
 
     async def meme(self):
         dt = datetime.datetime.utcnow()
@@ -35,7 +36,6 @@ class Akane(commands.Cog):
             await discord.utils.sleep_until(dt)
             self.bot.dispatch("dawn" if nara else "dusk")
             dt += datetime.timedelta(hours=12, seconds=1)
-
 
     @commands.command(name="hello")
     async def hello(self, ctx: commands.Context):
@@ -90,57 +90,57 @@ class Akane(commands.Cog):
         await ctx.send("さようなら!")
         await self.bot.logout()
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=5)
     async def akane_task(self):
         now = datetime.datetime.utcnow()
-        if nara := (now.hour >= 6 and now.hour < 18):
-            start = datetime.time(hour=18)
-        else:
-            start = datetime.time(hour=6)
+        light = now.hour >= 6 and now.hour < 18
+        start = datetime.time(hour=(18 if light else 6))
 
         if now.time() > start:
             now = now.date() + datetime.timedelta(hours=12)
         then = datetime.datetime.combine(now, start)
 
-        await self.webhook_send(f"In task, waitingtil: {then}")
-        self.bot.__akane_new = then
-
-        await discord.utils.sleep_until(then)
-
-        profile = self.akane_details[not nara]
-
+        profile = self.akane_details[light]
         name = profile.name
         path = profile.path
 
-        await self.webhook_send(f"Performing change to: {name}")
+        if now > self.akane_time:
+            with open(path, "rb") as buffer:
+                await self.webhook_send(f"Performing change to: {name}")
+                await self.bot.user.edit(username=name, avatar=buffer.read())
+                self.akane_time = then
 
-        with open(path, "rb") as buffer:
-            return await self.bot.user.edit(username=name, avatar=buffer.read())
+        await self.webhook_send(f"In task, now: {then}")
+        self.akane_next = then
 
     @akane_task.before_loop
     async def before_akane(self):
         await self.bot.wait_until_ready()
 
-        new = datetime.datetime.utcnow()
-        if nara := (new.hour >= 6 and new.hour < 18):
-            new = new.replace(hour=18, minute=0, second=0, microsecond=0)
+        now = datetime.datetime.utcnow()
 
-        profile = self.akane_details[nara]
+        light = now.hour >= 6 and now.hour < 18
+        start = datetime.time(hour=(18 if light else 6))
 
+        if now.time() > start:
+            now = now.date() + datetime.timedelta(hours=12)
+        then = datetime.datetime.combine(now, start)
+
+        profile = self.akane_details[light]
         name = profile.name
         path = profile.path
         await self.webhook_send(name)
 
-        if (nara and self.bot.user.name != "Akane Dawn") or (
-            not nara and self.bot.user.name != "Akane Dusk"
+        if (light and self.bot.user.name != "Akane Dawn") or (
+            not light and self.bot.user.name != "Akane Dusk"
         ):
             with open(path, "rb") as buffer:
+                await self.webhook_send(f"Drift - changing to: {name}.")
                 await self.bot.user.edit(username=name, avatar=buffer.read())
 
-        await self.webhook_send(f"Before task - waiting til: {new}")
-        self.bot.__akane_new = new
-
-        await discord.utils.sleep_until(new)
+        self.akane_time = then
+        await self.webhook_send(f"Before task: waiting until {then}.")
+        await discord.utils.sleep_until(then)
 
     @akane_task.error
     async def akane_error(self, error: Exception):
@@ -158,7 +158,9 @@ class Akane(commands.Cog):
             embed.description = "".join(lines)
             await self.webhook_send(embed=embed)
 
-    async def webhook_send(self, message: str = None, *, embed: discord.Embed = None):
+    async def webhook_send(
+        self, message: str = "Error", *, embed: discord.Embed = None
+    ):
         cog = self.bot.get_cog("Stats")
         if not cog:
             await asyncio.sleep(5)

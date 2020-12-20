@@ -41,9 +41,6 @@ class KanjiAPISource(menus.ListPageSource):
 
     async def format_page(self, menu, entries):
         embed = self.embeds[entries]
-        # idx = self.embeds.index(embed) + 1
-        # text = f"{embed.footer.text} :: " if embed.footer.text else ""
-        # embed.set_footer(text=f"{text}{idx}/{len(self.embeds)}")
         return embed
 
 
@@ -107,6 +104,7 @@ class Nihongo(commands.Cog):
 
     @commands.group(name="kanji", aliases=["かんじ", "漢字"], invoke_without_command=True)
     async def kanji(self, ctx: Context, character: str):
+        """ Return data on a single Kanji from the KanjiDev API. """
         if len(character) > 1:
             raise commands.BadArgument("Only one Kanji please.")
         url = f"{BASE_URL}/kanji/{character}"
@@ -123,6 +121,7 @@ class Nihongo(commands.Cog):
 
     @kanji.command(name="words")
     async def words(self, ctx: Context, character: str):
+        """ Return the words a Kanji is used in, or in conjuction with. """
         if len(character) > 1:
             raise commands.BadArgument("Only one Kanji please.")
         url = f"{BASE_URL}/words/{character}"
@@ -145,7 +144,11 @@ class Nihongo(commands.Cog):
             for embed in real_embeds
         ]
 
-        menu = RoboPages(KanjiAPISource(range(0, len(fixed_embeds)), fixed_embeds), delete_message_after=False, clear_reactions_after=False)
+        menu = RoboPages(
+            KanjiAPISource(range(0, len(fixed_embeds)), fixed_embeds),
+            delete_message_after=False,
+            clear_reactions_after=False,ddef
+        )
         await menu.start(ctx)
 
     @kanji.error

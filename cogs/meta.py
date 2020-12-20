@@ -489,11 +489,6 @@ class Meta(commands.Cog):
         embed.description = textwrap.dedent(stringy)
         await ctx.send(embed=embed)
 
-    @commands.command(rest_is_raw=True, hidden=True)
-    @commands.is_owner()
-    async def echo(self, ctx, *, content):
-        await ctx.send(content)
-
     @commands.command()
     @commands.cooldown(rate=1, per=60.0, type=commands.BucketType.user)
     async def feedback(self, ctx, *, content: str):

@@ -316,8 +316,9 @@ class Fun(commands.Cog):
                 new_str += char
         await ctx.send(new_str.replace("~", "").capitalize())
 
-    @commands.command()
+    @commands.command(hidden=True, enabled=False)
     async def ocr(self, ctx, *, image_url: str = None):
+        """ Perform an OCR task on an image. """
         if not image_url and not ctx.message.attachments:
             raise commands.BadArgument("Url or attachment required.")
         image_url = image_url or ctx.message.attachments[0].url
@@ -326,8 +327,9 @@ class Fun(commands.Cog):
             embed=discord.Embed(description=data, colour=self.bot.colour["dsc"])
         )
 
-    @commands.command()
+    @commands.command(hidden=True, enabled=False)
     async def ocrt(self, ctx, *, image_url: str = None):
+        """ Perform an OCR and translation on an image. """
         if not image_url and not ctx.message.attachments:
             raise commands.BadArgument("URL or attachment required.")
         image_url = image_url or ctx.message.attachments[0].url
@@ -336,7 +338,7 @@ class Fun(commands.Cog):
             return await self.translate(ctx, message=data)
         return await ctx.send("No text returned.")
 
-    @commands.command(hidden=True)
+    @commands.command()
     async def translate(self, ctx, *, message: commands.clean_content):
         """Translates a message to English using Google translate."""
         ret = await self.bot.loop.run_in_executor(
@@ -462,6 +464,7 @@ class Fun(commands.Cog):
     @commands.command()
     @commands.cooldown(1, 60, commands.BucketType.guild)
     async def statistics(self, ctx):
+        """ A small embed with some statistics Akane tracks. """
         query = "SELECT * FROM statistics LIMIT 1;"
         stat_record = await self.bot.pool.fetchrow(query)
 

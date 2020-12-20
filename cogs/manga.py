@@ -136,6 +136,7 @@ class Manga(commands.Cog):
 
     @commands.command()
     async def mangadex(self, ctx: commands.Context, *, mangadex_id: int):
+        """ Return details, images and links to a Mangadex entry. """
         try:
             response = await self.bot.session.get(
                 f"{MANGADEX_API_BASE}manga/{mangadex_id}"

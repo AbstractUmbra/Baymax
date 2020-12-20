@@ -114,6 +114,7 @@ class Admin(commands.Cog):
 
     @commands.command(hidden=True)
     async def leave(self, ctx):
+        """ Leaves the current guild. """
         await ctx.guild.leave()
 
     @commands.command(hidden=True)
@@ -300,6 +301,7 @@ class Admin(commands.Cog):
 
     @_block.command(name="query", aliases=["q"])
     async def _block_query(self, ctx, user_id: int):
+        """ Show why the target was blocked. """
         query = """ SELECT reason FROM owner_blocked WHERE user_id = $1; """
         result = await self.bot.pool.fetchrow(query, user_id)
 
