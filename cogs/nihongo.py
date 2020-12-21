@@ -1,16 +1,30 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Union
+from typing import TYPE_CHECKING, Dict, List, Union
+
+if TYPE_CHECKING:
+    from bot import Akane
 
 import aiohttp
 import discord
+import pykakasi
 from discord.ext import commands, menus
 from utils.context import Context
 from utils.formats import to_codeblock
 from utils.paginator import RoboPages
 
 BASE_URL = "https://kanjiapi.dev/v1"
+
+
+def _create_kakasi() -> pykakasi.kakasi:
+    kakasi = pykakasi.kakasi()
+    kakasi.setMode("H", "a")
+    kakasi.setMode("K", "a")
+    kakasi.setMode("J", "a")
+    kakasi.setMode("s", True)
+    return kakasi.getConverter()
 
 
 @dataclass
@@ -99,8 +113,15 @@ class KanjiEmbed(discord.Embed):
 class Nihongo(commands.Cog):
     """The description for Nihongo goes here."""
 
-    def __init__(self, bot):
+    def __init__(self, bot: Akane):
         self.bot = bot
+        self.converter = _create_kakasi()
+
+    @commands.command()
+    async def romaji(self, ctx: Context, *, text: commands.clean_content):
+        """ Sends the Romaji version of passed Kana. """
+        ret = await self.bot.loop.run_in_executor(None, self.converter.do, text)
+        await ctx.send(ret)
 
     @commands.group(name="kanji", aliases=["かんじ", "漢字"], invoke_without_command=True)
     async def kanji(self, ctx: Context, character: str):
@@ -147,7 +168,7 @@ class Nihongo(commands.Cog):
         menu = RoboPages(
             KanjiAPISource(range(0, len(fixed_embeds)), fixed_embeds),
             delete_message_after=False,
-            clear_reactions_after=False,ddef
+            clear_reactions_after=False,
         )
         await menu.start(ctx)
 

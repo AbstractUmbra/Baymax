@@ -6,6 +6,7 @@ from collections import namedtuple
 import discord
 from discord.ext import commands, tasks
 from jishaku.codeblocks import codeblock_converter
+from utils.formats import to_codeblock
 
 ProfileState = namedtuple("ProfileState", "path name")
 
@@ -97,8 +98,8 @@ class Akane(commands.Cog):
         start = datetime.time(hour=(18 if light else 6))
 
         if now.time() > start:
-            now = now.date() + datetime.timedelta(hours=12)
-        then = datetime.datetime.combine(now, start)
+            now = now + datetime.timedelta(hours=12)
+        then = datetime.datetime.combine(now.date(), start)
 
         profile = self.akane_details[light]
         name = profile.name
@@ -118,13 +119,12 @@ class Akane(commands.Cog):
         await self.bot.wait_until_ready()
 
         now = datetime.datetime.utcnow()
-
         light = now.hour >= 6 and now.hour < 18
         start = datetime.time(hour=(18 if light else 6))
 
         if now.time() > start:
-            now = now.date() + datetime.timedelta(hours=12)
-        then = datetime.datetime.combine(now, start)
+            now = now + datetime.timedelta(hours=12)
+        then = datetime.datetime.combine(now.date(), start)
 
         profile = self.akane_details[light]
         name = profile.name
@@ -155,7 +155,7 @@ class Akane(commands.Cog):
             lines = traceback.format_exception(
                 type(error), error, error.__traceback__, 4
             )
-            embed.description = "".join(lines)
+            embed.description = to_codeblock("".join(lines))
             await self.webhook_send(embed=embed)
 
     async def webhook_send(
@@ -166,7 +166,7 @@ class Akane(commands.Cog):
             await asyncio.sleep(5)
             return await self.webhook_send(message, embed=embed)
         wh = cog.webhook
-        await wh.send(message)
+        await wh.send(message, embed=embed)
 
 
 def setup(bot):

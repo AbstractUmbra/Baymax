@@ -182,6 +182,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "dill"
+version = "0.3.3"
+description = "serialize all of python"
+category = "main"
+optional = false
+python-versions = ">=2.6, !=3.0.*"
+
+[package.extras]
+graph = ["objgraph (>=1.7.2)"]
+
+[[package]]
 name = "discord-ext-menus"
 version = "1.0.0a27+g6f2b873"
 description = "An extension module to make reaction based menus with discord.py"
@@ -201,7 +212,7 @@ resolved_reference = "6f2b873bf0d28903eb752aa1166b3aac26dc9007"
 
 [[package]]
 name = "discord.py"
-version = "1.6.0a2614+g6515f33"
+version = "1.6.0a2699+gede7b47"
 description = "A Python wrapper for the Discord API"
 category = "main"
 optional = false
@@ -212,14 +223,14 @@ develop = false
 aiohttp = ">=3.6.0,<3.8.0"
 
 [package.extras]
-docs = ["sphinx (==1.8.5)", "sphinxcontrib-trio (==1.1.1)", "sphinxcontrib-websupport"]
+docs = ["sphinx (==3.0.3)", "sphinxcontrib-trio (==1.1.2)", "sphinxcontrib-websupport"]
 voice = ["PyNaCl (>=1.3.0,<1.5)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/Rapptz/discord.py"
 reference = "master"
-resolved_reference = "6515f339780ba2efe8951b827de53656aa84b695"
+resolved_reference = "ede7b4762a34df9b36bf6221b316873eb38fa694"
 
 [[package]]
 name = "discord.py-stubs"
@@ -414,6 +425,21 @@ reference = "master"
 resolved_reference = "98a4e0f2f186d961231db20b61cee80450f69fb9"
 
 [[package]]
+name = "klepto"
+version = "0.2.0"
+description = "persistent caching to memory, disk, or database"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+dill = ">=0.3.3"
+pox = ">=0.2.9"
+
+[package.extras]
+archives = ["h5py (>=2.8.0)", "pandas (>=0.17.0)", "sqlalchemy (>=0.8.4)"]
+
+[[package]]
 name = "lru-dict"
 version = "1.1.6"
 description = "An Dict like LRU container."
@@ -527,6 +553,14 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "pox"
+version = "0.2.9"
+description = "utilities for filesystem exploration and automated builds"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "psutil"
 version = "5.7.3"
 description = "Cross-platform lib for process and system monitoring in Python."
@@ -572,6 +606,22 @@ python-versions = "*"
 [package.dependencies]
 cached-property = "*"
 cffi = ">=1.4.0"
+
+[[package]]
+name = "pykakasi"
+version = "2.0.4"
+description = "Python implementation of kakasi - kana kanji simple inversion library"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+klepto = "*"
+
+[package.extras]
+check = ["mypy (==0.770)", "mypy-extensions (==0.4.3)", "docutils", "check-manifest", "flake8", "readme-renderer", "pygments", "isort", "twine"]
+docs = ["sphinx (>=1.8)", "sphinx-intl", "sphinx-py3doc-enhanced-theme", "sphinx-rtd-theme"]
+test = ["pytest", "pytest-pep8", "pytest-cov", "coverage[toml] (>=5.2)"]
 
 [[package]]
 name = "python-dateutil"
@@ -674,7 +724,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "e9160951cac216a563cd30313fef75a9fcaf0c7830036d6d667bf38975c1a0a2"
+content-hash = "52290cd66742abe4f27e2ddc151c7d95df4fb7cad33d2eaa139538964b4d2934"
 
 [metadata.files]
 aiohttp = [
@@ -826,6 +876,10 @@ click = [
 currencyconverter = [
     {file = "CurrencyConverter-0.14.4.tar.gz", hash = "sha256:8c35e50ecf25c42f736e1169c043625b341ee93e4f8095d2388cab849d4a70c1"},
 ]
+dill = [
+    {file = "dill-0.3.3-py2.py3-none-any.whl", hash = "sha256:78370261be6ea49037ace8c17e0b7dd06d0393af6513cc23f9b222d9367ce389"},
+    {file = "dill-0.3.3.zip", hash = "sha256:efb7f6cb65dba7087c1e111bb5390291ba3616741f96840bfc75792a1a9b5ded"},
+]
 discord-ext-menus = []
 "discord.py" = []
 "discord.py-stubs" = [
@@ -888,6 +942,10 @@ import-expression = [
     {file = "import_expression-1.1.4.tar.gz", hash = "sha256:06086a6ab3bfa528b1c478e633d6adf2b3a990e31440f6401b0f3ea12b0659a9"},
 ]
 jishaku = []
+klepto = [
+    {file = "klepto-0.2.0-py2.py3-none-any.whl", hash = "sha256:990f2cbc39a44765d5a438b63094543ebfdbd72b45e940e4188e8e73c3f854bd"},
+    {file = "klepto-0.2.0.zip", hash = "sha256:8030f76c9ba147ac14178792180409d027cda159eecd7d2f7cda2dd4e0ba51a2"},
+]
 lru-dict = [
     {file = "lru-dict-1.1.6.tar.gz", hash = "sha256:365457660e3d05b76f1aba3e0f7fedbfcd6528e97c5115a351ddd0db488354cc"},
 ]
@@ -1038,6 +1096,10 @@ pillow = [
     {file = "Pillow-8.0.1-pp37-pypy37_pp73-win32.whl", hash = "sha256:8de332053707c80963b589b22f8e0229f1be1f3ca862a932c1bcd48dafb18dd8"},
     {file = "Pillow-8.0.1.tar.gz", hash = "sha256:11c5c6e9b02c9dac08af04f093eb5a2f84857df70a7d4a6a6ad461aca803fb9e"},
 ]
+pox = [
+    {file = "pox-0.2.9-py2.py3-none-any.whl", hash = "sha256:013eb9e01e9a0670da881894925d73b2d4b32343471b22fa8c41e19e8b3f6367"},
+    {file = "pox-0.2.9.zip", hash = "sha256:f08b5453edf94fd6fdb28e043658cdd6151d5fd8384066a24fad8d4bd7e637c0"},
+]
 psutil = [
     {file = "psutil-5.7.3-cp27-none-win32.whl", hash = "sha256:1cd6a0c9fb35ece2ccf2d1dd733c1e165b342604c67454fd56a4c12e0a106787"},
     {file = "psutil-5.7.3-cp27-none-win_amd64.whl", hash = "sha256:e02c31b2990dcd2431f4524b93491941df39f99619b0d312dfe1d4d530b08b4b"},
@@ -1081,6 +1143,10 @@ pygit2 = [
     {file = "pygit2-1.4.0-cp39-cp39-win32.whl", hash = "sha256:fdd8ba30cda277290e000322f505132f590cf89bd7d31829b45a3cb57447ec32"},
     {file = "pygit2-1.4.0-cp39-cp39-win_amd64.whl", hash = "sha256:0ee135eb2cd8b07ce1374f3596cc5c3213472d6389bad6a4c5d87d8e267e93e9"},
     {file = "pygit2-1.4.0.tar.gz", hash = "sha256:cbeb38ab1df9b5d8896548a11e63aae8a064763ab5f1eabe4475e6b8a78ee1c8"},
+]
+pykakasi = [
+    {file = "pykakasi-2.0.4-py3-none-any.whl", hash = "sha256:e0bf25a0fc31db3d7c3b0dd460c7e84eaf791e47a680e03b3059891e4d54bb86"},
+    {file = "pykakasi-2.0.4.tar.gz", hash = "sha256:bb29480ae0a99dd4ff955f4c5753077e94717b3119a89781a4e05f48699c4ad2"},
 ]
 python-dateutil = [
     {file = "python-dateutil-2.8.1.tar.gz", hash = "sha256:73ebfe9dbf22e832286dafa60473e4cd239f8592f699aa5adaf10050e6e1823c"},

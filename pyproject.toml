@@ -29,6 +29,7 @@ attrdict = "*"
 "discord.py-stubs" = "*"
 Pillow = "*"
 nhentaio = "*"
+pykakasi = "*"
 
 [tool.poetry.dev-dependencies]
 black = "*"
