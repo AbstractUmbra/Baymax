@@ -1,10 +1,10 @@
 name: Analyze
 
-on:
-  pull_request:
-  push:
-  schedule:
-  - cron: "0 0 * * *"
+# on:
+#   pull_request:
+#   push:
+#   schedule:
+#   - cron: "0 0 * * *"
 
 jobs:
   job:
