@@ -1,24 +1,33 @@
+from __future__ import annotations
+
 import argparse
 import asyncio
 import json
 import random
 import shlex
 from collections import namedtuple
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import anekos
 import discord
 import nhentaio
+from aiohttp import BasicAuth
+from asyncpg import Connection
+from asyncpg.pool import Pool
 from discord.ext import commands, menus
 from utils import cache, checks, db
+from utils.context import Context
 from utils.formats import to_codeblock
 from utils.paginator import RoboPages
 
+if TYPE_CHECKING:
+    from bot import Akane
+
 RATING = {"e": "explicit", "q": "questionable", "s": "safe"}
-Gelbooru = namedtuple("Gelbooru", "api_key user_id endpoint")
+Booru = namedtuple("Booru", "auth endpoint")
 
 
-class BlacklistedGelbooru(commands.CommandError):
+class BlacklistedBooru(commands.CommandError):
     """ Error raised when you request a blacklisted tag. """
 
     def __init__(self, tags: set):
@@ -41,7 +50,7 @@ class BadNHentaiID(commands.CommandError):
         return f"Invalid NHentai ID: `{self.nhentai_id}`."
 
 
-class GelbooruConfigTable(db.Table, table_name="gelbooru_config"):
+class BooruConfigTable(db.Table, table_name="booru_config"):
     """ Database ORM fun. """
 
     guild_id = db.Column(db.Integer(big=True), primary_key=True)
@@ -49,16 +58,16 @@ class GelbooruConfigTable(db.Table, table_name="gelbooru_config"):
     blacklist = db.Column(db.Array(db.String()))
 
 
-class GelbooruConfig:
+class BooruConfig:
     """ Config object per guild. """
 
-    def __init__(self, *, guild_id: int, bot: commands.Bot, record=None):
+    def __init__(self, *, guild_id: int, bot: Akane, record=None):
         self.guild_id = guild_id
         self.bot = bot
         self.record = record
 
         if record:
-            self.blacklist = record["blacklist"]
+            self.blacklist = set(record["blacklist"])
         else:
             self.blacklist = []
 
@@ -73,8 +82,6 @@ class LewdPageSource(menus.ListPageSource):
 
     async def format_page(self, menu, entries):
         embed = self.embeds[entries]
-        idx = self.embeds.index(embed) + 1
-        embed.set_footer(text=f"{embed.footer.text} :: {idx}/{len(self.embeds)}")
         return embed
 
 
@@ -106,19 +113,49 @@ class GelbooruEntry:
         self.raw_tags = payload.get("tags")
 
     @property
-    def tags(self):
+    def tags(self) -> List[str]:
         return self.raw_tags.split(" ")
+
+
+class DanbooruEntry:
+    def __init__(self, payload: Dict[str, Optional[Union[str, int, bool]]]) -> None:
+        self.ext: str = payload.get("file_ext", "none")
+        self.image: bool = True if self.ext in ("png", "jpg", "jpeg", "gif") else False
+        self.video: bool = True if self.ext in ("mp4", "gifv", "webm") else False
+        self.source: str = payload.get("source")
+        self.db_id: int = payload.get("id")
+        self.rating: str = RATING.get(payload.get("rating"))
+        self.score: int = payload.get("score")
+        self.large: bool = payload.get("has_large", False)
+        self.file_url: str = payload.get("file_url")
+        self.large_url: str = payload.get("large_file_url")
+        self.raw_tags: str = payload.get("tag_string")
+
+    @property
+    def tags(self) -> List[str]:
+        return self.raw_tags.split(" ")
+
+    @property
+    def url(self) -> str:
+        return self.large_url if self.large else self.file_url
 
 
 class Lewd(commands.Cog):
     """ Lewd cog. """
 
-    def __init__(self, bot):
+    def __init__(self, bot: Akane) -> None:
         self.bot = bot
-        self.gelbooru_config = Gelbooru(
-            bot.config.gelbooru_api["api_key"],
-            bot.config.gelbooru_api["user_id"],
+        self.gelbooru_config = Booru(
+            BasicAuth(
+                bot.config.gelbooru_api["user_id"], bot.config.gelbooru_api["api_key"]
+            ),
             "https://gelbooru.com/index.php?page=dapi&s=post&q=index",
+        )
+        self.danbooru_config = Booru(
+            BasicAuth(
+                bot.config.danbooru_api["user_id"], bot.config.danbooru_api["api_key"]
+            ),
+            "https://danbooru.donmai.us/posts.json",
         )
         self.sfw_tags = anekos.SFWImageTags.to_list()
         self.nsfw_tags = anekos.NSFWImageTags.to_list()
@@ -127,7 +164,7 @@ class Lewd(commands.Cog):
     async def cog_command_error(self, ctx, error):
         error = getattr(error, "original", error)
 
-        if isinstance(error, BlacklistedGelbooru):
+        if isinstance(error, BlacklistedBooru):
             return await ctx.send(error)
         elif isinstance(error, commands.BadArgument):
             return await ctx.send(error)
@@ -143,13 +180,18 @@ class Lewd(commands.Cog):
             )
 
     @cache.cache()
-    async def get_gelbooru_config(self, guild_id, *, connection=None):
+    async def get_booru_config(
+        self,
+        guild_id: int,
+        *,
+        connection: Union[Pool, Connection] = None,
+    ):
         connection = connection or self.bot.pool
         query = """ SELECT * FROM gelbooru_config WHERE guild_id = $1; """
         record = await connection.fetchrow(query, guild_id)
-        return GelbooruConfig(guild_id=guild_id, bot=self.bot, record=record)
+        return BooruConfig(guild_id=guild_id, bot=self.bot, record=record)
 
-    def _gen_embeds(self, payloads: list, config: GelbooruConfig):
+    def _gen_gelbooru_embeds(self, payloads: list, config: BooruConfig):
         embeds = []
         blacklisted_tags = config.blacklist
 
@@ -157,7 +199,7 @@ class Lewd(commands.Cog):
             new_item = GelbooruEntry(item)
 
             # blacklist check
-            set_blacklist = set(blacklisted_tags)
+            set_blacklist = blacklisted_tags
             set_tags = set(new_item.tags)
             if set_blacklist & set_tags:
                 continue
@@ -180,14 +222,45 @@ class Lewd(commands.Cog):
                 embed.add_field(name="Source:", value=new_item.source)
 
             embeds.append(embed)
-
         return embeds
 
-    @commands.group(usage="<flags>+ | subcommand", invoke_without_command=True)
+    def _gen_danbooru_embeds(
+        self,
+        results: List[Dict[str, Optional[Union[str, int, bool]]]],
+        config: BooruConfig,
+    ) -> List[Optional[discord.Embed]]:
+        embeds = []
+        blacklist = config.blacklist
+        for _result in results:
+            result = DanbooruEntry(_result)
+            if blacklist & set(result.tags):
+                continue
+
+            embed = discord.Embed(colour=discord.Colour(0xD552C9))
+            if result.image:
+                embed.set_image(url=result.url)
+            elif result.video:
+                embed.add_field(
+                    name="Video - Source:-", value=f"f[Click here!]({result.url})"
+                )
+            else:
+                continue
+
+            fmt = f"ID: {result.db_id} | Rating: {result.rating.capitalize()}"
+            fmt += f"       Result {results.index(_result)+1}/{len(results)}"
+            embed.set_footer(text=fmt)
+
+            if result.source:
+                embed.add_field(name="Source:", value=result.source)
+
+            embeds.append(embed)
+        return embeds
+
+    @commands.command(usage="<flags>+ | subcommand")
     @commands.cooldown(1, 10, commands.BucketType.user)
     @commands.max_concurrency(1, commands.BucketType.user, wait=False)
     @commands.is_nsfw()
-    async def gelbooru(self, ctx: commands.Context, *, params: str):
+    async def gelbooru(self, ctx: Context, *, params: str):
         """This command uses a flag style syntax.
         The following options are valid.
 
@@ -212,7 +285,7 @@ class Lewd(commands.Cog):
             - NOTE: if not enough searches are returned, page 2 will cause an empty response.
         ```
         """
-        aiohttp_params = self.bot.config.gelbooru_api
+        aiohttp_params = {}
         aiohttp_params.update({"json": 1})
         parser = argparse.ArgumentParser(
             add_help=False, allow_abbrev=False, prefix_chars="+"
@@ -229,7 +302,7 @@ class Lewd(commands.Cog):
             await ctx.send(f"Parsing your args failed: {err}")
             return
 
-        current_config = await self.get_gelbooru_config(ctx.guild.id)
+        current_config = await self.get_booru_config(ctx.guild.id)
 
         if real_args.limit:
             aiohttp_params.update({"limit": int(real_args.limit)})
@@ -238,17 +311,18 @@ class Lewd(commands.Cog):
         if real_args.tags:
             lowered_tags = [tag.lower() for tag in real_args.tags]
             tags_set = set(lowered_tags)
-            blacklist_set = set(current_config.blacklist)
-            common_elements = tags_set & blacklist_set
-            if common_elements:
-                raise BlacklistedGelbooru((tags_set & blacklist_set))
+            common_elems = tags_set & current_config.blacklist
+            if common_elems:
+                raise BlacklistedBooru(common_elems)
             aiohttp_params.update({"tags": " ".join(lowered_tags)})
         if real_args.cid:
             aiohttp_params.update({"cid", real_args.cid})
 
         async with ctx.typing():
             async with self.bot.session.get(
-                self.gelbooru_config.endpoint, params=aiohttp_params
+                self.gelbooru_config.endpoint,
+                params=aiohttp_params,
+                auth=self.gelbooru_config.auth,
             ) as resp:
                 data = await resp.text()
                 if not data:
@@ -260,7 +334,11 @@ class Lewd(commands.Cog):
                 ctx.command.reset_cooldown(ctx)
                 raise commands.BadArgument("The specified query returned no results.")
 
-            embeds = self._gen_embeds(json_data, current_config)
+            embeds = self._gen_gelbooru_embeds(json_data, current_config)
+            if not embeds:
+                raise commands.BadArgument(
+                    "Your search had results but all of them contain blacklisted tags."
+                )
             pages = RoboPages(
                 source=LewdPageSource(range(0, len(embeds[:30])), embeds),
                 delete_message_after=False,
@@ -268,12 +346,105 @@ class Lewd(commands.Cog):
             )
             await pages.start(ctx)
 
-    @gelbooru.group(invoke_without_command=True)
+    @commands.command()
+    @commands.cooldown(1, 10, commands.BucketType.user)
+    @commands.max_concurrency(1, commands.BucketType.user, wait=False)
+    @commands.is_nsfw()
+    async def danbooru(self, ctx: Context, *, params: str) -> None:
+        """This command uses a flag style syntax.
+        The following options are valid.
+
+        `*` denotes it is a mandatory argument.
+
+        `+t | ++tags`: The tags to search Gelbooru for. `*` (uses logical AND per tag)
+        `+l | ++limit`: The maximum amount of posts to show. Cannot be higher than 30.
+
+        Examples:
+        ```
+        !gelbooru ++tags lemon
+            - search for the 'lemon' tag.
+            - NOTE: if your tag has a space in it, replace it with '_'
+
+        !danbooru ++tags melon -rating:explicit
+            - search for the 'melon' tag, removing posts marked as 'explicit`
+
+        !danbooru ++tags apple orange rating:safe
+            - Search for the 'apple' AND 'orange' tags, with only 'safe' results.
+        ```
+        """
+        aiohttp_params = {}
+        parser = argparse.ArgumentParser(
+            add_help=False, allow_abbrev=False, prefix_chars="+"
+        )
+        parser.add_argument("+t", "++tags", nargs="+", required=True)
+        parser.add_argument("+l", "++limit", type=int, default=30)
+        try:
+            real_args = parser.parse_args(shlex.split(params))
+        except SystemExit as fuck:
+            raise commands.BadArgument("Your flags could not be parsed.") from fuck
+        except Exception as err:
+            await ctx.send(f"Parsing your args failed: {err}.")
+            return
+
+        current_config = await self.get_booru_config(ctx.guild.id)
+
+        if real_args.limit:
+            limit = real_args.limit
+            if not 1 < real_args.limit <= 30:
+                limit = 30
+            aiohttp_params.update({"limit": limit})
+        if real_args.tags:
+            lowered_tags = [tag.lower() for tag in real_args.tags]
+            tags = set(lowered_tags)
+            common_elems = tags & current_config.blacklist
+            if common_elems:
+                raise BlacklistedBooru(common_elems)
+            aiohttp_params.update({"tags": " ".join(lowered_tags)})
+
+        async with ctx.typing():
+            async with self.bot.session.get(
+                self.danbooru_config.endpoint,
+                params=aiohttp_params,
+                auth=self.danbooru_config.auth,
+            ) as resp:
+                data = await resp.text()
+                if not data:
+                    ctx.command.reset_cooldown(ctx)
+                    raise commands.BadArgument("Got an empty response... bad search?")
+                json_data = json.loads(data)
+
+            if not json_data:
+                ctx.command.reset_cooldown(ctx)
+                raise commands.BadArgument("The specified query returned no results.")
+
+            print(json_data)
+            print(aiohttp_params)
+            embeds = self._gen_danbooru_embeds(json_data, current_config)
+            if not embeds:
+                raise commands.BadArgument(
+                    "Your search had results but all of them contained blacklisted tags."
+                )
+
+            pages = RoboPages(
+                source=LewdPageSource(range(0, len(embeds[:30])), embeds),
+                delete_message_after=False,
+                clear_reactions_after=True,
+            )
+            await pages.start(ctx)
+
+    @commands.group(invoke_without_command=True)
     @checks.has_permissions(manage_messages=True)
-    async def blacklist(self, ctx: commands.Context):
+    async def booru(self, ctx: Context) -> None:
+        """ Booru commands! Please see the subcommands. """
+        if not ctx.invoked_subcommand:
+            return await ctx.send_help(ctx.command)
+
+    @booru.group(invoke_without_command=True)
+    @checks.has_permissions(manage_messages=True)
+    async def blacklist(self, ctx: Context) -> None:
         """ Blacklist management for gelbooru command. """
         if not ctx.invoked_subcommand:
-            config = await self.get_gelbooru_config(ctx.guild.id)
+            config = await self.get_booru_config(ctx.guild.id)
             if config.blacklist:
                 fmt = "\n".join(config.blacklist)
             else:
@@ -286,7 +457,7 @@ class Lewd(commands.Cog):
 
     @blacklist.command()
     @checks.has_permissions(manage_messages=True)
-    async def add(self, ctx: commands.Context, *tags: str):
+    async def add(self, ctx: Context, *tags: str):
         """ Add an item to the blacklist. """
         query = """ INSERT INTO gelbooru_config (guild_id, blacklist)
                     VALUES ($1, $2)
@@ -295,12 +466,12 @@ class Lewd(commands.Cog):
                 """
         iterable = [(ctx.guild.id, [tag.lower()]) for tag in tags]
         await self.bot.pool.executemany(query, iterable)
-        self.get_gelbooru_config.invalidate(self, ctx.guild.id)
+        self.get_booru_config.invalidate(self, ctx.guild.id)
         await ctx.message.add_reaction(self.bot.emoji[True])
 
     @blacklist.command()
     @checks.has_permissions(manage_messages=True)
-    async def remove(self, ctx: commands.Context, *tags: str):
+    async def remove(self, ctx: Context, *tags: str):
         """ Remove an item from the blacklist. """
         query = """ UPDATE gelbooru_config
                     SET blacklist = array_remove(gelbooru_config.blacklist, $2)
@@ -308,7 +479,7 @@ class Lewd(commands.Cog):
                 """
         iterable = [(ctx.guild.id, tag) for tag in tags]
         await self.bot.pool.executemany(query, iterable)
-        self.get_gelbooru_config.invalidate(self, ctx.guild.id)
+        self.get_booru_config.invalidate(self, ctx.guild.id)
         await ctx.message.add_reaction(self.bot.emoji[True])
 
     @commands.group(invoke_without_command=True)
@@ -324,7 +495,7 @@ class Lewd(commands.Cog):
             raise BadNHentaiID(hentai_id, "Doesn't seem to be a valid ID.")
         embed = discord.Embed(title=gallery.title, url=gallery.url)
         embed.add_field(name="Page count", value=gallery.page_count)
-        embed.add_field(name="Local name", value=gallery.title_untranslated or "N/A")
+        embed.add_field(name="Local name", value="N/A")
         embed.timestamp = gallery.uploaded
         embed.add_field(name="# of Favourites", value=gallery.favourites)
         embed.set_image(url=gallery.cover.url)
