@@ -1,6 +1,5 @@
 import datetime
 import traceback
-from collections import deque
 from typing import Dict, List, Optional, Union
 
 import asyncpg
@@ -70,6 +69,7 @@ class Twitch(commands.Cog):
         self.get_streamers.start()
         self.get_clips.start()
         self.streamer_limit = 5
+        self.last_pagination = None
 
     async def _get_streamers(self, name: str, guild_id: int) -> List[asyncpg.Record]:
         """ To get all streamers in the db. """
@@ -109,7 +109,7 @@ class Twitch(commands.Cog):
         return await self.bot.pool.execute(query, auth_token, now, expire_date)
 
     @cache.cache()
-    async def _gen_headers(self) -> Dict:
+    async def _gen_headers(self) -> Dict[str, str]:
         """ Let's use this to create the Headers. """
         base = self.bot.config.twitch_headers
         query = "SELECT secret from twitchsecrettable WHERE id = 1;"
@@ -149,7 +149,7 @@ class Twitch(commands.Cog):
     @twitch.command(hidden=True)
     @commands.is_owner()
     async def streamdb(self, ctx: commands.Context) -> discord.Message:
-        """ Let's check every 2 minutes for clips, eh? """
+        """. """
         headers = await self._gen_headers()
         query = """ SELECT * FROM twitchcliptable; """
         results = await self.bot.pool.fetch(query)
@@ -158,17 +158,21 @@ class Twitch(commands.Cog):
             guild = self.bot.get_guild(item["guild_id"])
             channel = guild.get_channel(item["channel_id"])
 
+            params = {"broadcaster_id": item["broadcaster_id"]}
+            if self.last_pagination:
+                params.update({"after": self.last_pagination})
+
             async with self.bot.session.get(
                 self.clip_endpoint,
-                params={"broadcaster_id": item["broadcaster_id"]},
+                params=params,
                 headers=headers,
             ) as resp:
                 clips_json = await resp.json()
 
             if "error" in clips_json:
+                await ctx.send("error in resp")
                 await self._refresh_oauth()
-                await self.streamdb(ctx)
-                # return await self.get_clips.coro()
+                return await self.get_clips.coro(self)
             if not clips_json["data"]:
                 continue
 
@@ -179,13 +183,15 @@ class Twitch(commands.Cog):
                 clip_time = datetime.datetime.fromisoformat(
                     clip_dict["created_at"][:-1]
                 )
+                await ctx.send(clip_time)
                 clip_seconds = (now - clip_time).total_seconds()
-                await ctx.send(clip_seconds)  # TODO remove
-                if clip_seconds <= 120 or (clip_dict["id"] not in self._clip_cache):
+                await ctx.send(clip_seconds)
+                if (clip_seconds <= 3600) and (clip_dict["id"] not in self._clip_cache):
                     safe_clips.append(clip_dict)
 
             if not safe_clips:
-                return
+                await ctx.send("no safe clips")
+                continue
 
             for clip_dict in safe_clips:
                 # Now we have the real data.
@@ -204,6 +210,7 @@ class Twitch(commands.Cog):
                 embed.timestamp = timestamp
                 await channel.send(embed=embed)
                 self._clip_cache.add(clip_dict["id"])
+        await ctx.send("done")
 
     @twitch.command(name="add")
     @commands.has_guild_permissions(manage_channels=True)
@@ -280,19 +287,35 @@ class Twitch(commands.Cog):
     @twitch_clips.command(name="add")
     @commands.has_guild_permissions(manage_channels=True)
     async def add_clips(
-        self, ctx: commands.Context, *, broadcaster: str
+        self,
+        ctx: commands.Context,
+        broadcaster: str,
+        *,
+        channel: discord.TextChannel = None,
     ) -> discord.Reaction:
         """ Add a clip section to monitor. """
-        broadcaster_data = await self._get_streamer_data(broadcaster)
+        try:
+            broadcaster_data = await self._get_streamer_data(broadcaster)
+        except KeyError:
+            raise InvalidBroadcaster(broadcaster)
+
+        results = await self._get_clips(broadcaster, ctx.guild.id)
+        if results:
+            return await ctx.send("This streamer is already monitored.")
+
         if not broadcaster_data:
             raise InvalidBroadcaster(broadcaster)
+
+        await ctx.send(broadcaster_data)
+
+        channel = channel or ctx.channel
 
         query = """INSERT INTO twitchcliptable (guild_id, channel_id, broadcaster_id, last_25_clips)
                    VALUES ($1, $2, $3, $4)
                 """
 
         await self.bot.pool.execute(
-            query, ctx.guild.id, ctx.channel.id, broadcaster_data["id"], []
+            query, ctx.guild.id, channel.id, broadcaster_data["id"], []
         )
         return await ctx.message.add_reaction(self.bot.emoji[True])
 
@@ -403,7 +426,7 @@ class Twitch(commands.Cog):
             if "error" in stream_json:
                 await self._refresh_oauth()
                 return await self.get_streamers.coro(self)
-            if not "data" in stream_json.keys() or not stream_json["data"]:
+            if "data" not in stream_json.keys() or not stream_json["data"]:
                 continue
 
             current_stream = datetime.datetime.utcnow() - item["streamer_last_datetime"]
@@ -499,11 +522,11 @@ class Twitch(commands.Cog):
                     clip_dict["created_at"][:-1]
                 )
                 clip_seconds = (now - clip_time).total_seconds()
-                if clip_seconds <= 300 and (clip_dict["id"] not in self._clip_cache):
+                if (clip_seconds <= 3600) and (clip_dict["id"] not in self._clip_cache):
                     safe_clips.append(clip_dict)
 
             if not safe_clips:
-                return
+                continue
 
             for clip_dict in safe_clips:
                 # Now we have the real data.
@@ -522,6 +545,8 @@ class Twitch(commands.Cog):
                 embed.timestamp = timestamp
                 await channel.send(embed=embed)
                 self._clip_cache.add(clip_dict["id"])
+        if clips_json:
+            self.last_pagination = clips_json["pagination"]["cursor"]
 
     @get_streamers.before_loop
     @get_clips.before_loop
@@ -539,7 +564,7 @@ class Twitch(commands.Cog):
         )
 
         if not stats:
-            return tb_str
+            print(tb_str)
 
         webhook = stats.webhook
         embed = discord.Embed(title="Twitch error", colour=0xFFFFFF)
