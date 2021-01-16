@@ -4,7 +4,6 @@ from textwrap import shorten
 
 import discord
 from discord.ext import commands, menus
-
 from utils.paginator import RoboPages
 
 
@@ -145,9 +144,9 @@ class Reddit(commands.Cog):
         self, ctx: commands.Context, subreddit: str, sort_by: str = "hot"
     ):
         """ Main Reddit command, subcommands to be added. """
-        sub_re = re.compile(r"(/?r/(?P<subname>.*))")
+        sub_re = re.compile(r"(/?(r/)?(?P<subname>.*))")
         sub_search = sub_re.search(subreddit)
-        if sub_search and "subname" in sub_search:
+        if sub_search.group("subname"):
             subreddit = sub_search["subname"]
         embeds = await self._perform_search(
             str(ctx.author), ctx.channel, subreddit, sort_by

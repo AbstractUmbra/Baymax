@@ -41,7 +41,7 @@ class SphinxObjectFileReader:
             pos = buf.find(b"\n")
             while pos != -1:
                 yield buf[:pos].decode("utf-8")
-                buf = buf[pos + 1 :]
+                buf = buf[pos + 1:]
                 pos = buf.find(b"\n")
 
 
@@ -57,8 +57,8 @@ class RTFX(commands.Cog):
         # first line is version info
         inv_version = stream.readline().rstrip()
 
-        if inv_version != "# Sphinx inventory version 2":
-            raise RuntimeError("Invalid objects.inv file version.")
+        # if inv_version != "# Sphinx inventory version 2":
+        #     raise RuntimeError("Invalid objects.inv file version.")
 
         # next line is "# Project: <name>"
         # then after that is "# Version: <version>"
@@ -129,6 +129,7 @@ class RTFX(commands.Cog):
             "twitchio": "https://twitchio.readthedocs.io/en/rewrite/",
             "aiohttp": "https://docs.aiohttp.org/en/stable/",
             "wavelink": "https://wavelink.readthedocs.io/en/latest/",
+            "flask": "https://flask.palletsprojects.com/en/1.1.x/",
         }
 
         if obj is None:
@@ -206,6 +207,11 @@ class RTFX(commands.Cog):
     async def rtfm_wavelink(self, ctx, *, obj: str = None):
         """ Gives you the documentation link for a `Wavelink` entity. """
         await self.do_rtfm(ctx, "wavelink", obj)
+
+    @rtfm.command(name="flask")
+    async def rtfm_flask(self, ctx, *, obj: str = None):
+        """ Gives you the documentation link for a `Wavelink` entity. """
+        await self.do_rtfm(ctx, "flask", obj)
 
     async def _member_stats(self, ctx, member, total_uses):
         e = discord.Embed(title="RTFM Stats")

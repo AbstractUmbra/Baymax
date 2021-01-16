@@ -6,7 +6,7 @@ from typing import Optional, Union
 
 from discord import (AsyncWebhookAdapter, AuditLogAction, AuditLogEntry,
                      CategoryChannel, Colour, Embed, Guild, Member, Message,
-                     Object, TextChannel, User, VoiceChannel, Webhook)
+                     TextChannel, User, VoiceChannel, Webhook)
 from discord.abc import GuildChannel
 from discord.ext import commands
 
@@ -18,6 +18,7 @@ MUTE_RE = re.compile(
     r"([^#]+#\d{4} \(ID: (\d+)\):(.*))?(Action done by [^#]+#\d{4} \(ID: (\d+)\))?",
     re.IGNORECASE,
 )
+UMBRA = 155863164544614402
 # 2nd or 5th index, attempt both?
 
 
@@ -66,7 +67,7 @@ class Private(commands.Cog):
         debug: bool = False,
     ) -> Optional[AuditLogEntry]:
         if debug:
-            await self.bot.get_user(self.bot.owner_id).send("find_start")
+            await self.bot.get_user(UMBRA).send("find_start")
         async for entry in guild.audit_logs(action=action, limit=3):
             if entry.target.id == channel.id:
                 # help 1 entry
@@ -75,7 +76,7 @@ class Private(commands.Cog):
                 if not bool(re.match(r"\b(temp)?block\b", entry.reason.lower())):
                     continue  # no match to tempblock / block. Usually means an unblock or manual removal
                 if debug:
-                    await self.bot.get_user(self.bot.owner_id).send("find_done")
+                    await self.bot.get_user(UMBRA).send("find_done")
                     return entry
                 else:
                     if (datetime.datetime.utcnow() - entry.created_at).seconds <= 30:
@@ -143,7 +144,7 @@ class Private(commands.Cog):
         if not real_entry:
             return
         embed = self.gen_embed(ModActions.banned, member=person, entry=real_entry)
-        await self.bot.get_user(self.bot.owner_id).send(embed=embed)
+        await self.bot.get_user(UMBRA).send(embed=embed)
         for wh in self.webhooks:
             await wh.send(embed=embed)
 
@@ -162,7 +163,7 @@ class Private(commands.Cog):
         if not real_entry:
             return
         embed = self.gen_embed(ModActions.kicked, member=member, entry=real_entry)
-        await self.bot.get_user(self.bot.owner_id).send(embed=embed)
+        await self.bot.get_user(UMBRA).send(embed=embed)
         for wh in self.webhooks:
             await wh.send(embed=embed)
 
@@ -180,7 +181,7 @@ class Private(commands.Cog):
         if not real_entry:
             return
         embed = self.gen_embed(ModActions.unbanned, member=person, entry=real_entry)
-        await self.bot.get_user(self.bot.owner_id).send(embed=embed)
+        await self.bot.get_user(UMBRA).send(embed=embed)
         for wh in self.webhooks:
             await wh.send(embed=embed)
 
@@ -203,7 +204,7 @@ class Private(commands.Cog):
         await asyncio.sleep(3)  # to allow the audit log to actually... create.
 
         if debug:
-            await self.bot.get_user(self.bot.owner_id).send("main start")
+            await self.bot.get_user(UMBRA).send("main start")
         real_entry = await self.find_block(
             guild=before.guild,
             channel=after,
@@ -218,7 +219,7 @@ class Private(commands.Cog):
 
         if not real_entry:
             if debug:
-                await self.bot.get_user(self.bot.owner_id).send("no entry")
+                await self.bot.get_user(UMBRA).send("no entry")
             return
 
         new_overwrite_for = (
@@ -227,7 +228,7 @@ class Private(commands.Cog):
 
         if not new_overwrite_for:
             # entries return no accurate search
-            await self.bot.get_user(self.bot.owner_id).send(
+            await self.bot.get_user(UMBRA).send(
                 f"failed:\nEntry: {real_entry}\nMember target: {new_overwrite_for}."
             )
             return
@@ -235,7 +236,11 @@ class Private(commands.Cog):
         if not before.guild.get_member(new_overwrite_for.id):
             return
 
-        reason_expanded = BLOCK_RE.search(real_entry.reason)
+        reason = (
+            real_entry.reason or "Action done by Umbra#0009 (ID: 155863164544614402)"
+        )
+
+        reason_expanded = BLOCK_RE.search(reason)
 
         if reason_expanded:
             helper = self.bot.get_user(int(reason_expanded[1]))
@@ -251,14 +256,12 @@ class Private(commands.Cog):
                 helper=helper,
                 expires=expires,
             )
-            await self.bot.get_user(self.bot.owner_id).send(embed=embed)
+            await self.bot.get_user(UMBRA).send(embed=embed)
             for wh in self.webhooks:
                 await wh.send(embed=embed)
         else:
             fmt = real_entry.reason
-            await self.bot.get_user(self.bot.owner_id).send(
-                f"reason_expanded failed {fmt}"
-            )
+            await self.bot.get_user(UMBRA).send(f"reason_expanded failed {fmt}")
 
     @commands.Cog.listener()
     async def on_member_update(self, before: Member, after: Member) -> Message:
@@ -286,7 +289,9 @@ class Private(commands.Cog):
             if not real_entry:
                 return
 
-            reason_expanded = MUTE_RE.search(real_entry.reason)
+            reason = real_entry.reason or "No reason."
+
+            reason_expanded = MUTE_RE.search(reason)
             mod_id = None
             mod_reason = None
             if reason_expanded:
@@ -299,7 +304,7 @@ class Private(commands.Cog):
                         mod_reason = reason_expanded[3].lstrip()
                     else:
                         mod_reason = "Member was previously muted."
-            if not mod_id and not mod_reason:
+            if not mod_id:
                 return
 
             mod = self.bot.get_user(int(mod_id))
@@ -310,7 +315,7 @@ class Private(commands.Cog):
                 mod=mod,
                 reason=mod_reason,
             )
-            await self.bot.get_user(self.bot.owner_id).send(embed=embed)
+            await self.bot.get_user(UMBRA).send(embed=embed)
             for wh in self.webhooks:
                 await wh.send(embed=embed)
 

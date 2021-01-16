@@ -1,7 +1,10 @@
 import asyncio
 import datetime
+import timeit
 import traceback
 from collections import namedtuple
+from functools import partial
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import discord
 from discord.ext import commands, tasks
@@ -9,6 +12,10 @@ from jishaku.codeblocks import codeblock_converter
 from utils.formats import to_codeblock
 
 ProfileState = namedtuple("ProfileState", "path name")
+
+
+class BadEval(commands.CommandError):
+    """ Bad Timeit Code. """
 
 
 class Akane(commands.Cog):
@@ -26,17 +33,6 @@ class Akane(commands.Cog):
 
     def cog_unload(self):
         self.akane_task.cancel()
-
-    async def meme(self):
-        dt = datetime.datetime.utcnow()
-        while True:
-            if nara := dt.hour >= 6 and dt.hour < 18:
-                dt.replace(hour=18, minute=0, second=0, microsecond=0)
-            else:
-                dt.replace(hour=6, minute=0, second=0, microsecond=0)
-            await discord.utils.sleep_until(dt)
-            self.bot.dispatch("dawn" if nara else "dusk")
-            dt += datetime.timedelta(hours=12, seconds=1)
 
     @commands.command(name="hello")
     async def hello(self, ctx: commands.Context):
@@ -70,6 +66,45 @@ class Akane(commands.Cog):
         jsk = self.bot.get_command("jishaku shell")
         await jsk(ctx, argument=body)
 
+    @akane.command()
+    @commands.is_owner()
+    async def timeit(
+        self,
+        ctx: commands.Context,
+        iterations: Optional[int] = 100,
+        *,
+        body: codeblock_converter,
+    ):
+
+        await ctx.message.add_reaction(self.bot.emoji[None])
+        timeit_globals = {
+            "ctx": ctx,
+            "guild": ctx.guild,
+            "author": ctx.author,
+            "bot": ctx.bot,
+            "channel": ctx.channel,
+            "discord": discord,
+            "commands": commands,
+        }
+        timeit_globals.update(globals())
+
+        func = partial(
+            timeit.timeit, body.content, number=iterations, globals=timeit_globals
+        )
+        run = await self.bot.loop.run_in_executor(None, func)
+        await ctx.message.add_reaction(self.bot.emoji[True])
+
+        embed = discord.Embed(
+            title=f"timeit of {iterations} iterations took {run:.20f}.",
+            colour=self.bot.colour["dsc"],
+        )
+        embed.add_field(
+            name="Body",
+            value=to_codeblock(body.content, language=body.language, escape_md=False),
+        )
+
+        await ctx.send(embed=embed)
+
     @akane.command(aliases=["sauce"])
     @commands.is_owner()
     async def source(self, ctx: commands.Context, *, command: str):
@@ -89,10 +124,9 @@ class Akane(commands.Cog):
     async def sleep(self, ctx):
         """ Akane naptime. """
         await ctx.send("さようなら!")
-        await self.bot.logout()
+        await self.bot.close()
 
-    @tasks.loop(minutes=5)
-    async def akane_task(self):
+    def dt(self) -> Tuple[bool, datetime.datetime]:
         now = datetime.datetime.utcnow()
         light = now.hour >= 6 and now.hour < 18
         start = datetime.time(hour=(18 if light else 6))
@@ -100,31 +134,32 @@ class Akane(commands.Cog):
         if now.time() > start:
             now = now + datetime.timedelta(hours=12)
         then = datetime.datetime.combine(now.date(), start)
+
+        return light, then
+
+    @tasks.loop(minutes=5)
+    async def akane_task(self):
+        light, then = self.dt()
 
         profile = self.akane_details[light]
         name = profile.name
         path = profile.path
 
-        if now > self.akane_time:
+        if now := (datetime.datetime.utcnow()) > self.akane_time:
+            await self.webhook_send(
+                f"In task: Now {now}, mapped time: {self.akane_time}"
+            )
             with open(path, "rb") as buffer:
                 await self.webhook_send(f"Performing change to: {name}")
                 await self.bot.user.edit(username=name, avatar=buffer.read())
-                self.akane_time = then
 
-        await self.webhook_send(f"In task, now: {then}")
-        self.akane_next = then
+        self.akane_time = then
 
     @akane_task.before_loop
     async def before_akane(self):
         await self.bot.wait_until_ready()
 
-        now = datetime.datetime.utcnow()
-        light = now.hour >= 6 and now.hour < 18
-        start = datetime.time(hour=(18 if light else 6))
-
-        if now.time() > start:
-            now = now + datetime.timedelta(hours=12)
-        then = datetime.datetime.combine(now.date(), start)
+        light, then = self.dt()
 
         profile = self.akane_details[light]
         name = profile.name

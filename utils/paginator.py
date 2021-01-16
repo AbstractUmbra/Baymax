@@ -5,18 +5,9 @@ from discord.ext import menus
 from discord.ext.commands import Paginator as CommandPaginator
 
 
-class RoboPages(menus.MenuPages):
+class RoboPages(menus.MenuPages, inherit_buttons=False):
     def __init__(self, source, *args, **kwargs):
         super().__init__(source=source, check_embeds=True, *args, **kwargs)
-        self.remove_button(
-            "\N{BLACK LEFT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f"
-        )
-        self.remove_button("\N{BLACK LEFT-POINTING TRIANGLE}\ufe0f")
-        self.remove_button("\N{BLACK RIGHT-POINTING TRIANGLE}\ufe0f")
-        self.remove_button(
-            "\N{BLACK RIGHT-POINTING DOUBLE TRIANGLE WITH VERTICAL BAR}\ufe0f"
-        )
-        self.remove_button("\N{BLACK SQUARE FOR STOP}\ufe0f")
 
     async def finalize(self, timed_out):
         try:

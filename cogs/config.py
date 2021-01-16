@@ -365,7 +365,8 @@ class Config(commands.Cog):
         await ctx.release()
 
         try:
-            page = SimplePages(entries=entries, per_page=20).start(ctx)
+            page = SimplePages(entries=entries, per_page=20)
+            await page.start(ctx)
         except menus.MenuError as err:
             await ctx.send(str(err))
 

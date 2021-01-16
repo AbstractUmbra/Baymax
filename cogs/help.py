@@ -17,90 +17,6 @@ class HelpSource(menus.ListPageSource):
         return embed
 
 
-class EmbedMenu(menus.Menu):
-    def __init__(self, pages):
-        super().__init__(delete_message_after=True)
-        self.pages = pages
-        self.current_page = 0
-
-    def _skip_when(self):
-        return len(self.pages) <= 2
-
-    def _skip_when_short(self):
-        return len(self.pages) <= 1
-
-    async def update_page(self):
-        embed = self.pages[self.current_page]
-        await self.message.edit(embed=embed)
-
-    @menus.button(
-        "<:LL:785744371453919243>", skip_if=_skip_when, position=menus.First(0)
-    )
-    async def jump_to_first(self, payload):
-        self.current_page = 0
-        await self.update_page()
-
-    @menus.button(
-        "<:L_:785744338487214104>", skip_if=_skip_when_short, position=menus.First(1)
-    )
-    async def previous_page(self, payload):
-        if self.current_page > 0:
-            self.current_page -= 1
-            await self.update_page()
-
-    @menus.button("<:Stop:785018971119157300>", position=menus.First(2))
-    async def stop_pages(self, payload):
-        self.stop()
-
-    @menus.button(
-        "<:R_:785744271579414528>", skip_if=_skip_when_short, position=menus.Last(0)
-    )
-    async def next_page(self, payload):
-        if self.current_page < len(self.pages) - 1:
-            self.current_page += 1
-            await self.update_page()
-
-    @menus.button(
-        "<:RR:785742013089185812>", skip_if=_skip_when, position=menus.Last(1)
-    )
-    async def jump_to_last(self, payload):
-        self.current_page = len(self.pages) - 1
-        await self.update_page()
-
-    @menus.button(
-        "<:1234:787170360013225996>", skip_if=_skip_when, position=menus.Last(2)
-    )
-    async def jump_to(self, payload):
-        m = await self.message.channel.send("Which page would you like to go to?")
-        try:
-            n = await self.bot.wait_for(
-                "message",
-                check=lambda m: m.author == self.ctx.author
-                and m.channel == self.ctx.channel
-                and m.content.isdigit(),
-                timeout=30,
-            )
-        except asyncio.TimeoutError:
-            return
-        except Exception:
-            raise
-        else:
-            self.current_page = int(n.content) - 1
-            await self.update_page()
-        finally:
-            await m.delete()
-            try:
-                await n.delete()
-            except Exception:
-                pass
-
-    async def send_initial_message(self, ctx, channel):
-        if self.pages:
-            return await channel.send(embed=self.pages[self.current_page])
-        await channel.send("No matching command, group or Cog.")
-        self.stop()
-
-
 class PaginatedHelpCommand(commands.HelpCommand):
     def __init__(self):
         self.verify_checks = True
@@ -167,7 +83,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         for i, embed in enumerate(pages, start=1):
             embed.title = f"Page {i}/{total}: {embed.title}"
 
-        pg = EmbedMenu(pages)
+        pg = RoboPages(HelpSource(range(0, len(pages)), pages))
         await pg.start(self.context)
 
     async def send_cog_help(self, cog: commands.Cog):
@@ -188,7 +104,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         try:
             await group.can_run(self.context)
         except (commands.CommandError, commands.CheckFailure):
-            return await self.context.send(f'No command called "{group}" found.')
+            return await self.context.send(f'No command called "{group.name}" found.')
         if not group.commands:
             return await self.send_command_help(group)
         subs = "\n".join(f"`{c.qualified_name}`: {c.short_doc}" for c in group.commands)
@@ -204,7 +120,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         try:
             await command.can_run(self.context)
         except (commands.CommandError, commands.CheckFailure):
-            return await self.context.send(f'No command called "{command}" found.')
+            return await self.context.send(f'No command called "{command.name}" found.')
         embed = discord.Embed(colour=discord.Colour.blurple())
         embed.title = f"{self.clean_prefix}{command.qualified_name} {command.signature}"
         embed.description = command.help or "No help provided"
