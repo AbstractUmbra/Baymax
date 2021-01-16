@@ -7,6 +7,11 @@
             "autorestart": true,
             "max_restart": 5,
             "instances": 1,
+            "env": {
+                "JISHAKU_HIDE": "True",
+                "JISHAKU_RETAIN": "True",
+                "JISHAKU_NO_UNDERSCORE": "True"
+            },
             "interpreter": "/home/penumbra/.poetry/bin/poetry",
             "interpreter_args": [
                 "run",

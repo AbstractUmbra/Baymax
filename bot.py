@@ -210,7 +210,7 @@ class Akane(commands.AutoShardedBot):
         """ When the websocket resumes a connection. """
         print("Resumed...")
 
-    @property
+    @discord.utils.cached_property
     def stat_webhook(self):
         """ Get webhook stats. """
         wh_id, wh_token = self.config.stat_webhook
@@ -242,7 +242,7 @@ class Akane(commands.AutoShardedBot):
         )
         embed.add_field(
             name="Channel Info",
-            value=f"{message.channel} (ID: {message.channel.id}",
+            value=f"{message.channel} (ID: {message.channel.id})",
             inline=False,
         )
         embed.timestamp = datetime.datetime.utcnow()
@@ -306,8 +306,8 @@ class Akane(commands.AutoShardedBot):
             super().close(),
             self.session.close(),
             self.mb_client.close(),
-            self.hentai_client.close(),
         )
+        self.hentai_client.close()
 
     def run(self):
         """ Run my Akane please. """
