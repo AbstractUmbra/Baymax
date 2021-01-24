@@ -69,7 +69,7 @@ class BooruConfig:
         if record:
             self.blacklist = set(record["blacklist"])
         else:
-            self.blacklist = []
+            self.blacklist = set()
 
 
 class LewdPageSource(menus.ListPageSource):
@@ -417,13 +417,14 @@ class Lewd(commands.Cog):
                 ctx.command.reset_cooldown(ctx)
                 raise commands.BadArgument("The specified query returned no results.")
 
-            print(json_data)
-            print(aiohttp_params)
             embeds = self._gen_danbooru_embeds(json_data, current_config)
             if not embeds:
-                raise commands.BadArgument(
-                    "Your search had results but all of them contained blacklisted tags."
+                fmt = (
+                    "Your search had results but all of them contained blacklisted tags"
                 )
+                if "loli" in lowered_tags:
+                    fmt += "\nPlease note that Danbooru does not support 'loli'."
+                raise commands.BadArgument(fmt)
 
             pages = RoboPages(
                 source=LewdPageSource(range(0, len(embeds[:30])), embeds),

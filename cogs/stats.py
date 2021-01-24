@@ -1231,7 +1231,7 @@ class Stats(commands.Cog):
         await ctx.safe_send(f"```\n{render}\n```")
 
 
-old_on_error = commands.AutoShardedBot.on_error
+old_on_error = commands.Bot.on_error
 
 
 async def on_error(self, event, *args, **kwargs):
@@ -1263,10 +1263,10 @@ def setup(bot):
     bot.add_cog(cog)
     bot._stats_cog_gateway_handler = handler = GatewayHandler(cog)
     logging.getLogger().addHandler(handler)
-    commands.AutoShardedBot.on_error = on_error
+    commands.Bot.on_error = on_error
 
 
 def teardown(bot):
-    commands.AutoShardedBot.on_error = old_on_error
+    commands.Bot.on_error = old_on_error
     logging.getLogger().removeHandler(bot._stats_cog_gateway_handler)
     del bot._stats_cog_gateway_handler

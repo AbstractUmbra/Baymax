@@ -3,9 +3,8 @@ from discord.ext import commands
 from utils.config import Config
 
 BMOJI = "\N{NEGATIVE SQUARED LATIN CAPITAL LETTER B}\N{VARIATION SELECTOR-16}"
-# DUNSTON = 705500489248145459
 DUNSTON = 364412422540361729
-# BCHAN = 705501796159848541
+ACHAN = 738281022374019142
 BCHAN = 748996615502823616
 
 
@@ -36,8 +35,8 @@ class Dunston(commands.Cog):
                 f"{cheater_message.author} is a filthy cheater."
             )
 
-    @commands.Cog.listener()
-    async def on_message(self, message: discord.Message):
+    @commands.Cog.listener("on_message")
+    async def bchan_on_message(self, message: discord.Message):
         """ Unique Bs only please. """
         if message.channel.id != BCHAN:
             return
@@ -61,6 +60,19 @@ class Dunston(commands.Cog):
         words.append(self.b_replace(content))
 
         await self.b_words.put(message.guild.id, sorted(set(words), reverse=True))
+
+    @commands.Cog.listener("on_message")
+    async def achan_on_message(self, message: discord.Message):
+        if message.channel.id != ACHAN or message.author.bot:
+            return
+
+        if message.content != "B":
+            try:
+                await message.add_reaction("❌")
+                return
+            except discord.Forbidden:
+                return await self.cheater(message)
+
 
     @commands.Cog.listener()
     async def on_message_edit(self, _: discord.Message, after: discord.Message):

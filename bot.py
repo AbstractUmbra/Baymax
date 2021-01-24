@@ -100,7 +100,7 @@ def _prefix_callable(bot: commands.Bot, msg: discord.Message) -> typing.List[str
     return base
 
 
-class Akane(commands.AutoShardedBot):
+class Akane(commands.Bot):
     """ The actual robot herself! """
 
     def __init__(self):

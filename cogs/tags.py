@@ -1068,7 +1068,12 @@ class Tags(commands.Cog):
         query = "SELECT id, owner_id FROM tags WHERE location_id=$1 AND LOWER(name)=$2;"
         row = await ctx.db.fetchrow(query, ctx.guild.id, tag.lower())
         if row is None:
-            return await ctx.send(f'A tag with the name of "{tag}" does not exist.')
+            alias_query = "SELECT tag_id, owner_id FROM tag_lookup WHERE location_id = $1 and LOWER(name) = $2;"
+            alias_row = await ctx.db.fetchrow(alias_query, ctx.guild.id, tag.lower())
+            if alias_row is None:
+                return await ctx.send(f'A tag with the name of "{tag}" does not exist.')
+
+        row = row or alias_row
 
         try:
             member = ctx.guild.get_member(row[1]) or await ctx.guild.fetch_member(

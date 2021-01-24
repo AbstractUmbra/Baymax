@@ -14,6 +14,7 @@ import discord
 from discord.ext import commands, tasks
 from utils import cache, checks, db, time
 from utils.formats import plural
+from utils.context import Context
 
 log = logging.getLogger(__name__)
 
@@ -2231,6 +2232,29 @@ class Mod(commands.Cog):
                 if stats:
                     wh = stats.webhook
                     await wh.send(f"```py\n{real_exc}\n```")
+
+
+    @commands.command()
+    @commands.has_guild_permissions(manage_roles=True)
+    async def unblock(self, ctx: Context, member: discord.Member, channel: discord.TextChannel = None):
+        channels = [channel] if channel else ctx.guild.text_channels
+
+        reason = f"Unblock by {ctx.author} (ID: {ctx.author.id})"
+
+        failed = 0
+        success = 0
+
+        for channel in channels:
+            ow = channel.overwrites.copy()
+            try:
+                ow.pop(member)
+                await channel.edit(overwrites=ow, reason=reason)
+                success += 1
+            except Exception as err:
+                failed += 1
+
+        await ctx.send(f"\N{THUMBS UP SIGN} Succeeded: {success}, Failed: {failed}.")
+
 
 
 def setup(bot):

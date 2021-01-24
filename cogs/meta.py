@@ -480,10 +480,10 @@ class Meta(commands.Cog):
         perms.administrator = False
         stringy = f"""
                    Okay you have two options:
-                   Invite me with managed permissions [here]({discord.utils.oauth_url(self.bot.client_id, perms)} 'WARNING: Creates a managed role in your server.').
+                   Invite me with managed permissions [here]({discord.utils.oauth_url(self.bot.user.id, perms)} 'WARNING: Creates a managed role in your server.').
                    or...
                    Invite me with no permissions, and you handle it with your own roles.
-                   [I can't promise I'll work until you fix my perms.]({discord.utils.oauth_url(self.bot.client_id)} 'I prefer this option, personally.').
+                   [I can't promise I'll work until you fix my perms.]({discord.utils.oauth_url(self.bot.user.id)} 'I prefer this option, personally.').
                    """
         embed = discord.Embed()
         embed.description = textwrap.dedent(stringy)

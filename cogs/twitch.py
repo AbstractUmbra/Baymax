@@ -172,7 +172,6 @@ class Twitch(commands.Cog):
             if "error" in clips_json:
                 await ctx.send("error in resp")
                 await self._refresh_oauth()
-                return await self.get_clips.coro(self)
             if not clips_json["data"]:
                 continue
 
@@ -425,7 +424,7 @@ class Twitch(commands.Cog):
 
             if "error" in stream_json:
                 await self._refresh_oauth()
-                return await self.get_streamers.coro(self)
+                return
             if "data" not in stream_json.keys() or not stream_json["data"]:
                 continue
 
@@ -510,7 +509,7 @@ class Twitch(commands.Cog):
 
             if "error" in clips_json:
                 await self._refresh_oauth()
-                return await self.get_clips.coro(self)
+                return
             if not clips_json["data"]:
                 continue
 

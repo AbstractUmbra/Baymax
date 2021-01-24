@@ -12,14 +12,14 @@ class Testing(commands.Cog):
     def cog_check(self, ctx: Context):
         return ctx.author.id == self.bot.owner_id
 
-    @commands.command()
-    async def test(
-        self,
-        ctx: commands.Context,
-        emoji: Union[discord.Emoji, discord.PartialEmoji, str],
-    ):
-        await ctx.send(emoji)
-        await ctx.message.add_reaction(emoji)
+
+    @commands.group()
+    async def test(self, ctx):
+        await ctx.send(self.test.commands)
+
+    @test.command()
+    async def test1(self, ctx):
+        ...
 
 
 def setup(bot: commands.Bot):
