@@ -433,7 +433,7 @@ class Mod(commands.Cog):
             return
 
         # we're going to ignore members with roles
-        if len(author.roles) > 1:
+        if message.author.permissions_in(message.channel).manage_messages:
             return
 
         guild_id = message.guild.id
