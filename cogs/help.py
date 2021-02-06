@@ -23,16 +23,17 @@ class PaginatedHelpCommand(commands.HelpCommand):
         self.show_hidden = False
         super().__init__()
 
-    def recursive_command_format(self, command: commands.Command, *, indent=1, subc=0):
+    async def recursive_command_format(self, command: commands.Command, *, indent=1, subc=0):
         yield (
             "" if indent == 1 else "├" if subc != 0 else "└"
         ) + f"`{command.qualified_name}`: {command.short_doc}"
         if isinstance(command, commands.Group):
             last = len(command.commands) - 1
-            for _, command in enumerate(self.filter_commands(command.commands, sort=True)):
-                yield from self.recursive_command_format(
+            for _, command in enumerate(await self.filter_commands(command.commands, sort=True)):
+                asyync for result in self.recursive_command_format(
                     command, indent=indent + 1, subc=last
-                )
+                ):
+                    yield result
                 last -= 1
 
     async def format_commands(
@@ -53,7 +54,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
             except (discord.Forbidden, commands.CheckFailure, commands.CommandError):
                 continue
             else:
-                for line in self.recursive_command_format(command):
+                async for line in self.recursive_command_format(command):
                     pg.add_line(line)
 
         for desc in pg.pages:
