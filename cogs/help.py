@@ -29,7 +29,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         ) + f"`{command.qualified_name}`: {command.short_doc}"
         if isinstance(command, commands.Group):
             last = len(command.commands) - 1
-            for _, command in enumerate(command.commands):
+            for _, command in enumerate(self.filter_commands(command.commands, sort=True)):
                 yield from self.recursive_command_format(
                     command, indent=indent + 1, subc=last
                 )
