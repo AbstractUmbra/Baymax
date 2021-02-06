@@ -30,7 +30,7 @@ class PaginatedHelpCommand(commands.HelpCommand):
         if isinstance(command, commands.Group):
             last = len(command.commands) - 1
             for _, command in enumerate(await self.filter_commands(command.commands, sort=True)):
-                asyync for result in self.recursive_command_format(
+                async for result in self.recursive_command_format(
                     command, indent=indent + 1, subc=last
                 ):
                     yield result
